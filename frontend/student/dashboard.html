@@ -13,48 +13,36 @@ body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--t);min-he
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 15% 15%,rgba(108,99,255,.15) 0%,transparent 70%),radial-gradient(ellipse 50% 40% at 85% 85%,rgba(72,209,142,.1) 0%,transparent 70%);pointer-events:none;z-index:0}
 
 header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.9rem 2rem;border-bottom:1px solid var(--b);backdrop-filter:blur(14px);background:rgba(11,15,26,.85)}
-.logo-img{height:64px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(108,99,255,.4))}
+.logo-img{height:54px;object-fit:contain}
 .user-bar{display:flex;align-items:center;gap:.75rem}
-.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));display:grid;place-items:center;font-weight:800;font-size:.9rem;flex-shrink:0}
-.btn-out{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.4);padding:.38rem .9rem;border-radius:20px;cursor:pointer;font-weight:700;font-size:.78rem;font-family:'Inter',sans-serif;transition:all .2s}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));display:grid;place-items:center;font-weight:800;font-size:.9rem}
+.btn-out{background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.3);padding:.4rem 1rem;border-radius:20px;cursor:pointer;font-weight:700;font-size:.75rem}
 
-.hero{position:relative;z-index:1;text-align:center;padding:3.5rem 1rem 2.5rem}
-.hero h1{font-size:2rem;font-weight:900;background:linear-gradient(90deg,#fff 30%,var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
-
-.levels-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;max-width:1100px;margin:0 auto 2.5rem;padding:0 1.5rem}
-/* ROJO SUAVE MEJORADO */
-.lvl-card{background:rgba(239, 68, 68, 0.15);border:2px solid rgba(239, 68, 68, 0.3);border-radius:24px;padding:1.8rem 1.4rem;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
-.lvl-card:hover{transform:translateY(-4px);border-color:rgba(239, 68, 68, 0.5);box-shadow:0 16px 40px rgba(239, 68, 68, 0.15)}
-.lvl-card.active{border-color:var(--red);box-shadow:0 0 0 4px rgba(239, 68, 68, 0.2)}
-.lvl-name{font-size:1.1rem;font-weight:800;margin-top:1rem}
-.lvl-badge{display:inline-block;margin-top:.8rem;background:rgba(239, 68, 68, 0.2);color:#ff8080;font-size:.68rem;font-weight:800;padding:.3rem .8rem;border-radius:20px;border:1px solid rgba(239, 68, 68, 0.4)}
+.hero{position:relative;z-index:1;text-align:center;padding:3rem 1rem 2rem}
+.hero h1{font-size:2rem;font-weight:900;margin-bottom:.5rem}
+.lvl-tag{display:inline-block;padding:.4rem 1.2rem;background:rgba(239, 68, 68, 0.15);border:2px solid rgba(239, 68, 68, 0.3);border-radius:20px;color:#ff8080;font-weight:800;font-size:.85rem}
 
 .content-area{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 1.5rem 4rem}
-.section-card{background:var(--card);border:1px solid var(--b);border-radius:18px;padding:1.5rem;margin-bottom:1.5rem}
+.section-card{background:var(--card);border:1px solid var(--b);border-radius:20px;padding:1.5rem;margin-bottom:1.5rem}
 
-.sem-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
-.sem-tab{padding:.5rem 1.3rem;border-radius:25px;border:2px solid var(--b);background:transparent;color:var(--m);cursor:pointer;font-weight:700;font-size:.82rem;transition:all .2s}
-.sem-tab.active{border-color:var(--a2);color:var(--a2);background:rgba(72,209,142,.08)}
+.sem-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;justify-content:center}
+.sem-tab{padding:.6rem 1.4rem;border-radius:25px;border:2px solid var(--b);background:transparent;color:var(--m);cursor:pointer;font-weight:700;font-size:.82rem}
+.sem-tab.active{border-color:var(--a2);color:var(--a2);background:rgba(72,209,142,.1)}
 
-.module-card{background:var(--card2);border:1px solid var(--b);border-radius:16px;margin-bottom:.9rem;overflow:hidden;transition:border-color .2s}
+.module-card{background:var(--card2);border:1px solid var(--b);border-radius:16px;margin-bottom:1rem;overflow:hidden}
 .module-header{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;cursor:pointer}
-.mod-name{font-size:.95rem;font-weight:700}
-.module-body{display:none;padding:1.4rem}
+.module-body{display:none;padding:1.4rem;border-top:1px solid var(--b)}
 .module-card.open .module-body{display:block}
 
-.topic-item{background:rgba(255,255,255,.03);border:1px solid var(--b);border-radius:12px;padding:1rem;margin-bottom:1rem}
-.topic-name{font-size:.85rem;font-weight:800;color:var(--a2);margin-bottom:.8rem;display:block}
+.topic-box{background:rgba(255,255,255,.03);border:1px solid var(--b);border-radius:12px;padding:1.2rem;margin-bottom:1.2rem}
+.topic-label{font-size:.8rem;font-weight:900;color:var(--a2);margin-bottom:.8rem;display:block;text-transform:uppercase}
 
-.mat-link{display:flex;align-items:center;gap:.6rem;padding:.6rem .9rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--b);text-decoration:none;margin-top:.4rem;transition:all .2s}
+.mat-link{display:flex;align-items:center;gap:.7rem;padding:.7rem 1rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--b);text-decoration:none;color:var(--t);margin-top:.5rem;transition:all .2s}
 .mat-link:hover{background:rgba(108,99,255,0.08);border-color:var(--a)}
-.m-ico{font-size:1.1rem}
-.m-txt{font-size:.82rem;font-weight:600;flex:1}
-.m-tag{font-size:.62rem;font-weight:800;text-transform:uppercase;color:var(--a);padding:.2rem .5rem;background:rgba(108,99,255,0.15);border-radius:6px}
 
 @media(max-width:640px){
   header{padding:0.8rem 1rem}
-  .hero{padding:2rem 1rem}
-  .levels-grid{grid-template-columns:1fr}
+  .hero h1{font-size:1.6rem}
 }
 </style>
 </head>
@@ -70,41 +58,35 @@ header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify
 
 <div class="hero">
   <h1 id="welcome-msg">¡Hola!</h1>
-  <p style="color:var(--m)">Tu ruta de aprendizaje personalizada</p>
+  <div class="lvl-tag" id="lvl-tag">Nivel: ...</div>
 </div>
 
-<div class="levels-grid" id="levels-grid"></div>
-
 <div class="content-area">
-  <!-- PASSWORD CHANGE -->
-  <div class="section-card">
-    <div style="font-weight:700;margin-bottom:.8rem;font-size:.7rem;color:var(--m);text-transform:uppercase;letter-spacing:0.1em">🔑 Seguridad</div>
-    <div style="display:flex;gap:.8rem">
-      <input type="password" id="new-pass" placeholder="Nueva contraseña" style="flex:1;background:rgba(0,0,0,0.2);border:1px solid var(--b);border-radius:8px;padding:.6rem;color:#fff">
-      <button onclick="cambiarPass()" style="background:var(--a);color:#fff;border:none;padding:.6rem 1.2rem;border-radius:8px;font-weight:700;cursor:pointer">Actualizar</button>
-    </div>
-  </div>
-
-  <div id="main-content"></div>
+  <div id="semesters-nav" class="sem-tabs"></div>
+  <div id="modules-list"></div>
 </div>
 
 <script>
 const API_URL = "https://educonnect-backend-production-1d08.up.railway.app";
 const TOKEN = localStorage.getItem('token');
-const CURRICULUM = [
-  {id:'basico', name:'Básico', icon:'🔰', badge:'Semestre 1', semesters:[{id:'S1', label:'Semestre 1', modules:['Introducción a la Informática','Pensamiento Computacional','Lógica de Programación I','Algoritmos I','Ofimática Básica']}]},
-  {id:'auxiliar', name:'Auxiliar', icon:'⚙️', badge:'Semestre 1', semesters:[{id:'S1', label:'Semestre 1', modules:['Sistemas Operativos','Programación Básica','Hardware Esencial','Redes Locales','Base de Datos Básica']}]},
-  {id:'medio', name:'Medio', icon:'📚', badge:'Semestre 1-2', semesters:[
-    {id:'M1', label:'Medio 1', modules:['Programación Intermedia','Diseño Web I','Base de Datos Intermedia','Inglés Técnico I','Emprendimiento Digital']},
-    {id:'M2', label:'Medio 2', modules:['Programación Web','Diseño Web II','Redes Intermedias','Programación Móvil I','Proyecto Integrador I']}
+const MALLA = [
+  { nivel: "Básico", semestres: [
+    { n: "1er SEMESTRE – BÁSICO", mods: ["Introducción a la Informática", "Pensamiento Computacional", "Lógica de Programación I", "Algoritmos I", "Módulo Emergente I (IA básica)"] },
+    { n: "2do SEMESTRE – AUXILIAR", mods: ["Lógica de Programación II", "Estructuras de Control", "Funciones", "Bases de Datos Básicas", "Módulo Emergente II (Prompts básicos)"] }
   ]},
-  {id:'superior', name:'Superior', icon:'🚀', badge:'Semestre 1-2', semesters:[
-    {id:'S1', label:'Superior 1', modules:['Arquitectura de Software','Bases de Datos Avanzadas','DevOps & Cloud','Seguridad Informática','Inglés Técnico II']},
-    {id:'S2', label:'Superior 2', modules:['Inteligencia Artificial','Desarrollo Full Stack','Gestión de Proyectos TI','Programación Móvil II','Proyecto Integrador II']}
+  { nivel: "Medio", semestres: [
+    { n: "3er SEMESTRE – MEDIO I", mods: ["Programación con Python", "Estructuras de Datos", "Bases de Datos I", "Sistemas Operativos y Redes", "Módulo Emergente III (Prompt estructurado)"] },
+    { n: "4to SEMESTRE – MEDIO II", mods: ["Frontend", "Backend Básico", "Base de Datos II", "Control de Versiones", "Módulo Emergente IV (Contexto IA)"] }
   ]},
-  {id:'ingenieria', name:'Ingeniería', icon:'🏗️', badge:'Semestre 1-4', semesters:[
-    {id:'I1', label:'Ingeniería 1', modules:['Fundamentos de Ing. Software','Matemáticas Discretas','Arquitecturas','Cálculo']},
-    {id:'I2', label:'Ingeniería 2', modules:['Estructuras de Datos','SO Avanzados','Compiladores','Redes Avanzadas']}
+  { nivel: "Superior", semestres: [
+    { n: "5to SEMESTRE – SUPERIOR I", mods: ["Frontend Avanzado", "Backend Avanzado", "Arquitectura de Software", "Seguridad Informática", "Módulo Emergente V (SDD)"] },
+    { n: "6to SEMESTRE – SUPERIOR II", mods: ["DevOps Básico", "Testing de Software", "Despliegue", "Gestión de Proyectos", "Módulo Emergente VI (Flujo con IA)"] }
+  ]},
+  { nivel: "Ingeniería", semestres: [
+    { n: "7mo SEMESTRE – INGENIERÍA I", mods: ["Estructuras de Datos Avanzadas", "Algoritmos", "Complejidad Computacional", "Bases de Datos Avanzadas", "Módulo Emergente VII (Validación IA)"] },
+    { n: "8vo SEMESTRE – INGENIERÍA II", mods: ["Arquitectura Avanzada", "Microservicios", "Infraestructura", "Seguridad Avanzada", "Módulo Emergente VIII (Automatización IA)"] },
+    { n: "9no SEMESTRE – INGENIERÍA III", mods: ["IA en Desarrollo", "Spec-Driven Development (SDD)", "Ingeniería de Prompts", "Automatización Avanzada", "Módulo Emergente IX (Ética IA)"] },
+    { n: "10mo SEMESTRE – INGENIERÍA IV", mods: ["Proyecto de Grado", "Documentación Técnica", "Emprendimiento Tecnológico", "Inserción Laboral", "Módulo Emergente X (IA aplicada)"] }
   ]}
 ];
 
@@ -115,69 +97,47 @@ window.addEventListener('DOMContentLoaded', async () => {
   if (!TOKEN) { window.location.href = '../login.html'; return; }
   document.getElementById('welcome-msg').textContent = `¡Hola, ${u.nombre}!`;
   document.getElementById('avatar').textContent = u.nombre[0].toUpperCase();
-  
+  document.getElementById('lvl-tag').textContent = `Nivel: ${u.nivel_asignado}`;
+
   const r = await fetch(API_URL + '/modulos/');
   const d = await r.json();
   (d.modulos || []).forEach(m => { modNameToId[m.nombre] = m.id; });
 
-  renderLevels(u.nivel_asignado);
+  initNav(u.nivel_asignado);
 });
 
 function logout() { localStorage.clear(); window.location.href = '../login.html'; }
 
-async function cambiarPass() {
-  const pass = document.getElementById('new-pass').value;
-  if (pass.length < 4) return alert('Mínimo 4 caracteres');
-  const r = await fetch(API_URL + '/auth/update-password', {
-    method: 'PUT', headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ new_password: pass })
-  });
-  if (r.ok) { alert('✅ Contraseña actualizada'); document.getElementById('new-pass').value = ''; }
-}
+function initNav(nivelAsignado) {
+  const nav = document.getElementById('semesters-nav');
+  const base = (nivelAsignado || '').split(' ')[0].toLowerCase().trim();
+  const lvlData = MALLA.find(l => l.nivel.toLowerCase().includes(base));
+  
+  if (!lvlData) return;
 
-function renderLevels(asignado) {
-  const grid = document.getElementById('levels-grid');
-  const base = (asignado || '').split(' - ')[0].toLowerCase().trim();
-  const filtered = CURRICULUM.filter(l => l.name.toLowerCase() === base || l.id === base);
-  grid.innerHTML = (filtered.length ? filtered : CURRICULUM).map(l => `
-    <div class="lvl-card" onclick="selectLevel('${l.id}')">
-      <div style="font-size:2.5rem">${l.icon}</div>
-      <div class="lvl-name">Nivel ${l.name}</div>
-      <span class="lvl-badge">${l.badge}</span>
-    </div>
+  nav.innerHTML = lvlData.semestres.map((s, i) => `
+    <button class="sem-tab ${i===0?'active':''}" onclick="renderModules('${lvlData.nivel}', ${i}, this)">${s.n.split(' – ')[0]}</button>
   `).join('');
-  if (filtered.length === 1) selectLevel(filtered[0].id);
+  
+  renderModules(lvlData.nivel, 0, nav.querySelector('.active'));
 }
 
-function selectLevel(id) {
-  const lvl = CURRICULUM.find(l => l.id === id);
-  const container = document.getElementById('main-content');
-  container.innerHTML = `
-    <div class="sem-tabs">${lvl.semesters.map(s => `<button class="sem-tab" onclick="renderModules('${id}','${s.id}',this)">${s.label}</button>`).join('')}</div>
-    <div id="modules-list"></div>
-  `;
-  container.querySelector('.sem-tab').click();
-}
-
-function renderModules(lvlId, semId, btn) {
+function renderModules(nivel, semIdx, btn) {
   document.querySelectorAll('.sem-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  const lvl = CURRICULUM.find(l => l.id === lvlId);
-  const sem = lvl.semesters.find(s => s.id === semId);
+  
+  const lvlData = MALLA.find(l => l.nivel === nivel);
+  const sem = lvlData.semestres[semIdx];
   const list = document.getElementById('modules-list');
-  list.innerHTML = sem.modules.map((m, i) => `
+  
+  list.innerHTML = sem.mods.map((m, i) => `
     <div class="module-card" id="mc-${i}">
       <div class="module-header" onclick="toggleMod(${i},'${m}')">
-        <div class="mod-name">${i+1}. ${m}</div>
-        <span style="font-size:0.7rem;color:var(--m)">▼</span>
+        <div style="font-weight:700">Módulo ${i+1}: ${m}</div>
+        <span>▼</span>
       </div>
       <div class="module-body" id="mb-${i}">
-        ${[1,2,3,4,5].map(t => `
-          <div class="topic-item">
-            <span class="topic-name">TEMA ${t}</span>
-            <div id="mat-${i}-${t}">⏳ Cargando...</div>
-          </div>
-        `).join('')}
+        ${[1,2,3,4,5].map(t => `<div class="topic-box"><span class="topic-label">TEMA ${t}</span><div id="mat-${i}-${t}">⏳ Cargando...</div></div>`).join('')}
       </div>
     </div>
   `).join('');
@@ -200,9 +160,11 @@ async function toggleMod(idx, name) {
         if (!tItems.length) { matEl.innerHTML = '<span style="font-size:0.75rem;color:var(--m)">Sin material</span>'; continue; }
         matEl.innerHTML = tItems.map(c => `
           <a href="${c.url}" target="_blank" class="mat-link">
-            <span class="m-ico">${icons[c.tipo]||'📂'}</span>
-            <span class="m-txt">${c.titulo || 'Ver material'}</span>
-            <span class="m-tag">${c.tipo}</span>
+            <span>${icons[c.tipo]||'📂'}</span>
+            <div style="flex:1">
+              <div style="font-size:0.85rem;font-weight:700">${c.titulo || 'Ver material'}</div>
+              <div style="font-size:0.65rem;color:var(--a);text-transform:uppercase">${c.tipo}</div>
+            </div>
           </a>`).join('');
       }
     } catch { }

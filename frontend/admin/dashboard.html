@@ -65,23 +65,39 @@ td{padding:.8rem;border-bottom:1px solid rgba(255,255,255,.03)}
           <div class="field"><label>Carnet</label><input id="pcarnet" required></div>
           <div class="field"><label>Nivel Asignado</label>
             <select id="pnivel">
-              <option value="Básico">Básico</option>
-              <option value="Auxiliar">Auxiliar</option>
-              <option value="Medio - M1">Medio - M1</option>
-              <option value="Medio - M2">Medio - M2</option>
-              <option value="Superior - S1">Superior - S1</option>
-              <option value="Superior - S2">Superior - S2</option>
-              <option value="Ingeniería - I1">Ingeniería - I1</option>
+              <optgroup label="BÁSICO">
+                <option value="Básico – 1er SEMESTRE">1er SEMESTRE – BÁSICO</option>
+                <option value="Básico – 2do SEMESTRE">2do SEMESTRE – AUXILIAR</option>
+              </optgroup>
+              <optgroup label="MEDIO">
+                <option value="Medio – 3er SEMESTRE">3er SEMESTRE – MEDIO I</option>
+                <option value="Medio – 4to SEMESTRE">4to SEMESTRE – MEDIO II</option>
+              </optgroup>
+              <optgroup label="SUPERIOR">
+                <option value="Superior – 5to SEMESTRE">5to SEMESTRE – SUPERIOR I</option>
+                <option value="Superior – 6to SEMESTRE">6to SEMESTRE – SUPERIOR II</option>
+              </optgroup>
+              <optgroup label="INGENIERÍA">
+                <option value="Ingeniería – 7mo SEMESTRE">7mo SEMESTRE – INGENIERÍA I</option>
+                <option value="Ingeniería – 8vo SEMESTRE">8vo SEMESTRE – INGENIERÍA II</option>
+                <option value="Ingeniería – 9no SEMESTRE">9no SEMESTRE – INGENIERÍA III</option>
+                <option value="Ingeniería – 10mo SEMESTRE">10mo SEMESTRE – INGENIERÍA IV</option>
+              </optgroup>
             </select>
           </div>
-          <button type="submit" class="btn-primary" style="grid-column:1/-1">Crear</button>
+          <button type="submit" class="btn-primary" style="grid-column:1/-1">Crear Profesor</button>
         </form>
       </div>
 
       <div class="bulk-box">
         <h4 style="margin-bottom:.5rem">📂 Carga Masiva Profesores (.xlsx)</h4>
         <div style="display:flex;gap:.8rem">
-          <select id="bulk-nivel-p" style="flex:1"><option value="Básico">Básico</option><option value="Auxiliar">Auxiliar</option></select>
+          <select id="bulk-nivel-p" style="flex:1">
+            <option value="Básico">Básico</option>
+            <option value="Medio">Medio</option>
+            <option value="Superior">Superior</option>
+            <option value="Ingeniería">Ingeniería</option>
+          </select>
           <input type="file" id="file-p" accept=".xlsx" style="flex:2">
           <button onclick="uploadExcel('profesor')" style="background:var(--a2);color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;font-weight:700">Subir</button>
         </div>
@@ -101,23 +117,27 @@ td{padding:.8rem;border-bottom:1px solid rgba(255,255,255,.03)}
           <div class="field"><label>Nombres</label><input id="enombre" required></div>
           <div class="field"><label>Apellidos</label><input id="eapellido" required></div>
           <div class="field"><label>Carnet</label><input id="ecarnet" required></div>
-          <div class="field"><label>Nivel</label>
+          <div class="field"><label>Nivel de Ingreso</label>
             <select id="enivel">
-              <option value="Básico">Básico</option>
-              <option value="Auxiliar">Auxiliar</option>
-              <option value="Medio">Medio</option>
-              <option value="Superior">Superior</option>
-              <option value="Ingeniería">Ingeniería</option>
+              <option value="Básico">NIVEL BÁSICO</option>
+              <option value="Medio">NIVEL MEDIO</option>
+              <option value="Superior">NIVEL SUPERIOR</option>
+              <option value="Ingeniería">NIVEL INGENIERÍA</option>
             </select>
           </div>
-          <button type="submit" class="btn-primary" style="grid-column:1/-1">Inscribir</button>
+          <button type="submit" class="btn-primary" style="grid-column:1/-1">Inscribir Estudiante</button>
         </form>
       </div>
 
       <div class="bulk-box">
         <h4 style="margin-bottom:.5rem">📂 Carga Masiva Estudiantes (.xlsx)</h4>
         <div style="display:flex;gap:.8rem">
-          <select id="bulk-nivel-e" style="flex:1"><option value="Básico">Básico</option><option value="Auxiliar">Auxiliar</option></select>
+          <select id="bulk-nivel-e" style="flex:1">
+            <option value="Básico">Básico</option>
+            <option value="Medio">Medio</option>
+            <option value="Superior">Superior</option>
+            <option value="Ingeniería">Ingeniería</option>
+          </select>
           <input type="file" id="file-e" accept=".xlsx" style="flex:2">
           <button onclick="uploadExcel('estudiante')" style="background:var(--a2);color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;font-weight:700">Subir</button>
         </div>
@@ -151,19 +171,23 @@ function showPage(id, btn) {
 }
 
 async function loadProfesores() {
-  const r = await fetch(API_URL + '/auth/profesores', { headers: { Authorization: 'Bearer ' + TOKEN } });
-  const d = await r.json();
-  document.getElementById('tbl-prof').innerHTML = (d.profesores || []).map(p => `
-    <tr><td>${p.nombre} ${p.apellido}</td><td>${p.email}</td><td>${p.nivel_asignado}</td><td><button onclick="del(${p.id})">❌</button></td></tr>
-  `).join('');
+  try {
+    const r = await fetch(API_URL + '/auth/profesores', { headers: { Authorization: 'Bearer ' + TOKEN } });
+    const d = await r.json();
+    document.getElementById('tbl-prof').innerHTML = (d.profesores || []).map(p => `
+      <tr><td>${p.nombre} ${p.apellido}</td><td>${p.email}</td><td>${p.nivel_asignado}</td><td><button onclick="del(${p.id})">❌</button></td></tr>
+    `).join('');
+  } catch(e) { }
 }
 
 async function loadEstudiantes() {
-  const r = await fetch(API_URL + '/auth/estudiantes', { headers: { Authorization: 'Bearer ' + TOKEN } });
-  const d = await r.json();
-  document.getElementById('tbl-est').innerHTML = (d.estudiantes || []).map(e => `
-    <tr><td>${e.nombre} ${e.apellido}</td><td>${e.email}</td><td>${e.nivel_asignado}</td><td><button onclick="del(${e.id})">❌</button></td></tr>
-  `).join('');
+  try {
+    const r = await fetch(API_URL + '/auth/estudiantes', { headers: { Authorization: 'Bearer ' + TOKEN } });
+    const d = await r.json();
+    document.getElementById('tbl-est').innerHTML = (d.estudiantes || []).map(e => `
+      <tr><td>${e.nombre} ${e.apellido}</td><td>${e.email}</td><td>${e.nivel_asignado}</td><td><button onclick="del(${e.id})">❌</button></td></tr>
+    `).join('');
+  } catch(e) { }
 }
 
 async function crearProfesor(e) {
@@ -172,10 +196,10 @@ async function crearProfesor(e) {
   const a = document.getElementById('papellido').value;
   const c = document.getElementById('pcarnet').value;
   const nv = document.getElementById('pnivel').value;
-  const r = await fetch(API_URL + `/auth/register-profesor?nombre=${n}&apellido=${a}&carnet=${c}&nivel_asignado=${nv}`, {
+  const r = await fetch(API_URL + `/auth/register-profesor?nombre=${encodeURIComponent(n)}&apellido=${encodeURIComponent(a)}&carnet=${c}&nivel_asignado=${encodeURIComponent(nv)}`, {
     method: 'POST', headers: { Authorization: 'Bearer ' + TOKEN }
   });
-  if(r.ok) { alert('✅ Creado'); loadProfesores(); }
+  if(r.ok) { alert('✅ Profesor creado'); loadProfesores(); e.target.reset(); }
 }
 
 async function crearEstudiante(e) {
@@ -190,24 +214,25 @@ async function crearEstudiante(e) {
     method: 'POST', headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-  if(r.ok) { alert('✅ Inscrito'); loadEstudiantes(); }
+  if(r.ok) { alert('✅ Estudiante inscrito'); loadEstudiantes(); e.target.reset(); }
 }
 
 async function uploadExcel(role) {
-  const file = document.getElementById(role === 'profesor' ? 'file-p' : 'file-e').files[0];
+  const fileInput = document.getElementById(role === 'profesor' ? 'file-p' : 'file-e');
+  const file = fileInput.files[0];
   const nivel = document.getElementById(role === 'profesor' ? 'bulk-nivel-p' : 'bulk-nivel-e').value;
-  if(!file) return alert('Selecciona archivo');
+  if(!file) return alert('Selecciona un archivo Excel');
   const fd = new FormData(); fd.append('file', file);
-  const r = await fetch(`${API_URL}/auth/bulk-register?nivel=${nivel}&rol=${role}`, {
+  const r = await fetch(`${API_URL}/auth/bulk-register?nivel=${encodeURIComponent(nivel)}&rol=${role}`, {
     method: 'POST', headers: { Authorization: 'Bearer ' + TOKEN }, body: fd
   });
-  if(r.ok) { alert('✅ Carga completa'); role === 'profesor' ? loadProfesores() : loadEstudiantes(); }
+  if(r.ok) { alert('✅ Carga masiva exitosa'); role === 'profesor' ? loadProfesores() : loadEstudiantes(); fileInput.value=''; }
 }
 
 async function del(id) {
-  if(!confirm('¿Eliminar?')) return;
-  await fetch(API_URL + '/auth/usuarios/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + TOKEN } });
-  loadProfesores(); loadEstudiantes();
+  if(!confirm('¿Estás seguro de eliminar este usuario?')) return;
+  const r = await fetch(API_URL + '/auth/usuarios/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + TOKEN } });
+  if(r.ok) { loadProfesores(); loadEstudiantes(); }
 }
 </script>
 </body>
