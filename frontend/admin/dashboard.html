@@ -9,35 +9,41 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--a:#0ea5e9;--a2:#38bdf8;--dark:#0b0f1a;--card:#131929;--card2:#1a2338;--b:rgba(255,255,255,.07);--t:#e8eaf0;--m:rgba(255,255,255,.45);--celeste:rgba(56, 189, 248, 0.15)}
-body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--t);min-height:100vh}
+body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--t);min-height:100vh;overflow-x:hidden}
 
-header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.85rem 2rem;border-bottom:1px solid var(--b);backdrop-filter:blur(14px);background:rgba(11,15,26,.9)}
-.logo-img{height:50px;object-fit:contain}
-.btn-out{background:rgba(56,189,248,.1);color:var(--a2);border:1px solid rgba(56,189,248,.3);padding:.4rem 1rem;border-radius:20px;cursor:pointer;font-weight:700;font-size:.75rem}
+header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.5rem;border-bottom:1px solid var(--b);backdrop-filter:blur(14px);background:rgba(11,15,26,.9)}
+.logo-img{height:40px;object-fit:contain}
+.btn-out{background:rgba(56,189,248,.1);color:var(--a2);border:1px solid rgba(56,189,248,.3);padding:.4rem .8rem;border-radius:20px;cursor:pointer;font-weight:700;font-size:.7rem}
 
 .layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 60px)}
-aside{border-right:1px solid var(--b);padding:1.5rem 1rem;display:flex;flex-direction:column;gap:.3rem}
+aside{border-right:1px solid var(--b);padding:1.5rem 1rem;display:flex;flex-direction:column;gap:.3rem;background:var(--dark)}
 .nav-item{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;border-radius:12px;cursor:pointer;font-size:.85rem;font-weight:600;color:var(--m);transition:all .2s;border:none;background:none;width:100%;text-align:left}
 .nav-item.active{background:rgba(14,165,233,0.1);color:var(--a);border:1px solid rgba(14,165,233,0.2)}
 
-main{padding:2rem;overflow-y:auto}
-.section-card{background:var(--card);border:1px solid var(--b);border-radius:20px;padding:1.5rem;margin-bottom:1.5rem}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+main{padding:1.5rem;overflow-y:auto;max-width:100vw}
+.section-card{background:var(--card);border:1px solid var(--b);border-radius:20px;padding:1.2rem;margin-bottom:1.5rem}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem}
 .field{display:flex;flex-direction:column;gap:.4rem}
-label{font-size:.7rem;font-weight:800;text-transform:uppercase;color:var(--m);letter-spacing:0.05em}
-input,select{background:rgba(255,255,255,.05);border:1px solid var(--b);border-radius:10px;padding:.7rem;color:var(--t);outline:none}
-input:focus{border-color:var(--a)}
+label{font-size:.65rem;font-weight:800;text-transform:uppercase;color:var(--m)}
+input,select{background:rgba(255,255,255,.05);border:1px solid var(--b);border-radius:10px;padding:.7rem;color:var(--t);outline:none;font-size:.85rem}
 
-.btn-primary{background:var(--a);color:#fff;border:none;padding:.7rem;border-radius:10px;font-weight:700;cursor:pointer;width:100%;margin-top:1rem}
+.btn-primary{background:var(--a);color:#fff;border:none;padding:.8rem;border-radius:10px;font-weight:700;cursor:pointer;width:100%;margin-top:1rem}
 
-.tbl-wrap{overflow-x:auto;margin-top:1rem}
-table{width:100%;border-collapse:collapse;font-size:.82rem}
-th{text-align:left;padding:.8rem;color:var(--m);border-bottom:1px solid var(--b);text-transform:uppercase;font-size:.7rem}
+.tbl-wrap{overflow-x:auto;margin-top:1rem;border-radius:12px;background:rgba(0,0,0,0.2)}
+table{width:100%;border-collapse:collapse;font-size:.75rem;min-width:500px}
+th{text-align:left;padding:.8rem;color:var(--m);border-bottom:1px solid var(--b);text-transform:uppercase}
 td{padding:.8rem;border-bottom:1px solid rgba(255,255,255,.03)}
 
-.bulk-box{border:2px dashed var(--a);background:rgba(14,165,233,0.03);border-radius:16px;padding:1.2rem;margin-bottom:1.5rem}
+.bulk-box{border:2px dashed var(--a);background:rgba(14,165,233,0.03);border-radius:16px;padding:1rem;margin-bottom:1.5rem}
+.bulk-controls{display:flex;flex-direction:column;gap:.8rem}
 
-@media(max-width:768px){.layout{grid-template-columns:1fr}aside{display:none}}
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}
+  aside{flex-direction:row;padding:.5rem;border-right:none;border-bottom:1px solid var(--b);position:sticky;top:58px;z-index:90;overflow-x:auto}
+  .nav-item{padding:.5rem .8rem;font-size:.75rem;white-space:nowrap;width:auto}
+  main{padding:1rem}
+  .form-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -47,7 +53,7 @@ td{padding:.8rem;border-bottom:1px solid rgba(255,255,255,.03)}
 </header>
 
 <div class="layout">
-  <aside>
+  <aside id="sidebar">
     <button class="nav-item active" onclick="showPage('profesores',this)">👨‍🏫 Profesores</button>
     <button class="nav-item" onclick="showPage('estudiantes',this)">🎓 Estudiantes</button>
   </aside>
@@ -55,7 +61,7 @@ td{padding:.8rem;border-bottom:1px solid rgba(255,255,255,.03)}
   <main>
     <div id="page-profesores" class="page">
       <div class="section-card">
-        <h3>➕ Nuevo Profesor</h3>
+        <h3 style="font-size:1rem;margin-bottom:1rem">➕ Nuevo Profesor</h3>
         <form class="form-grid" onsubmit="crearProfesor(event)">
           <div class="field"><label>Nombres</label><input id="pnombre" required></div>
           <div class="field"><label>Apellidos</label><input id="papellido" required></div>
@@ -79,29 +85,29 @@ td{padding:.8rem;border-bottom:1px solid rgba(255,255,255,.03)}
       </div>
 
       <div class="bulk-box">
-        <h4 style="margin-bottom:.5rem">📂 Carga Masiva Profesores (.xlsx)</h4>
-        <div style="display:flex;gap:.8rem">
-          <select id="bulk-nivel-p" style="flex:1">
+        <h4 style="font-size:.85rem;margin-bottom:.8rem">📂 Carga Masiva Profesores</h4>
+        <div class="bulk-controls">
+          <select id="bulk-nivel-p">
             <option value="Básico">Básico</option>
             <option value="Auxiliar">Auxiliar</option>
             <option value="Medio">Medio</option>
             <option value="Superior">Superior</option>
             <option value="Ingeniería">Ingeniería</option>
           </select>
-          <input type="file" id="file-p" accept=".xlsx" style="flex:2">
-          <button onclick="uploadExcel('profesor')" style="background:var(--a2);color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;font-weight:700">Subir</button>
+          <input type="file" id="file-p" accept=".xlsx">
+          <button onclick="uploadExcel('profesor')" style="background:var(--a2);color:#fff;border:none;padding:.8rem;border-radius:10px;font-weight:800">🚀 Procesar Excel</button>
         </div>
       </div>
 
       <div class="section-card">
-        <h3>📋 Lista de Profesores</h3>
+        <h3 style="font-size:1rem;margin-bottom:1rem">📋 Lista de Profesores</h3>
         <div class="tbl-wrap"><table><thead><tr><th>Nombre</th><th>Email</th><th>Nivel</th><th>Acción</th></tr></thead><tbody id="tbl-prof"></tbody></table></div>
       </div>
     </div>
 
     <div id="page-estudiantes" class="page" style="display:none">
       <div class="section-card">
-        <h3>➕ Nuevo Estudiante</h3>
+        <h3 style="font-size:1rem;margin-bottom:1rem">➕ Nuevo Estudiante</h3>
         <form class="form-grid" onsubmit="crearEstudiante(event)">
           <div class="field"><label>Nombres</label><input id="enombre" required></div>
           <div class="field"><label>Apellidos</label><input id="eapellido" required></div>
@@ -120,22 +126,22 @@ td{padding:.8rem;border-bottom:1px solid rgba(255,255,255,.03)}
       </div>
 
       <div class="bulk-box">
-        <h4 style="margin-bottom:.5rem">📂 Carga Masiva Estudiantes (.xlsx)</h4>
-        <div style="display:flex;gap:.8rem">
-          <select id="bulk-nivel-e" style="flex:1">
+        <h4 style="font-size:.85rem;margin-bottom:.8rem">📂 Carga Masiva Estudiantes</h4>
+        <div class="bulk-controls">
+          <select id="bulk-nivel-e">
             <option value="Básico">Básico</option>
             <option value="Auxiliar">Auxiliar</option>
             <option value="Medio">Medio</option>
             <option value="Superior">Superior</option>
             <option value="Ingeniería">Ingeniería</option>
           </select>
-          <input type="file" id="file-e" accept=".xlsx" style="flex:2">
-          <button onclick="uploadExcel('estudiante')" style="background:var(--a2);color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;font-weight:700">Subir</button>
+          <input type="file" id="file-e" accept=".xlsx">
+          <button onclick="uploadExcel('estudiante')" style="background:var(--a2);color:#fff;border:none;padding:.8rem;border-radius:10px;font-weight:800">🚀 Procesar Excel</button>
         </div>
       </div>
 
       <div class="section-card">
-        <h3>📋 Lista de Estudiantes</h3>
+        <h3 style="font-size:1rem;margin-bottom:1rem">📋 Lista de Estudiantes</h3>
         <div class="tbl-wrap"><table><thead><tr><th>Nombre</th><th>Email</th><th>Nivel</th><th>Acción</th></tr></thead><tbody id="tbl-est"></tbody></table></div>
       </div>
     </div>

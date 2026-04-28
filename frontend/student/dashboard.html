@@ -9,44 +9,42 @@
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--a:#0ea5e9;--a2:#38bdf8;--dark:#0b0f1a;--card:#131929;--card2:#1a2338;--b:rgba(255,255,255,.07);--t:#e8eaf0;--m:rgba(255,255,255,.45);--celeste:rgba(56, 189, 248, 0.15)}
-body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--t);min-height:100vh}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 15% 15%,rgba(14,165,233,.12) 0%,transparent 70%);pointer-events:none;z-index:0}
+body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--t);min-height:100vh;overflow-x:hidden}
 
-header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.9rem 2rem;border-bottom:1px solid var(--b);backdrop-filter:blur(14px);background:rgba(11,15,26,.85)}
-.logo-img{height:54px;object-fit:contain}
-.user-bar{display:flex;align-items:center;gap:.75rem}
-.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));display:grid;place-items:center;font-weight:800;font-size:.9rem}
-.btn-out{background:rgba(56,189,248,.1);color:var(--a2);border:1px solid rgba(56,189,248,.3);padding:.4rem 1rem;border-radius:20px;cursor:pointer;font-weight:700;font-size:.75rem}
+header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;border-bottom:1px solid var(--b);backdrop-filter:blur(14px);background:rgba(11,15,26,.85)}
+.logo-img{height:36px;object-fit:contain}
+.user-bar{display:flex;align-items:center;gap:.5rem}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));display:grid;place-items:center;font-weight:800;font-size:.75rem}
+.btn-out{background:rgba(56,189,248,.1);color:var(--a2);border:1px solid rgba(56,189,248,.3);padding:.3rem .7rem;border-radius:20px;cursor:pointer;font-weight:700;font-size:.65rem}
 
-.hero{position:relative;z-index:1;text-align:center;padding:3rem 1rem 2rem}
-.hero h1{font-size:2rem;font-weight:900;margin-bottom:.5rem}
-.lvl-tag{display:inline-block;padding:.4rem 1.2rem;background:var(--celeste);border:2px solid rgba(56, 189, 248, 0.3);border-radius:20px;color:var(--a2);font-weight:800;font-size:.85rem}
+.hero{text-align:center;padding:2rem 1rem}
+.hero h1{font-size:1.5rem;font-weight:900;margin-bottom:.5rem}
+.lvl-tag{display:inline-block;padding:.3rem 1rem;background:var(--celeste);border:1.5px solid rgba(56, 189, 248, 0.3);border-radius:20px;color:var(--a2);font-weight:800;font-size:.75rem}
 
-.content-area{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 1.5rem 4rem}
-.section-card{background:var(--card);border:1px solid var(--b);border-radius:20px;padding:1.5rem;margin-bottom:1.5rem}
+.content-area{max-width:800px;margin:0 auto;padding:0 1rem 4rem}
 
-.sem-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;justify-content:center}
-.sem-tab{padding:.6rem 1.4rem;border-radius:25px;border:2px solid var(--b);background:transparent;color:var(--m);cursor:pointer;font-weight:700;font-size:.82rem}
+.sem-tabs{display:flex;gap:.5rem;overflow-x:auto;padding-bottom:.5rem;margin-bottom:1.5rem;scrollbar-width:none}
+.sem-tabs::-webkit-scrollbar{display:none}
+.sem-tab{padding:.5rem 1rem;border-radius:20px;border:1.5px solid var(--b);background:transparent;color:var(--m);cursor:pointer;font-weight:700;font-size:.75rem;white-space:nowrap}
 .sem-tab.active{border-color:var(--a2);color:var(--a2);background:rgba(56,189,248,.1)}
 
 .module-card{background:var(--card2);border:1px solid var(--b);border-radius:16px;margin-bottom:1rem;overflow:hidden}
-.module-header{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;cursor:pointer}
-.module-body{display:none;padding:1.4rem;border-top:1px solid var(--b)}
+.module-header{display:flex;align-items:center;justify-content:space-between;padding:1rem;cursor:pointer}
+.module-name{font-size:.85rem;font-weight:700;flex:1;padding-right:.5rem}
+.module-body{display:none;padding:1rem;border-top:1px solid var(--b)}
 .module-card.open .module-body{display:block}
 
-.topic-box{background:rgba(255,255,255,.03);border:1px solid var(--b);border-radius:12px;padding:1.2rem;margin-bottom:1.2rem}
-.topic-label{font-size:.8rem;font-weight:900;color:var(--a2);margin-bottom:.8rem;display:block;text-transform:uppercase}
+.topic-box{background:rgba(255,255,255,.02);border:1px solid var(--b);border-radius:12px;padding:1rem;margin-bottom:1rem}
+.topic-label{font-size:.65rem;font-weight:900;color:var(--a2);margin-bottom:.6rem;display:block}
 
-.mat-link{display:flex;align-items:center;gap:.7rem;padding:.7rem 1rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--b);text-decoration:none;color:var(--t);margin-top:.5rem;transition:all .2s}
-.mat-link:hover{background:rgba(14,165,233,0.08);border-color:var(--a)}
-
-@media(max-width:640px){ header{padding:0.8rem 1rem} .hero h1{font-size:1.6rem} }
+.mat-link{display:flex;align-items:center;gap:.7rem;padding:.7rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--b);text-decoration:none;color:var(--t);margin-top:.4rem}
+.mat-link div div{font-size:.75rem!important}
 </style>
 </head>
 <body>
 
 <header>
-  <img src="../images/logo.png" alt="EduConnect" class="logo-img" onerror="this.style.display='none'">
+  <img src="../images/logo.png" alt="EduConnect" class="logo-img">
   <div class="user-bar">
     <div class="avatar" id="avatar">?</div>
     <button class="btn-out" onclick="logout()">Salir</button>
@@ -107,32 +105,28 @@ function initNav(nivelAsignado) {
   const nav = document.getElementById('semesters-nav');
   const base = (nivelAsignado || '').split(' ')[0].toLowerCase().trim();
   const lvlData = MALLA.find(l => l.nivel.toLowerCase().includes(base));
-  
-  if (!lvlData) { nav.innerHTML = '<p style="color:var(--m)">Nivel no reconocido. Contacta al administrador.</p>'; return; }
+  if (!lvlData) return;
 
   nav.innerHTML = lvlData.semestres.map((s, i) => `
     <button class="sem-tab ${i===0?'active':''}" onclick="renderModules('${lvlData.nivel}', ${i}, this)">${s.n.split(' – ')[0]}</button>
   `).join('');
-  
   renderModules(lvlData.nivel, 0, nav.querySelector('.active'));
 }
 
 function renderModules(nivel, semIdx, btn) {
   document.querySelectorAll('.sem-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  
   const lvlData = MALLA.find(l => l.nivel === nivel);
   const sem = lvlData.semestres[semIdx];
   const list = document.getElementById('modules-list');
-  
   list.innerHTML = sem.mods.map((m, i) => `
     <div class="module-card" id="mc-${i}">
       <div class="module-header" onclick="toggleMod(${i},'${m}')">
-        <div style="font-weight:700">Módulo ${i+1}: ${m}</div>
+        <div class="module-name">Módulo ${i+1}: ${m}</div>
         <span>▼</span>
       </div>
       <div class="module-body" id="mb-${i}">
-        ${[1,2,3,4,5].map(t => `<div class="topic-box"><span class="topic-label">TEMA ${t}</span><div id="mat-${i}-${t}">⏳ Cargando...</div></div>`).join('')}
+        ${[1,2,3,4,5].map(t => `<div class="topic-box"><span class="topic-label">TEMA ${t}</span><div id="mat-${i}-${t}">...</div></div>`).join('')}
       </div>
     </div>
   `).join('');
@@ -144,25 +138,16 @@ async function toggleMod(idx, name) {
   if (card.classList.contains('open')) {
     const dbId = modNameToId[name];
     if (!dbId) return;
-    try {
-      const r = await fetch(API_URL + '/modulos/' + dbId + '/contenidos');
-      const d = await r.json();
-      const items = (d.contenidos || []).filter(c => c.url);
-      const icons = {teoria:'📄',presentacion:'📊',video:'🎥',audio:'🎵',evaluacion:'📝'};
-      for (let t = 1; t <= 5; t++) {
-        const matEl = document.getElementById(`mat-${idx}-${t}`);
-        const tItems = items.filter(c => c.tema_num === t);
-        if (!tItems.length) { matEl.innerHTML = '<span style="font-size:0.75rem;color:var(--m)">Sin material</span>'; continue; }
-        matEl.innerHTML = tItems.map(c => `
-          <a href="${c.url}" target="_blank" class="mat-link">
-            <span>${icons[c.tipo]||'📂'}</span>
-            <div style="flex:1">
-              <div style="font-size:0.85rem;font-weight:700">${c.titulo || 'Ver material'}</div>
-              <div style="font-size:0.65rem;color:var(--a);text-transform:uppercase">${c.tipo}</div>
-            </div>
-          </a>`).join('');
-      }
-    } catch { }
+    const r = await fetch(API_URL + '/modulos/' + dbId + '/contenidos');
+    const d = await r.json();
+    const items = (d.contenidos || []).filter(c => c.url);
+    const icons = {teoria:'📄',presentacion:'📊',video:'🎥',audio:'🎵',evaluacion:'📝'};
+    for (let t = 1; t <= 5; t++) {
+      const matEl = document.getElementById(`mat-${idx}-${t}`);
+      const tItems = items.filter(c => c.tema_num === t);
+      if (!tItems.length) { matEl.innerHTML = '<span style="font-size:0.6rem;color:var(--m)">Sin material</span>'; continue; }
+      matEl.innerHTML = tItems.map(c => `<a href="${c.url}" target="_blank" class="mat-link"><span>${icons[c.tipo]||'📂'}</span><div style="flex:1"><div style="font-weight:700">${c.titulo}</div></div></a>`).join('');
+    }
   }
 }
 </script>
