@@ -1,276 +1,300 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduConnect - Panel Profesor</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            background: #f0f4f8;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduConnect – Profesor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="../js/api.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--a:#6c63ff;--a2:#48d18e;--red:#f87171;--yellow:#fbbf24;--dark:#0b0f1a;--card:#131929;--card2:#1a2338;--b:rgba(255,255,255,.07);--t:#e8eaf0;--m:rgba(255,255,255,.45)}
+body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--t);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 55% 45% at 10% 10%,rgba(72,209,142,.12) 0%,transparent 65%),radial-gradient(ellipse 45% 35% at 90% 90%,rgba(108,99,255,.1) 0%,transparent 65%);pointer-events:none;z-index:0}
 
-        .nivel-badge {
-            background: #2980b9;
-            color: white;
-            padding: 4px 18px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: .9rem;
-        }
+header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.85rem 2rem;border-bottom:1px solid var(--b);backdrop-filter:blur(14px);background:rgba(11,15,26,.9)}
+.logo-img{height:56px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(72,209,142,.4))}
+.header-right{display:flex;align-items:center;gap:.75rem}
+.role-badge{background:linear-gradient(135deg,var(--a2),#059669);font-size:.72rem;font-weight:700;padding:.28rem .8rem;border-radius:20px;letter-spacing:.05em;color:#fff}
+.u-name{font-weight:600;font-size:.88rem}
+.btn-out{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.4);padding:.38rem .9rem;border-radius:20px;cursor:pointer;font-weight:700;font-size:.78rem;font-family:'Inter',sans-serif;transition:all .2s}
+.btn-out:hover{background:var(--red);color:#fff}
 
-        .module-block {
-            background: white;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
-            overflow: hidden;
-        }
+/* HERO */
+.hero{position:relative;z-index:1;padding:2.5rem 2rem 1.5rem;border-bottom:1px solid var(--b)}
+.hero h1{font-size:1.6rem;font-weight:900;margin-bottom:.3rem}
+.hero h1 span{background:linear-gradient(90deg,var(--a2),var(--a));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--m);font-size:.9rem}
+.level-tag{display:inline-flex;align-items:center;gap:.4rem;background:rgba(72,209,142,.12);border:1px solid rgba(72,209,142,.25);color:var(--a2);font-size:.82rem;font-weight:700;padding:.35rem .9rem;border-radius:20px;margin-top:.75rem}
 
-        .module-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            background: linear-gradient(135deg, #2980b9, #1b4f72);
-            color: white;
-            cursor: pointer;
-        }
+/* MAIN */
+.wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:2rem 1.5rem}
 
-        .module-header h3 {
-            font-size: .95rem;
-            font-weight: 700;
-            margin: 0;
-        }
+/* MODULE GRID */
+.mod-grid{display:grid;gap:1.2rem}
+.mod-card{background:var(--card);border:1px solid var(--b);border-radius:20px;overflow:hidden;transition:border-color .2s}
+.mod-card:hover{border-color:rgba(108,99,255,.3)}
 
-        .module-body {
-            padding: 1.5rem;
-            display: none;
-        }
+.mod-header{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;cursor:pointer}
+.mod-left{display:flex;align-items:center;gap:.9rem}
+.mod-num{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--a),#8b5cf6);display:grid;place-items:center;font-weight:800;font-size:.85rem;flex-shrink:0}
+.mod-name{font-size:.97rem;font-weight:700}
+.mod-sub{font-size:.76rem;color:var(--m);margin-top:.1rem}
+.chevron{color:var(--m);font-size:1rem;transition:transform .2s}
+.mod-card.open .chevron{transform:rotate(180deg)}
 
-        .module-body.open {
-            display: block;
-        }
+.mod-body{display:none;padding:0 1.4rem 1.4rem}
+.mod-card.open .mod-body{display:block}
 
-        .tema-tabs {
-            display: flex;
-            gap: .4rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
+/* TOPIC SECTIONS */
+.topic-block{background:var(--card2);border:1px solid var(--b);border-radius:14px;margin-bottom:.8rem;overflow:hidden}
+.topic-title{display:flex;align-items:center;gap:.5rem;padding:.8rem 1.1rem;font-size:.85rem;font-weight:700;border-bottom:1px solid var(--b)}
+.topic-title .tnum{background:var(--a);color:#fff;font-size:.7rem;padding:.15rem .45rem;border-radius:6px;font-weight:800}
 
-        .tema-tab {
-            padding: .35rem .9rem;
-            border-radius: 15px;
-            border: 1px solid #ccc;
-            background: white;
-            cursor: pointer;
-            font-size: .82rem;
-            font-weight: 600;
-        }
+/* UPLOAD FORM per topic */
+.upload-form{padding:.9rem 1.1rem;display:grid;grid-template-columns:1fr 1fr auto;gap:.6rem;align-items:end}
+.upload-form .field{display:flex;flex-direction:column;gap:.3rem}
+label{font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--m)}
+input,select{background:rgba(255,255,255,.06);border:1px solid var(--b);border-radius:8px;padding:.58rem .8rem;color:var(--t);font-size:.84rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
+input:focus,select:focus{border-color:var(--a);box-shadow:0 0 0 3px rgba(108,99,255,.15)}
+select option{background:var(--card2)}
 
-        .tema-tab.active {
-            background: #2ecc71;
-            color: white;
-            border-color: #2ecc71;
-        }
+.btn{padding:.6rem 1.2rem;border-radius:10px;border:none;cursor:pointer;font-weight:700;font-size:.82rem;font-family:'Inter',sans-serif;transition:all .2s;white-space:nowrap}
+.btn-green{background:linear-gradient(135deg,var(--a2),#059669);color:#fff}
+.btn-green:hover{opacity:.88;transform:translateY(-1px)}
+.btn-red{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3);padding:.4rem .7rem;font-size:.75rem;border-radius:7px}
+.btn-red:hover{background:var(--red);color:#fff}
 
-        .material-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: .75rem;
-        }
+/* SAVED CONTENT LIST */
+.content-list{padding:0 1.1rem .9rem;display:flex;flex-direction:column;gap:.4rem}
+.content-item{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.035);border:1px solid var(--b);border-radius:8px;padding:.5rem .85rem;font-size:.82rem;gap:.5rem}
+.content-item-left{display:flex;align-items:center;gap:.5rem;min-width:0}
+.tipo-badge{font-size:.65rem;font-weight:700;padding:.18rem .5rem;border-radius:6px;flex-shrink:0}
+.tipo-video{background:rgba(248,113,113,.15);color:var(--red)}
+.tipo-teoria{background:rgba(108,99,255,.15);color:var(--a)}
+.tipo-pdf{background:rgba(251,191,36,.12);color:var(--yellow)}
+.tipo-presentacion{background:rgba(72,209,142,.12);color:var(--a2)}
+.tipo-audio{background:rgba(156,163,175,.12);color:#9ca3af}
+.content-url{color:var(--m);font-size:.75rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px}
 
-        .material-item {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: .85rem;
-            border: 1px solid #eee;
-        }
+/* EMPTY / LOADING */
+.empty{text-align:center;padding:3rem;color:var(--m)}
+.empty .ico{font-size:2.5rem;margin-bottom:.8rem}
+.loader{text-align:center;padding:3rem;color:var(--m);font-size:.9rem}
 
-        .material-item label {
-            font-size: .78rem;
-            color: #666;
-            font-weight: 600;
-            display: block;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
+/* TOAST */
+#toast{position:fixed;bottom:2rem;right:2rem;background:var(--card2);border:1px solid var(--b);border-radius:14px;padding:.85rem 1.4rem;font-size:.85rem;font-weight:600;z-index:9999;transform:translateY(80px);opacity:0;transition:all .35s;pointer-events:none;max-width:300px}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.success{border-color:var(--a2);color:var(--a2)}
+#toast.error{border-color:var(--red);color:var(--red)}
 
-        .material-item input {
-            width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: .4rem .6rem;
-            font-size: .82rem;
-        }
-
-        .material-item input:focus {
-            outline: none;
-            border-color: #2980b9;
-        }
-
-        .btn-sm {
-            padding: .4rem 1rem;
-            border-radius: 20px;
-            border: none;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: .82rem;
-        }
-
-        .btn-save {
-            background: #2ecc71;
-            color: white;
-        }
-    </style>
+@media(max-width:640px){.upload-form{grid-template-columns:1fr}.content-url{max-width:140px}}
+</style>
 </head>
-
 <body>
-    <header class="navbar">
-        <div class="logo">
-            <img src="../images/logo.png" alt="EduConnect" class="logo-img">
+
+<header>
+  <img src="../images/logo.png" alt="EduConnect" class="logo-img" onerror="this.style.display='none'">
+  <div class="header-right">
+    <span class="role-badge">👨‍🏫 Profesor</span>
+    <span class="u-name" id="u-name"></span>
+    <button class="btn-out" onclick="logout()">Salir</button>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>Panel de <span id="nivel-title">mi nivel</span></h1>
+  <p>Sube y gestiona el material didáctico de tus módulos asignados</p>
+  <div class="level-tag" id="level-tag">🎓 Cargando...</div>
+</div>
+
+<div class="wrap" id="wrap">
+  <div class="loader">⏳ Cargando módulos...</div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const TOKEN = localStorage.getItem('token');
+let NIVEL = '';
+
+// Curriculum structure to match modules to topics
+const TOPIC_NAMES = {
+  'Básico': {
+    'Semestre Único': [
+      ['Qué es informática','Hardware y software','Dispositivos de E/S','Uso básico del computador'],
+      ['Qué es pensamiento computacional','Resolución de problemas','Abstracción','Descomposición'],
+      ['Secuencias','Algoritmos cotidianos','Introducción a variables','Representación de soluciones'],
+      ['Qué es un algoritmo','Pseudocódigo','Diagramas de flujo','Ejercicios básicos'],
+      ['Procesadores de texto','Hojas de cálculo','Presentaciones digitales','Herramientas en la nube']
+    ]
+  }
+};
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const u = JSON.parse(localStorage.getItem('user') || '{}');
+  if (!TOKEN || u.rol !== 'profesor') { window.location.href = '../login.html'; return; }
+  document.getElementById('u-name').textContent = u.nombre || 'Profesor';
+  NIVEL = u.nivel_asignado || '';
+  document.getElementById('nivel-title').textContent = NIVEL || 'nivel asignado';
+  document.getElementById('level-tag').textContent = '🎓 ' + (NIVEL || 'Sin nivel asignado');
+  loadModulos();
+});
+
+function logout() { localStorage.clear(); window.location.href = '../login.html'; }
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+let tt;
+function toast(msg, type='success') {
+  clearTimeout(tt);
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `show ${type}`;
+  tt = setTimeout(() => t.className = '', 3500);
+}
+
+// ─── Load modules for this professor's level ──────────────────────────────────
+async function loadModulos() {
+  const wrap = document.getElementById('wrap');
+  try {
+    // Determine the nivel (strip semestre part for DB query)
+    let nivelBase = NIVEL.split(' - ')[0]; // e.g. "Medio - M1" -> "Medio"
+    const r = await fetch(API_URL + '/modulos/');
+    const d = await r.json();
+    let mods = (d.modulos || []).filter(m => {
+      if (NIVEL.includes(' - ')) {
+        // e.g. "Medio - M1" matches nivel="Medio" AND subnivel includes "M1"
+        const parts = NIVEL.split(' - ');
+        return m.nivel === parts[0] && (m.subnivel || '').includes(parts[1]);
+      }
+      return m.nivel === NIVEL;
+    });
+
+    if (!mods.length) {
+      wrap.innerHTML = `<div class="empty"><div class="ico">📭</div><p>No hay módulos para tu nivel asignado.<br>Contacta al administrador.</p></div>`;
+      return;
+    }
+
+    wrap.innerHTML = mods.map((mod, i) => buildModCard(mod, i)).join('');
+
+    // Load contents for each module
+    mods.forEach(mod => loadContenidos(mod.id));
+
+  } catch(e) {
+    wrap.innerHTML = `<div class="empty"><div class="ico">⚠️</div><p>Error cargando módulos. Intenta de nuevo.</p></div>`;
+  }
+}
+
+// ─── Build module card HTML ───────────────────────────────────────────────────
+function buildModCard(mod, idx) {
+  const topics = [1,2,3,4];
+  const topicsHTML = topics.map(t => `
+    <div class="topic-block" id="topic-${mod.id}-${t}">
+      <div class="topic-title">
+        <span class="tnum">T${t}</span>
+        Tema ${t}
+      </div>
+      <div class="upload-form">
+        <div class="field">
+          <label>Tipo de material</label>
+          <select id="tipo-${mod.id}-${t}">
+            <option value="video">🎬 Video (YouTube)</option>
+            <option value="teoria">📖 Teoría (URL)</option>
+            <option value="pdf">📄 PDF (URL)</option>
+            <option value="presentacion">📊 Presentación</option>
+            <option value="audio">🎵 Audio</option>
+          </select>
         </div>
-        <nav class="nav-links">
-            <span id="user-name">Profesor</span>
-            <span class="nivel-badge" id="nivel-badge">—</span>
-            <a href="#" onclick="logout()" class="btn-login" style="background:#e74c3c;">Salir</a>
-        </nav>
-    </header>
-
-    <main style="padding:1.5rem;max-width:1000px;margin:auto;">
-        <h2 style="color:#1b4f72;margin-bottom:1rem;">📘 Módulos de mi Nivel</h2>
-        <div id="modulos-container">
-            <p style="color:#999;text-align:center;padding:2rem;">Cargando módulos...</p>
+        <div class="field">
+          <label>URL del material</label>
+          <input type="url" id="url-${mod.id}-${t}" placeholder="https://...">
         </div>
-    </main>
+        <button class="btn btn-green" onclick="subirMaterial(${mod.id},${t})">
+          ⬆ Subir
+        </button>
+      </div>
+      <div class="content-list" id="list-${mod.id}-${t}"></div>
+    </div>
+  `).join('');
 
-    <script src="../js/api.js"></script>
-    <script>
-        const TOKEN = localStorage.getItem('token');
-        let contenidosPorModulo = {};
+  return `
+    <div class="mod-card" id="modcard-${mod.id}">
+      <div class="mod-header" onclick="toggleMod(${mod.id})">
+        <div class="mod-left">
+          <div class="mod-num">${idx+1}</div>
+          <div>
+            <div class="mod-name">${mod.nombre}</div>
+            <div class="mod-sub">${mod.subnivel || mod.nivel} · 4 temas</div>
+          </div>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="mod-body">${topicsHTML}</div>
+    </div>`;
+}
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            const u = JSON.parse(localStorage.getItem('user') || '{}');
-            if (!u || u.rol !== 'profesor') { alert('Acceso denegado.'); window.location.href = '../index.html'; return; }
-            document.getElementById('user-name').textContent = u.nombre;
-            document.getElementById('nivel-badge').textContent = u.nivel_asignado || '';
-            await cargarModulos(u.nivel_asignado);
-        });
+// ─── Toggle accordion ─────────────────────────────────────────────────────────
+function toggleMod(id) {
+  document.getElementById('modcard-' + id).classList.toggle('open');
+}
 
-        async function cargarModulos(nivel) {
-            const r = await fetch(`${API_URL}/modulos/nivel/${encodeURIComponent(nivel)}`);
-            const d = await r.json();
-            const modulos = d.modulos || [];
-            const cont = document.getElementById('modulos-container');
-            if (!modulos.length) { cont.innerHTML = '<p style="text-align:center;color:#999;">No hay módulos para tu nivel aún.</p>'; return; }
-            cont.innerHTML = modulos.map(m => `
-        <div class="module-block">
-            <div class="module-header" onclick="toggle(${m.id})">
-                <h3 style="display:flex;align-items:center;">
-                   <span style="color:#FFF;background:rgba(0,0,0,0.2);padding:2px 8px;border-radius:12px;margin-right:.6rem;font-size:0.85rem;">#${m.orden || m.id}</span>
-                   ${m.nombre}
-                </h3>
-                <span>▾</span>
-            </div>
-            <div class="module-body" id="body-${m.id}">
-                <div class="tema-tabs">
-                    ${[1, 2, 3, 4].map(t => `<button class="tema-tab${t === 1 ? ' active' : ''}" onclick="setTema(${m.id},${t},this)">Tema ${t}</button>`).join('')}
-                </div>
-                <div id="tema-content-${m.id}">Cargando...</div>
-                <div style="margin-top:1rem;">
-                    <button class="btn-sm btn-save" onclick="guardar(${m.id})">💾 Guardar</button>
-                </div>
-            </div>
+// ─── Load existing contents for a module ─────────────────────────────────────
+async function loadContenidos(modId) {
+  try {
+    const r = await fetch(API_URL + '/modulos/' + modId + '/contenidos');
+    const d = await r.json();
+    const items = (d.contenidos || []).filter(c => c.url && c.url.trim());
+    // Group by tema_num
+    for (let t = 1; t <= 4; t++) {
+      const listEl = document.getElementById(`list-${modId}-${t}`);
+      if (!listEl) continue;
+      const tItems = items.filter(c => c.tema_num === t);
+      if (!tItems.length) { listEl.innerHTML = ''; continue; }
+      listEl.innerHTML = tItems.map(c => `
+        <div class="content-item" id="ci-${c.id}">
+          <div class="content-item-left">
+            <span class="tipo-badge tipo-${c.tipo}">${c.tipo}</span>
+            <span class="content-url" title="${c.url}">${c.url}</span>
+          </div>
+          <button class="btn btn-red" onclick="eliminarContenido(${c.id},${modId})">✕</button>
         </div>`).join('');
-        }
+    }
+  } catch {}
+}
 
-        async function toggle(id) {
-            const body = document.getElementById(`body-${id}`);
-            body.classList.toggle('open');
-            if (body.classList.contains('open')) await loadContenidos(id, 1);
-        }
+// ─── Subir material ───────────────────────────────────────────────────────────
+async function subirMaterial(modId, temaNum) {
+  const url   = document.getElementById(`url-${modId}-${temaNum}`).value.trim();
+  const tipo  = document.getElementById(`tipo-${modId}-${temaNum}`).value;
+  if (!url) { toast('Ingresa una URL válida', 'error'); return; }
 
-        async function loadContenidos(modId, tema) {
-            if (!contenidosPorModulo[modId]) {
-                const r = await fetch(`${API_URL}/modulos/${modId}/contenidos`);
-                contenidosPorModulo[modId] = (await r.json()).contenidos || [];
-            }
-            renderTema(modId, tema);
-        }
+  const params = new URLSearchParams({ tipo, titulo: `Tema ${temaNum} - ${tipo}`, url, tema_num: temaNum });
+  try {
+    const r = await fetch(API_URL + '/modulos/' + modId + '/contenidos?' + params, {
+      method: 'POST', headers: { Authorization: 'Bearer ' + TOKEN }
+    });
+    if (r.ok) {
+      toast('✅ Material subido correctamente');
+      document.getElementById(`url-${modId}-${temaNum}`).value = '';
+      loadContenidos(modId);
+    } else {
+      const d = await r.json();
+      toast(d.detail || 'Error al subir', 'error');
+    }
+  } catch { toast('Error de conexión', 'error'); }
+}
 
-        const ICONS = { teoria: '📄', presentacion: '📊', audio: '🔊', video: '🎬', evaluacion: '✅' };
-        const ORDER = ['teoria', 'presentacion', 'audio', 'video', 'evaluacion'];
-
-        function renderTema(modId, tema) {
-            const items = (contenidosPorModulo[modId] || []).filter(c => c.tema_num == tema);
-            items.sort((a, b) => {
-                const ia = ORDER.indexOf(a.tipo);
-                const ib = ORDER.indexOf(b.tipo);
-                return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-            });
-            document.getElementById(`tema-content-${modId}`).innerHTML = `<div class="material-grid">` +
-                items.map(c => `<div class="material-item"><label>${ICONS[c.tipo] || '📎'} ${c.tipo.toUpperCase()} <span style="float:right;cursor:pointer;color:#e74c3c;padding:0 5px;" onclick="eliminarMaterial(${c.id},${modId},${tema})" title="Eliminar material">✖</span></label>
-            <input id="cont-${c.id}" value="${c.url || ''}" placeholder="Enlace..."></div>`).join('') + `
-            <div class="material-item" style="display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px dashed #bbb;background:transparent;min-height:80px;" onclick="addMaterial(${modId}, ${tema})">
-                <span style="color:#666;font-weight:700;font-size:.9rem;">➕ Agregar</span>
-            </div>
-            </div>`;
-        }
-
-        function setTema(modId, tema, btn) {
-            document.querySelectorAll(`#body-${modId} .tema-tab`).forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            contenidosPorModulo[modId] ? renderTema(modId, tema) : loadContenidos(modId, tema);
-        }
-
-        async function guardar(modId) {
-            const items = contenidosPorModulo[modId] || [];
-            let ok = 0;
-            for (const c of items) {
-                const el = document.getElementById(`cont-${c.id}`);
-                if (el && el.value !== c.url) {
-                    await fetch(`${API_URL}/modulos/contenidos/${c.id}?url=${encodeURIComponent(el.value)}`,
-                        { method: 'PUT', headers: { Authorization: `Bearer ${TOKEN}` } });
-                    ok++;
-                }
-            }
-            if (ok > 0) alert(`✅ ${ok} materiales guardados correctamente.`);
-            else alert('No hay cambios para guardar.');
-        }
-
-        async function addMaterial(modId, tema) {
-            const tipo = prompt("Ingresa el tipo de material (ej. Extra, Documento, PDF):");
-            if (!tipo) return;
-            const titulo = prompt("Título para este material:", tipo.toUpperCase());
-            if (!titulo) return;
-            const url = prompt("Puedes pegar el enlace ahora o dejarlo vacío y guardarlo después:");
-
-            const params = new URLSearchParams({ tipo, titulo, url: url || '', tema_num: tema });
-            await fetch(`${API_URL}/modulos/${modId}/contenidos?${params.toString()}`, {
-                method: 'POST', headers: { Authorization: `Bearer ${TOKEN}` }
-            });
-            delete contenidosPorModulo[modId];
-            await loadContenidos(modId, tema);
-        }
-
-        async function eliminarMaterial(id, modId, tema) {
-            if (!confirm('¿Seguro que deseas eliminar este material permanentemente?')) return;
-            try {
-                const r = await fetch(`${API_URL}/modulos/contenidos/${id}`, {
-                    method: 'DELETE', headers: { Authorization: `Bearer ${TOKEN}` }
-                });
-                if (r.ok) {
-                    delete contenidosPorModulo[modId];
-                    await loadContenidos(modId, tema);
-                } else alert('Error al eliminar');
-            } catch (e) { alert('Error de conexión'); }
-        }
-
-        function logout() { localStorage.clear(); window.location.href = '../index.html'; }
-    </script>
+// ─── Eliminar contenido ───────────────────────────────────────────────────────
+async function eliminarContenido(cId, modId) {
+  if (!confirm('¿Eliminar este material?')) return;
+  try {
+    const r = await fetch(API_URL + '/modulos/contenidos/' + cId, {
+      method: 'DELETE', headers: { Authorization: 'Bearer ' + TOKEN }
+    });
+    if (r.ok) { toast('Material eliminado'); loadContenidos(modId); }
+    else toast('Error al eliminar', 'error');
+  } catch { toast('Error de conexión', 'error'); }
+}
+</script>
 </body>
-
 </html>
