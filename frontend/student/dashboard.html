@@ -1,488 +1,336 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduConnect - Mi Aprendizaje</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --blue: #2980b9;
-            --dark: #1b4f72;
-            --green: #2ecc71;
-            --bg: #0d1b2a;
-            --card: #162032;
-            --text: #e0e8f0;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduConnect – Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="../js/api.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--a:#6c63ff;--a2:#48d18e;--dark:#0b0f1a;--card:#131929;--card2:#1a2338;--b:rgba(255,255,255,.07);--t:#e8eaf0;--m:rgba(255,255,255,.45)}
+body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--t);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 15% 15%,rgba(108,99,255,.15) 0%,transparent 70%),radial-gradient(ellipse 50% 40% at 85% 85%,rgba(72,209,142,.1) 0%,transparent 70%);pointer-events:none;z-index:0}
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
+/* NAV */
+header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.9rem 2rem;border-bottom:1px solid var(--b);backdrop-filter:blur(14px);background:rgba(11,15,26,.85)}
+.logo-img{height:64px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(108,99,255,.4))}
+.user-bar{display:flex;align-items:center;gap:.75rem}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));display:grid;place-items:center;font-weight:800;font-size:.9rem;flex-shrink:0}
+.u-name{font-weight:600;font-size:.88rem}
+.btn-out{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.4);padding:.38rem .9rem;border-radius:20px;cursor:pointer;font-weight:700;font-size:.78rem;font-family:'Inter',sans-serif;transition:all .2s}
+.btn-out:hover{background:#f87171;color:#fff}
 
-        body {
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-        }
+/* HERO */
+.hero{position:relative;z-index:1;text-align:center;padding:3.5rem 1rem 2.5rem}
+.hero h1{font-size:2rem;font-weight:900;background:linear-gradient(90deg,#fff 30%,var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
+.hero p{color:var(--m);font-size:.95rem}
 
-        header {
-            background: rgba(22, 32, 50, .95);
-            backdrop-filter: blur(8px);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-        }
+/* LEVEL CARDS GRID */
+.levels-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;max-width:1100px;margin:0 auto 2.5rem;padding:0 1.5rem}
+.lvl-card{background:var(--card);border:1px solid var(--b);border-radius:20px;padding:1.8rem 1.4rem;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.lvl-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .25s}
+.lvl-card:hover{transform:translateY(-4px);border-color:rgba(108,99,255,.4);box-shadow:0 16px 40px rgba(0,0,0,.4)}
+.lvl-card.active{border-color:var(--a);box-shadow:0 0 0 2px rgba(108,99,255,.3),0 16px 40px rgba(0,0,0,.4)}
+.lvl-icon{font-size:2.4rem;margin-bottom:1rem}
+.lvl-name{font-size:1rem;font-weight:800;margin-bottom:.3rem}
+.lvl-desc{font-size:.76rem;color:var(--m);line-height:1.4}
+.lvl-badge{display:inline-block;margin-top:.8rem;background:rgba(108,99,255,.15);color:var(--a);font-size:.68rem;font-weight:700;padding:.25rem .7rem;border-radius:20px;border:1px solid rgba(108,99,255,.25)}
 
-        .logo-txt {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: white;
-            letter-spacing: -0.5px;
-        }
+/* CONTENT AREA */
+.content-area{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 1.5rem 4rem}
+.welcome-banner{background:linear-gradient(135deg,rgba(108,99,255,.15),rgba(72,209,142,.1));border:1px solid rgba(108,99,255,.2);border-radius:18px;padding:1.5rem 2rem;margin-bottom:1.5rem;animation:fadeIn .4s ease}
+.welcome-banner h2{font-size:1.15rem;font-weight:800;margin-bottom:.3rem}
+.welcome-banner p{color:var(--m);font-size:.85rem}
 
-        .logo-txt span {
-            color: var(--green);
-        }
+/* SEMESTER TABS */
+.sem-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.sem-tab{padding:.5rem 1.3rem;border-radius:25px;border:2px solid var(--b);background:transparent;color:var(--m);cursor:pointer;font-weight:700;font-size:.82rem;font-family:'Inter',sans-serif;transition:all .2s}
+.sem-tab.active{border-color:var(--a2);color:var(--a2);background:rgba(72,209,142,.08)}
+.sem-tab:hover:not(.active){border-color:rgba(255,255,255,.3);color:#fff}
 
-        .user-chip {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-        }
+/* MODULE CARDS */
+.module-card{background:var(--card2);border:1px solid var(--b);border-radius:16px;margin-bottom:.9rem;overflow:hidden;transition:border-color .2s;animation:fadeIn .35s ease}
+.module-card:hover{border-color:rgba(108,99,255,.3)}
+.module-header{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;cursor:pointer}
+.mod-left{display:flex;align-items:center;gap:.9rem}
+.mod-num{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--a),#8b5cf6);display:grid;place-items:center;font-weight:800;font-size:.82rem;flex-shrink:0}
+.mod-name{font-size:.95rem;font-weight:700}
+.mod-chevron{color:var(--m);font-size:1rem;transition:transform .2s}
+.module-card.open .mod-chevron{transform:rotate(180deg)}
+.module-body{display:none;padding:.2rem 1.4rem 1.4rem 1.4rem}
+.module-card.open .module-body{display:block}
+.topic-list{list-style:none}
+.topic-item{display:flex;align-items:center;gap:.7rem;padding:.6rem .8rem;border-radius:10px;margin-bottom:.4rem;background:rgba(255,255,255,.03);border:1px solid var(--b);font-size:.85rem;color:var(--m)}
+.topic-item::before{content:'📌';font-size:.85rem;flex-shrink:0}
 
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--blue), var(--green));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: .9rem;
-            color: white;
-        }
+/* EMPTY */
+.pick-prompt{text-align:center;padding:4rem 2rem;color:var(--m)}
+.pick-prompt .big{font-size:3rem;margin-bottom:1rem}
+.pick-prompt p{font-size:1rem}
 
-        .btn-out {
-            background: rgba(231, 76, 60, .15);
-            color: #e74c3c;
-            border: 1px solid #e74c3c;
-            padding: .4rem 1rem;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: .82rem;
-            transition: all .2s;
-        }
-
-        .btn-out:hover {
-            background: #e74c3c;
-            color: white;
-        }
-
-        /* Hero */
-        .hero {
-            background: linear-gradient(135deg, var(--dark), #0d1b2a);
-            padding: 3rem 2rem 2rem;
-            text-align: center;
-        }
-
-        .hero h1 {
-            font-size: 2rem;
-            font-weight: 800;
-            color: white;
-            margin-bottom: .5rem;
-        }
-
-        .hero p {
-            color: rgba(255, 255, 255, .6);
-            font-size: .95rem;
-        }
-
-        /* Tabs */
-        .level-tabs {
-            display: flex;
-            gap: .5rem;
-            justify-content: center;
-            padding: 1.5rem 1rem .5rem;
-            flex-wrap: wrap;
-        }
-
-        .level-tab {
-            padding: .6rem 1.5rem;
-            border-radius: 25px;
-            border: 2px solid rgba(255, 255, 255, .15);
-            background: transparent;
-            color: rgba(255, 255, 255, .6);
-            cursor: pointer;
-            font-weight: 700;
-            font-size: .85rem;
-            transition: all .25s;
-        }
-
-        .level-tab.active {
-            border-color: var(--green);
-            color: var(--green);
-            background: rgba(46, 204, 113, .08);
-        }
-
-        .level-tab:hover:not(.active) {
-            border-color: rgba(255, 255, 255, .4);
-            color: white;
-        }
-
-        /* Content */
-        .content {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 1.5rem;
-        }
-
-        .module-card {
-            background: var(--card);
-            border-radius: 16px;
-            margin-bottom: 1rem;
-            border: 1px solid rgba(255, 255, 255, .07);
-            overflow: hidden;
-            transition: all .2s;
-        }
-
-        .module-card:hover {
-            border-color: rgba(41, 128, 185, .4);
-        }
-
-        .module-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.2rem 1.5rem;
-            cursor: pointer;
-        }
-
-        .module-card-header h3 {
-            font-size: 1rem;
-            font-weight: 700;
-            color: white;
-        }
-
-        .expand-icon {
-            color: rgba(255, 255, 255, .4);
-            font-size: 1.1rem;
-            transition: transform .2s;
-        }
-
-        .module-card.open .expand-icon {
-            transform: rotate(180deg);
-        }
-
-        .module-body {
-            display: none;
-            padding: 0 1.5rem 1.5rem;
-        }
-
-        .module-card.open .module-body {
-            display: block;
-        }
-
-        /* Topic tabs */
-        .topic-tabs {
-            display: flex;
-            gap: .4rem;
-            margin-bottom: 1.2rem;
-            flex-wrap: wrap;
-        }
-
-        .topic-tab {
-            padding: .35rem 1rem;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, .15);
-            background: transparent;
-            color: rgba(255, 255, 255, .5);
-            cursor: pointer;
-            font-size: .8rem;
-            font-weight: 600;
-        }
-
-        .topic-tab.active {
-            background: var(--blue);
-            color: white;
-            border-color: var(--blue);
-        }
-
-        /* Material cards */
-        .materials {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: .75rem;
-        }
-
-        .mat-card {
-            background: rgba(255, 255, 255, .05);
-            border-radius: 10px;
-            padding: 1rem;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: .5rem;
-            border: 1px solid rgba(255, 255, 255, .08);
-            transition: all .2s;
-            cursor: pointer;
-        }
-
-        .mat-card:hover {
-            background: rgba(41, 128, 185, .2);
-            border-color: var(--blue);
-            transform: translateY(-2px);
-        }
-
-        .mat-icon {
-            font-size: 1.8rem;
-        }
-
-        .mat-label {
-            font-size: .75rem;
-            font-weight: 700;
-            color: rgba(255, 255, 255, .7);
-            text-align: center;
-        }
-
-        .mat-link {
-            font-size: .68rem;
-            color: var(--blue);
-            word-break: break-all;
-            text-align: center;
-            margin-top: 2px;
-        }
-
-        .empty-mat {
-            color: rgba(255, 255, 255, .25);
-            font-size: .75rem;
-            text-align: center;
-            padding: .5rem 0;
-        }
-
-        /* Empty state */
-        .empty-state {
-            text-align: center;
-            padding: 4rem 2rem;
-            color: rgba(255, 255, 255, .3);
-        }
-
-        .empty-state .icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        @media(max-width:600px) {
-            .hero h1 {
-                font-size: 1.5rem;
-            }
-
-            .level-tab {
-                font-size: .78rem;
-                padding: .5rem 1rem;
-            }
-
-            .materials {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-    </style>
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.hero h1{font-size:1.5rem}.levels-grid{grid-template-columns:1fr 1fr}.lvl-card{padding:1.2rem 1rem}}
+</style>
 </head>
-
 <body>
-    <header>
-        <div class="logo">
-            <img src="../images/logo.png" alt="EduConnect Ruben"
-                style="height: 95px; max-width: 220px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(52, 152, 219, 0.5)); transition: all 0.3s ease;">
-        </div>
-        <div class="user-chip">
-            <div class="user-avatar" id="avatar">R</div>
-            <span id="user-name" style="font-weight:600;font-size:.9rem;">Estudiante</span>
-            <button class="btn-out" onclick="logout()">Salir</button>
-        </div>
-    </header>
 
-    <div class="hero">
-        <h1 id="welcome-msg">¡Bienvenido a tu Plataforma de Aprendizaje!</h1>
-        <p>Selecciona un nivel y explora tus módulos de estudio</p>
+<header>
+  <img src="../images/logo.png" alt="EduConnect" class="logo-img" onerror="this.style.display='none'">
+  <div class="user-bar">
+    <div class="avatar" id="avatar">R</div>
+    <span class="u-name" id="u-name">Estudiante</span>
+    <button class="btn-out" onclick="logout()">Salir</button>
+  </div>
+</header>
+
+<div class="hero">
+  <h1 id="welcome-msg">¡Hola! Selecciona tu nivel para comenzar</h1>
+  <p>tu ruta de aprendizaje personalizada</p>
+</div>
+
+<div class="levels-grid" id="levels-grid"></div>
+
+<div class="content-area" id="content-area">
+  <div class="pick-prompt">
+    <div class="big">🎓</div>
+    <p>Selecciona un nivel académico para ver sus módulos</p>
+  </div>
+</div>
+
+<script>
+// ─── Curriculum data ───────────────────────────────────────────────────────
+const CURRICULUM = [
+  {
+    id:'basico', name:'Básico', icon:'🔰', badge:'1 Semestre · 5 Módulos',
+    desc:'Cimentando las bases de tu conocimiento profesional.',
+    welcome:'Cimentando las bases de tu conocimiento profesional.',
+    semesters:[{
+      id:'S1', label:'Semestre Único',
+      modules:[
+        {n:'Introducción a la Informática',   topics:['Qué es informática','Hardware y software','Dispositivos de entrada y salida','Uso básico del computador']},
+        {n:'Pensamiento Computacional',        topics:['Qué es pensamiento computacional','Resolución de problemas','Abstracción','Descomposición']},
+        {n:'Lógica de Programación I',         topics:['Secuencias','Algoritmos cotidianos','Introducción a variables','Representación de soluciones']},
+        {n:'Algoritmos I',                     topics:['Qué es un algoritmo','Pseudocódigo','Diagramas de flujo','Ejercicios básicos']},
+        {n:'Ofimática Básica',                 topics:['Procesadores de texto','Hojas de cálculo','Presentaciones digitales','Herramientas en la nube']}
+      ]
+    }]
+  },
+  {
+    id:'auxiliar', name:'Auxiliar', icon:'⚙️', badge:'1 Semestre · 5 Módulos',
+    desc:'Desarrollando habilidades prácticas esenciales.',
+    welcome:'Desarrollando habilidades prácticas esenciales.',
+    semesters:[{
+      id:'S1', label:'Semestre Único',
+      modules:[
+        {n:'Sistemas Operativos',              topics:['Instalación de SO','Administración de archivos','Configuración de red','Seguridad básica']},
+        {n:'Programación Básica',              topics:['Variables y tipos','Condicionales','Bucles','Funciones simples']},
+        {n:'Hardware Esencial',                topics:['Componentes internos','Mantenimiento preventivo','Diagnóstico de fallas','Periféricos']},
+        {n:'Redes Locales',                    topics:['Conceptos de red','Protocolos básicos','Configuración LAN','Solución de problemas']},
+        {n:'Base de Datos Básica',             topics:['Introducción a BD','Tablas y registros','Consultas SQL básicas','Formularios de captura']}
+      ]
+    }]
+  },
+  {
+    id:'medio', name:'Medio', icon:'📚', badge:'2 Semestres · 5 Módulos c/u',
+    desc:'Fortaleciendo tu perfil con formación intermedia.',
+    welcome:'Fortaleciendo tu perfil con formación intermedia.',
+    semesters:[
+      {
+        id:'M1', label:'Medio 1',
+        modules:[
+          {n:'Programación Intermedia',         topics:['POO conceptos','Clases y objetos','Herencia','Polimorfismo']},
+          {n:'Diseño Web I',                    topics:['HTML5 semántico','CSS avanzado','Flexbox y Grid','Responsive Design']},
+          {n:'Base de Datos Intermedia',        topics:['Normalización','Relaciones','Stored Procedures','Índices y optimización']},
+          {n:'Inglés Técnico I',                topics:['Vocabulario IT','Lectura de documentación','Presentaciones en inglés','Listening técnico']},
+          {n:'Emprendimiento Digital',          topics:['Modelo de negocio','Marketing digital','Plan de negocios','Pitch de proyectos']}
+        ]
+      },
+      {
+        id:'M2', label:'Medio 2',
+        modules:[
+          {n:'Programación Web',                topics:['JavaScript moderno','Fetch API','Frameworks intro','Despliegue web']},
+          {n:'Diseño Web II',                   topics:['React básico','Componentes','Estado y props','Hooks fundamentales']},
+          {n:'Redes Intermedias',               topics:['Subredes','VLANs','Routing básico','Firewall y seguridad']},
+          {n:'Programación Móvil I',            topics:['Intro a mobile dev','Android Studio','Layouts básicos','Primera app']},
+          {n:'Proyecto Integrador I',           topics:['Análisis de requerimientos','Diseño de solución','Implementación','Presentación final']}
+        ]
+      }
+    ]
+  },
+  {
+    id:'superior', name:'Superior', icon:'🚀', badge:'2 Semestres · 5 Módulos c/u',
+    desc:'Alcanzando la excelencia en capacidades técnicas.',
+    welcome:'Alcanzando la excelencia en capacidades técnicas.',
+    semesters:[
+      {
+        id:'S1', label:'Superior 1',
+        modules:[
+          {n:'Arquitectura de Software',        topics:['Patrones de diseño','MVC y capas','Microservicios','APIs RESTful']},
+          {n:'Bases de Datos Avanzadas',        topics:['NoSQL (MongoDB)','Redis caching','Optimización de queries','Replicación']},
+          {n:'DevOps & Cloud',                  topics:['Docker','CI/CD pipelines','AWS/GCP basics','Monitoreo y logs']},
+          {n:'Seguridad Informática',           topics:['OWASP Top 10','Criptografía','Pentesting básico','Políticas de seguridad']},
+          {n:'Inglés Técnico II',               topics:['Redacción técnica','Reuniones en inglés','Certificaciones IT','Portafolio profesional']}
+        ]
+      },
+      {
+        id:'S2', label:'Superior 2',
+        modules:[
+          {n:'Inteligencia Artificial',         topics:['Fundamentos de IA','Machine Learning básico','Modelos predictivos','IA aplicada']},
+          {n:'Desarrollo Full Stack',           topics:['Node.js backend','React frontend','PostgreSQL','Despliegue en cloud']},
+          {n:'Gestión de Proyectos TI',         topics:['Metodologías ágiles','Scrum & Kanban','Gestión de riesgos','PMI básico']},
+          {n:'Programación Móvil II',           topics:['React Native','APIs nativas','App Store / Play Store','Performance móvil']},
+          {n:'Proyecto Integrador II',          topics:['Análisis avanzado','Arquitectura del sistema','Desarrollo completo','Defensa de tesis']}
+        ]
+      }
+    ]
+  },
+  {
+    id:'ingenieria', name:'Ingeniería', icon:'🏗️', badge:'4 Semestres · 4 Temas c/u',
+    desc:'Bienvenido a la especialización técnica avanzada.',
+    welcome:'Bienvenido a la especialización técnica avanzada.',
+    semesters:[
+      {
+        id:'I1', label:'Ingeniería 1',
+        modules:[
+          {n:'Fundamentos de Ingeniería de Software', topics:['Ciclo de vida del software','Especificación de requerimientos','Modelado UML','Estándares IEEE']},
+          {n:'Matemáticas Discretas',                 topics:['Lógica proposicional','Teoría de grafos','Combinatoria','Álgebra booleana']},
+          {n:'Arquitecturas de Computadoras',         topics:['Organización del procesador','Memoria y jerarquía','Bus y E/S','Pipeline']},
+          {n:'Cálculo para Ingeniería',               topics:['Límites y derivadas','Integrales','Series','Aplicaciones en sistemas']}
+        ]
+      },
+      {
+        id:'I2', label:'Ingeniería 2',
+        modules:[
+          {n:'Estructuras de Datos',                  topics:['Listas enlazadas','Árboles y grafos','Hash tables','Algoritmos de ordenación']},
+          {n:'Sistemas Operativos Avanzados',         topics:['Gestión de procesos','Memoria virtual','Sistema de archivos','Concurrencia']},
+          {n:'Compiladores e Intérpretes',            topics:['Análisis léxico','Análisis sintáctico','Generación de código','Optimización']},
+          {n:'Redes de Computadoras Avanzadas',       topics:['Protocolos de capa 3','BGP y OSPF','SDN','Redes definidas por software']}
+        ]
+      },
+      {
+        id:'I3', label:'Ingeniería 3',
+        modules:[
+          {n:'Ingeniería de Datos',                   topics:['Big Data fundamentos','ETL y pipelines','Data Warehousing','Visualización de datos']},
+          {n:'Machine Learning Avanzado',             topics:['Regresión y clasificación','Redes neuronales','NLP básico','MLOps']},
+          {n:'Ciberseguridad Avanzada',               topics:['Análisis forense','Ethical hacking','Zero-trust architecture','Respuesta a incidentes']},
+          {n:'Sistemas Distribuidos',                 topics:['Teorema CAP','Consenso distribuido','Kafka y colas de mensajes','Tolerancia a fallos']}
+        ]
+      },
+      {
+        id:'I4', label:'Ingeniería 4',
+        modules:[
+          {n:'Proyecto de Grado I',                   topics:['Selección del tema','Marco teórico','Metodología de investigación','Cronograma']},
+          {n:'Proyecto de Grado II',                  topics:['Desarrollo del sistema','Pruebas y validación','Documentación final','Defensa']},
+          {n:'Innovación y Tecnología',               topics:['Tendencias tecnológicas 2025','IoT y Edge Computing','Blockchain aplicado','Computación cuántica intro']},
+          {n:'Liderazgo y Gestión TI',               topics:['CTO / CIO roles','Estrategia tecnológica','Equipos de alto rendimiento','Visión empresarial']}
+        ]
+      }
+    ]
+  }
+];
+
+// ─── State ──────────────────────────────────────────────────────────────────
+let activeLevelId   = null;
+let activeSemesterId = null;
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const u = JSON.parse(localStorage.getItem('user') || '{}');
+  if (u.nombre) {
+    document.getElementById('u-name').textContent  = u.nombre;
+    document.getElementById('avatar').textContent  = u.nombre[0].toUpperCase();
+    document.getElementById('welcome-msg').textContent = `¡Hola, ${u.nombre}! Selecciona tu nivel`;
+  }
+  renderLevelCards();
+});
+
+function logout() {
+  localStorage.clear();
+  window.location.href = '../login.html';
+}
+
+// ─── Render level cards ──────────────────────────────────────────────────────
+function renderLevelCards() {
+  const grid = document.getElementById('levels-grid');
+  grid.innerHTML = CURRICULUM.map(lvl => `
+    <div class="lvl-card" id="lvl-${lvl.id}" onclick="selectLevel('${lvl.id}')">
+      <div class="lvl-icon">${lvl.icon}</div>
+      <div class="lvl-name">Nivel ${lvl.name}</div>
+      <div class="lvl-desc">${lvl.desc}</div>
+      <span class="lvl-badge">${lvl.badge}</span>
     </div>
+  `).join('');
+}
 
-    <div class="level-tabs" id="level-tabs-container">
-        <!-- Se inyecta el nivel asignado aquí -->
-    </div>
+// ─── Select level ────────────────────────────────────────────────────────────
+function selectLevel(id) {
+  activeLevelId = id;
+  document.querySelectorAll('.lvl-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('lvl-' + id).classList.add('active');
 
-    <div class="content">
-        <div id="modulos-list">
-            <div class="empty-state">
-                <div class="icon">⏳</div>
-                <p>Cargando módulos...</p>
-            </div>
+  const lvl = CURRICULUM.find(l => l.id === id);
+  const area = document.getElementById('content-area');
+
+  // Welcome banner
+  let html = `<div class="welcome-banner">
+    <h2>${lvl.icon} Nivel ${lvl.name}</h2>
+    <p>${lvl.welcome}</p>
+  </div>`;
+
+  // Semester tabs (only if more than 1)
+  if (lvl.semesters.length > 1) {
+    html += `<div class="sem-tabs">` +
+      lvl.semesters.map((s, i) =>
+        `<button class="sem-tab ${i===0?'active':''}" onclick="selectSemester('${id}','${s.id}',this)">${s.label}</button>`
+      ).join('') +
+    `</div>`;
+  }
+
+  html += `<div id="modules-container"></div>`;
+  area.innerHTML = html;
+
+  // Show first semester modules
+  activeSemesterId = lvl.semesters[0].id;
+  renderModules(lvl, lvl.semesters[0]);
+}
+
+// ─── Select semester ─────────────────────────────────────────────────────────
+function selectSemester(lvlId, semId, btn) {
+  document.querySelectorAll('.sem-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeSemesterId = semId;
+  const lvl = CURRICULUM.find(l => l.id === lvlId);
+  const sem = lvl.semesters.find(s => s.id === semId);
+  renderModules(lvl, sem);
+}
+
+// ─── Render modules ───────────────────────────────────────────────────────────
+function renderModules(lvl, sem) {
+  const container = document.getElementById('modules-container');
+  container.innerHTML = sem.modules.map((mod, i) => `
+    <div class="module-card" id="mod-${lvl.id}-${sem.id}-${i}">
+      <div class="module-header" onclick="toggleModule('mod-${lvl.id}-${sem.id}-${i}')">
+        <div class="mod-left">
+          <div class="mod-num">${i+1}</div>
+          <div class="mod-name">${mod.n}</div>
         </div>
+        <span class="mod-chevron">▼</span>
+      </div>
+      <div class="module-body">
+        <ul class="topic-list">
+          ${mod.topics.map(t => `<li class="topic-item">${t}</li>`).join('')}
+        </ul>
+      </div>
     </div>
+  `).join('');
+}
 
-    <script src="../js/api.js"></script>
-    <script>
-        const TOKEN = localStorage.getItem('token');
-        let nivelActual = '';
-        let todosModulos = [];
-        let cacheContenidos = {};
-        let misNotas = {};
-
-        let todosNiveles = [];
-        let todosSubniveles = [];
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const u = JSON.parse(localStorage.getItem('user') || '{}');
-            if (u.nombre) {
-                document.getElementById('user-name').textContent = u.nombre;
-                document.getElementById('avatar').textContent = u.nombre[0].toUpperCase();
-                document.getElementById('welcome-msg').textContent = `¡Hola, ${u.nombre}! Aquí tu aprendizaje`;
-
-                // Set the assigned level
-                nivelActual = u.nivel_asignado || 'Nivel Básico';
-            }
-            cargarTodo();
-        });
-
-        async function cargarTodo() {
-            try {
-                if (TOKEN) {
-                    const resNotas = await fetch(`${API_URL}/modulos/mis-notas`, {
-                        headers: { 'Authorization': `Bearer ${TOKEN}` }
-                    });
-                    if (resNotas.ok) {
-                        const notesData = await resNotas.json();
-                        (notesData.progreso || []).forEach(p => misNotas[p.modulo_id] = p);
-                    }
-                }
-            } catch (e) { }
-
-            const r = await fetch(`${API_URL}/modulos/`);
-            const d = await r.json();
-            todosModulos = d.modulos || [];
-            
-            // Extract distinct subniveles for the assigned level
-            todosSubniveles = [...new Set(todosModulos.filter(m => m.nivel === nivelActual).map(m => m.subnivel))];
-            
-            const tabsContainer = document.getElementById('level-tabs-container');
-            if (tabsContainer && todosSubniveles.length > 0) {
-                tabsContainer.innerHTML = todosSubniveles.map((sn, i) => 
-                    `<button class="level-tab ${i===0 ? 'active' : ''}" onclick="setSubnivel('${sn}', this)">📚 ${sn}</button>`
-                ).join('');
-                
-                renderModulos(todosSubniveles[0]);
-            } else if (tabsContainer) {
-                tabsContainer.innerHTML = `<button class="level-tab active" style="cursor:default">🎯 ${nivelActual} (Sin Semestres)</button>`;
-                renderModulos(null);
-            }
-        }
-
-        function setSubnivel(subnivel, btn) {
-            document.querySelectorAll('.level-tab').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderModulos(subnivel);
-        }
-
-        function renderModulos(subnivel) {
-            let lista = todosModulos.filter(m => m.nivel === nivelActual);
-            if (subnivel) {
-                lista = lista.filter(m => m.subnivel === subnivel);
-            }
-            
-            const cont = document.getElementById('modulos-list');
-            if(lista.length === 0) {
-                cont.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No hay módulos para este semestre.</p></div>`;
-                return;
-            }
-
-            cont.innerHTML = lista.map((m, i) => {
-                const notaObj = misNotas[m.id];
-                const notaBadge = notaObj && notaObj.nota !== null
-                    ? `<span style="background:${notaObj.estado === 'aprobado' ? '#27ae60' : '#e67e22'};color:white;padding:2px 8px;border-radius:12px;font-size:0.75rem;margin-left:10px;">Nota: ${notaObj.nota}</span>`
-                    : '';
-                return `
-        <div class="module-card" id="card-${m.id}">
-            <div class="module-card-header" onclick="toggleCard(${m.id})">
-                <h3 style="display:flex;align-items:center;">
-                    <span style="color:var(--blue);margin-right:.5rem;">Módulo ${i+1}:</span>
-                    ${m.nombre}
-                    ${notaBadge}
-                </h3>
-                <span class="expand-icon">▼</span>
-            </div>
-            <div class="module-body">
-                <div class="topic-tabs">
-                    ${[1, 2, 3, 4].map(t => `<button class="topic-tab${t === 1 ? ' active' : ''}" onclick="setTopic(${m.id},${t},this)">Tema ${t}</button>`).join('')}
-                </div>
-                <div id="tc-${m.id}"><div class="empty-state"><div class="icon">📡</div><p>Cargando...</p></div></div>
-            </div>
-        </div>`;
-            }).join('');
-        }
-
-        async function toggleCard(id) {
-            const card = document.getElementById(`card-${id}`);
-            card.classList.toggle('open');
-            if (card.classList.contains('open')) await loadTopicContent(id, 1);
-        }
-
-        async function loadTopicContent(modId, tema) {
-            if (!cacheContenidos[modId]) {
-                const r = await fetch(`${API_URL}/modulos/${modId}/contenidos`);
-                cacheContenidos[modId] = (await r.json()).contenidos || [];
-            }
-            renderTopicContent(modId, tema);
-        }
-
-        const MAT = { teoria: { icon: '📄', label: 'Teoría' }, presentacion: { icon: '📊', label: 'Presentación' }, audio: { icon: '🔊', label: 'Audio' }, video: { icon: '🎬', label: 'Video' }, evaluacion: { icon: '✅', label: 'Evaluación' } };
-        const ORDER = ['teoria', 'presentacion', 'audio', 'video', 'evaluacion'];
-
-        function renderTopicContent(modId, tema) {
-            const items = (cacheContenidos[modId] || []).filter(c => c.tema_num == tema);
-            items.sort((a, b) => {
-                const ia = ORDER.indexOf(a.tipo);
-                const ib = ORDER.indexOf(b.tipo);
-                return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-            });
-            const container = document.getElementById(`tc-${modId}`);
-            const withUrl = items.filter(c => c.url && c.url.trim());
-            if (!withUrl.length) {
-                container.innerHTML = `<div class="empty-state"><div class="icon">🔒</div><p>Material aún no disponible para este tema.</p></div>`;
-                return;
-            }
-            container.innerHTML = `<div class="materials">` +
-                items.map(c => c.url && c.url.trim()
-                    ? `<a href="${c.url}" target="_blank" class="mat-card">
-                <div class="mat-icon">${MAT[c.tipo]?.icon || '📎'}</div>
-                <div class="mat-label">${MAT[c.tipo]?.label || c.tipo}</div>
-               </a>`
-                    : `<div class="mat-card" style="cursor:default;opacity:.4">
-                <div class="mat-icon">${MAT[c.tipo]?.icon || '📎'}</div>
-                <div class="mat-label">${MAT[c.tipo]?.label || c.tipo}</div>
-                <div class="empty-mat">No disponible</div>
-               </div>`
-                ).join('') + `</div>`;
-        }
-
-        function setTopic(modId, tema, btn) {
-            document.querySelectorAll(`#card-${modId} .topic-tab`).forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            cacheContenidos[modId] ? renderTopicContent(modId, tema) : loadTopicContent(modId, tema);
-        }
-
-        function logout() { localStorage.clear(); window.location.href = '../index.html'; }
-    </script>
+// ─── Toggle module accordion ──────────────────────────────────────────────────
+function toggleModule(id) {
+  const card = document.getElementById(id);
+  card.classList.toggle('open');
+}
+</script>
 </body>
-
 </html>
