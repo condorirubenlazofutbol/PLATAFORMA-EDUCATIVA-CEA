@@ -218,8 +218,8 @@ def update_my_password(data: PasswordResetBody, current_user: dict = Depends(get
         conn.close()
 
 @router.post("/bulk-register", dependencies=[Depends(get_current_user)])
-async def bulk_register_estudiantes(nivel: str, file: UploadFile = File(...)):
-    """Carga masiva de estudiantes desde Excel (.xlsx). Columnas: Nombres, Apellido, Carnet."""
+async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = File(...)):
+    """Carga masiva de usuarios (estudiante o profesor) desde Excel (.xlsx)."""
     if not file.filename.endswith('.xlsx'):
         raise HTTPException(status_code=400, detail="El archivo debe ser .xlsx")
     
@@ -233,7 +233,6 @@ async def bulk_register_estudiantes(nivel: str, file: UploadFile = File(...)):
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # Asumimos que la primera fila es encabezado
     for row in sheet.iter_rows(min_row=2, values_only=True):
         nombre, apellido, carnet = row
         if not nombre or not carnet: continue
@@ -244,7 +243,7 @@ async def bulk_register_estudiantes(nivel: str, file: UploadFile = File(...)):
             
             cur.execute(
                 "INSERT INTO usuarios (nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s)",
-                (str(nombre), str(apellido), email, hashed, "estudiante", nivel, str(carnet))
+                (str(nombre), str(apellido), email, hashed, rol, nivel, str(carnet))
             )
             registrados += 1
         except Exception as e:

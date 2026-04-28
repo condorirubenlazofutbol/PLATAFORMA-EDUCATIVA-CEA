@@ -162,6 +162,22 @@ tbody tr:hover{background:rgba(255,255,255,.025)}
         </form>
       </div>
 
+      <div class="section-card" style="border: 2px dashed var(--a2); background: rgba(72,209,142,0.03);">
+        <h3>📂 Carga Masiva Profesores (.xlsx)</h3>
+        <p style="font-size: 0.8rem; color: var(--m); margin-bottom: 1rem;">Formato: Nombres, Apellido, Carnet.</p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <select id="bulk-nivel-prof" style="flex: 1; min-width: 150px;">
+            <option value="Básico">🔰 Básico</option>
+            <option value="Auxiliar">⚙️ Auxiliar</option>
+            <option value="Medio">📚 Medio</option>
+            <option value="Superior">🚀 Superior</option>
+            <option value="Ingeniería">🏗️ Ingeniería</option>
+          </select>
+          <input type="file" id="file-excel-prof" accept=".xlsx" style="flex: 2;">
+          <button class="btn btn-primary" onclick="uploadExcel('profesor')">Subir Profesores</button>
+        </div>
+      </div>
+
       <div class="section-card">
         <h3>📋 Lista de Profesores</h3>
         <div class="tbl-wrap">
@@ -213,10 +229,6 @@ tbody tr:hover{background:rgba(255,255,255,.025)}
         </div>
       </div>
 
-      <div class="section-card">
-        <h3>📂 Carga Masiva (Excel)</h3>
-        <input type="file" id="file-est" accept=".xlsx, .xls">
-        <button class="btn btn-primary btn-sm" onclick="uploadExcel('estudiante')">Subir Estudiantes</button>
       </div>
 
       <div class="section-card">
@@ -351,9 +363,11 @@ async function crearEstudiante(e) {
 }
 
 // ─── Carga Masiva Excel ───────────────────────────────────────────────────────
-async function uploadExcel() {
-  const fileInput = document.getElementById('file-excel');
-  const nivel = document.getElementById('bulk-nivel').value;
+async function uploadExcel(role = 'estudiante') {
+  const isProf = role === 'profesor';
+  const fileInput = document.getElementById(isProf ? 'file-excel-prof' : 'file-excel');
+  const nivel = document.getElementById(isProf ? 'bulk-nivel-prof' : 'bulk-nivel').value;
+  
   if (!fileInput.files[0]) return toast('Selecciona un archivo .xlsx', 'error');
 
   const formData = new FormData();
@@ -361,7 +375,7 @@ async function uploadExcel() {
 
   try {
     toast('Subiendo y procesando...', 'warning');
-    const r = await fetch(`${API_URL}/auth/bulk-register?nivel=${nivel}`, {
+    const r = await fetch(`${API_URL}/auth/bulk-register?nivel=${nivel}&rol=${role}`, {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + TOKEN },
       body: formData
@@ -369,7 +383,7 @@ async function uploadExcel() {
     const d = await r.json();
     if (r.ok) {
       toast(`✅ ¡Éxito! Registrados: ${d.registrados}. Errores: ${d.errores.length}`);
-      loadEstudiantes();
+      if (isProf) loadProfesores(); else loadEstudiantes();
     } else {
       toast(d.detail || 'Error en la subida', 'error');
     }
