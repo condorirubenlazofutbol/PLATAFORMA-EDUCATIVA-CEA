@@ -336,13 +336,21 @@
 
         // Form submit
         document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+            e.preventDefault(); // Bloqueo inmediato de recarga
+            
             const email    = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const btn      = document.getElementById('btn-submit');
 
+            if (!email || !password) {
+                showToast('Por favor, completa todos los campos', 'warning');
+                return;
+            }
+
             btn.disabled    = true;
             btn.textContent = 'Verificando...';
+
+            console.log('Intentando login para:', email);
 
             try {
                 const body = new URLSearchParams({ username: email, password });
@@ -351,28 +359,40 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body
                 });
+                
                 const data = await res.json();
 
                 if (res.ok) {
+                    console.log('Login exitoso:', data.rol);
                     showToast('¡Bienvenido! Redirigiendo...', 'success');
+                    
+                    // Guardar datos
                     localStorage.setItem('token', data.access_token);
                     localStorage.setItem('user', JSON.stringify({
-                        nombre: data.nombre,
+                        nombre: data.nombre || 'Usuario',
                         rol: data.rol,
                         nivel_asignado: data.nivel_asignado
                     }));
+
+                    // Redirección con pequeño delay para el toast
                     setTimeout(() => {
-                        if (data.rol === 'administrador')   window.location.href = 'admin/dashboard.html';
-                        else if (data.rol === 'profesor')   window.location.href = 'profesor/dashboard.html';
-                        else                                window.location.href = 'student/dashboard.html';
-                    }, 900);
+                        let target = 'student/dashboard.html';
+                        if (data.rol === 'administrador') target = 'admin/dashboard.html';
+                        else if (data.rol === 'profesor') target = 'profesor/dashboard.html';
+                        
+                        console.log('Navegando a:', target);
+                        window.location.href = target;
+                    }, 800);
                 } else {
+                    console.error('Error de login:', data.detail);
                     showToast(data.detail || 'Credenciales incorrectas', 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Ingresar a EduConnect';
                 }
-            } catch {
-                showToast('No se pudo conectar con el servidor', 'error');
-            } finally {
-                btn.disabled    = false;
+            } catch (err) {
+                console.error('Fallo de conexión:', err);
+                showToast('Error de conexión. Revisa el servidor.', 'error');
+                btn.disabled = false;
                 btn.textContent = 'Ingresar a EduConnect';
             }
         });
