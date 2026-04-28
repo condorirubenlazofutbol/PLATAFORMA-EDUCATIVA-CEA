@@ -235,13 +235,15 @@ let activeLevelId   = null;
 let activeSemesterId = null;
 
 // ─── Init ────────────────────────────────────────────────────────────────────
+let NIVEL_ASIGNADO = '';
+
 window.addEventListener('DOMContentLoaded', () => {
   const u = JSON.parse(localStorage.getItem('user') || '{}');
-  if (u.nombre) {
-    document.getElementById('u-name').textContent  = u.nombre;
-    document.getElementById('avatar').textContent  = u.nombre[0].toUpperCase();
-    document.getElementById('welcome-msg').textContent = `¡Hola, ${u.nombre}! Selecciona tu nivel`;
-  }
+  if (!localStorage.getItem('token') || !u.nombre) { window.location.href = '../login.html'; return; }
+  document.getElementById('u-name').textContent  = u.nombre;
+  document.getElementById('avatar').textContent  = u.nombre[0].toUpperCase();
+  document.getElementById('welcome-msg').textContent = `¡Hola, ${u.nombre}!`;
+  NIVEL_ASIGNADO = (u.nivel_asignado || '').split(' - ')[0]; // e.g. 'Medio - M1' -> 'Medio'
   renderLevelCards();
 });
 
@@ -250,10 +252,15 @@ function logout() {
   window.location.href = '../login.html';
 }
 
-// ─── Render level cards ──────────────────────────────────────────────────────
+// ─── Render level cards (only student's assigned level) ──────────────────────
 function renderLevelCards() {
   const grid = document.getElementById('levels-grid');
-  grid.innerHTML = CURRICULUM.map(lvl => `
+  // Filter: only show the student's assigned level
+  const filtered = NIVEL_ASIGNADO
+    ? CURRICULUM.filter(lvl => lvl.name === NIVEL_ASIGNADO || lvl.id === NIVEL_ASIGNADO.toLowerCase())
+    : CURRICULUM;
+  const toShow = filtered.length ? filtered : CURRICULUM;
+  grid.innerHTML = toShow.map(lvl => `
     <div class="lvl-card" id="lvl-${lvl.id}" onclick="selectLevel('${lvl.id}')">
       <div class="lvl-icon">${lvl.icon}</div>
       <div class="lvl-name">Nivel ${lvl.name}</div>
@@ -261,6 +268,8 @@ function renderLevelCards() {
       <span class="lvl-badge">${lvl.badge}</span>
     </div>
   `).join('');
+  // Auto-select if only one level
+  if (toShow.length === 1) selectLevel(toShow[0].id);
 }
 
 // ─── Select level ────────────────────────────────────────────────────────────
@@ -305,12 +314,25 @@ function selectSemester(lvlId, semId, btn) {
   renderModules(lvl, sem);
 }
 
+// cache: modulo name -> DB id
+let modNameToId = {};
+
+// Fetch DB module IDs for this level
+async function fetchModuleIds(nivelName) {
+  try {
+    const r = await fetch(API_URL + '/modulos/');
+    const d = await r.json();
+    (d.modulos || []).forEach(m => { modNameToId[m.nombre] = m.id; });
+  } catch {}
+}
+
 // ─── Render modules ───────────────────────────────────────────────────────────
-function renderModules(lvl, sem) {
+async function renderModules(lvl, sem) {
+  await fetchModuleIds(lvl.name);
   const container = document.getElementById('modules-container');
   container.innerHTML = sem.modules.map((mod, i) => `
     <div class="module-card" id="mod-${lvl.id}-${sem.id}-${i}">
-      <div class="module-header" onclick="toggleModule('mod-${lvl.id}-${sem.id}-${i}')">
+      <div class="module-header" onclick="toggleModule('mod-${lvl.id}-${sem.id}-${i}','${mod.n}')">
         <div class="mod-left">
           <div class="mod-num">${i+1}</div>
           <div class="mod-name">${mod.n}</div>
@@ -321,15 +343,57 @@ function renderModules(lvl, sem) {
         <ul class="topic-list">
           ${mod.topics.map(t => `<li class="topic-item">${t}</li>`).join('')}
         </ul>
+        <div class="materials-section" id="mat-${lvl.id}-${sem.id}-${i}">
+          <div style="color:var(--m);font-size:.78rem;margin-top:.8rem">⏳ Cargando materiales...</div>
+        </div>
       </div>
     </div>
   `).join('');
 }
 
-// ─── Toggle module accordion ──────────────────────────────────────────────────
-function toggleModule(id) {
+// ─── Toggle module accordion + load materials ─────────────────────────────────
+function toggleModule(id, modName) {
   const card = document.getElementById(id);
   card.classList.toggle('open');
+  if (card.classList.contains('open')) {
+    loadMateriales(id, modName);
+  }
+}
+
+// ─── Load materiales del profesor ─────────────────────────────────────────────
+async function loadMateriales(cardId, modName) {
+  const matEl = document.getElementById('mat-' + cardId.replace('mod-',''));
+  const dbId = modNameToId[modName];
+  if (!dbId) {
+    if (matEl) matEl.innerHTML = '';
+    return;
+  }
+  try {
+    const r = await fetch(API_URL + '/modulos/' + dbId + '/contenidos');
+    const d = await r.json();
+    const items = (d.contenidos || []).filter(c => c.url && c.url.trim());
+    if (!matEl) return;
+    if (!items.length) {
+      matEl.innerHTML = '<div style="color:var(--m);font-size:.78rem;margin-top:.8rem;padding:.5rem;text-align:center">📭 Sin materiales publicados aún</div>';
+      return;
+    }
+    const typeIcon = {video:'🎬',teoria:'📖',pdf:'📄',presentacion:'📊',audio:'🎵'};
+    const typeColor = {video:'#f87171',teoria:'#6c63ff',pdf:'#fbbf24',presentacion:'#48d18e',audio:'#9ca3af'};
+    matEl.innerHTML = `
+      <div style="margin-top:1rem;border-top:1px solid rgba(255,255,255,.07);padding-top:.8rem">
+        <div style="font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--m);margin-bottom:.6rem">📂 Materiales del profesor</div>
+        <div style="display:grid;gap:.4rem">
+          ${items.map(c => `
+            <a href="${c.url}" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:.6rem;padding:.55rem .85rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='${typeColor[c.tipo]||'#6c63ff'}';this.style.background='rgba(108,99,255,.08)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)';this.style.background='rgba(255,255,255,.04)'">
+              <span style="font-size:1rem">${typeIcon[c.tipo]||'📁'}</span>
+              <span style="font-size:.82rem;font-weight:600;color:#e8eaf0;flex:1">${c.titulo}</span>
+              <span style="font-size:.68rem;font-weight:700;padding:.15rem .45rem;border-radius:6px;background:rgba(108,99,255,.15);color:${typeColor[c.tipo]||'#6c63ff'}'">${c.tipo}</span>
+            </a>`).join('')}
+        </div>
+      </div>`;
+  } catch {
+    if (matEl) matEl.innerHTML = '<div style="color:var(--m);font-size:.78rem;margin-top:.8rem">⚠️ Error cargando materiales</div>';
+  }
 }
 </script>
 </body>
