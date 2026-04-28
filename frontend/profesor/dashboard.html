@@ -4,176 +4,275 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EduConnect – Panel Profesor</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="../js/api.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--a:#0ea5e9;--a2:#38bdf8;--dark:#0b0f1a;--card:#131929;--card2:#1a2338;--b:rgba(255,255,255,.07);--t:#e8eaf0;--m:rgba(255,255,255,.45);--celeste:rgba(56, 189, 248, 0.15)}
+:root{--a:#0ea5e9;--a2:#38bdf8;--dark:#0b0f1a;--card:#131929;--card2:#1a2338;--b:rgba(255,255,255,.08);--t:#e8eaf0;--m:rgba(255,255,255,.45);--cel:rgba(56,189,248,.13)}
 body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--t);min-height:100vh;overflow-x:hidden}
 
-header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.8rem 1rem;border-bottom:1px solid var(--b);backdrop-filter:blur(14px);background:rgba(11,15,26,.85)}
-.logo-img{height:36px;object-fit:contain}
-.btn-out{background:rgba(56,189,248,.1);color:var(--a2);border:1px solid rgba(56,189,248,.3);padding:.4rem 1rem;border-radius:20px;cursor:pointer;font-weight:700;font-size:.7rem}
+header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.2rem;border-bottom:1px solid var(--b);backdrop-filter:blur(14px);background:rgba(11,15,26,.92)}
+.logo-img{height:38px;object-fit:contain}
+.hdr-right{display:flex;align-items:center;gap:.8rem}
+.hdr-name{font-size:.8rem;font-weight:700;color:var(--a2)}
+.btn-out{background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.3);padding:.35rem .8rem;border-radius:16px;cursor:pointer;font-weight:700;font-size:.7rem}
 
-.hero{padding:2rem 1rem;text-align:center}
-.hero h1{font-size:1.6rem}
-.lvl-tag{display:inline-block;padding:.3rem 1rem;background:var(--celeste);border:1.5px solid rgba(56, 189, 248, 0.3);border-radius:20px;color:var(--a2);font-weight:800;font-size:.75rem;margin-top:.5rem}
+.hero{text-align:center;padding:2rem 1rem 1.5rem}
+.hero h1{font-size:1.6rem;font-weight:900}
+.lvl-badge{display:inline-block;padding:.35rem 1rem;background:var(--cel);border:1.5px solid rgba(56,189,248,.3);border-radius:20px;color:var(--a2);font-weight:800;font-size:.75rem;margin-top:.5rem}
 
 .wrap{max-width:900px;margin:0 auto;padding:0 1rem 5rem}
-.mod-card{background:var(--card2);border:1px solid var(--b);border-radius:18px;margin-bottom:1.2rem;overflow:hidden}
-.mod-header{padding:1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--card)}
-.mod-name{font-size:.9rem;font-weight:800;flex:1;padding-right:.5rem}
-.mod-body{display:none;padding:1rem}
+
+/* Selector de semestre */
+.sem-tabs{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.5rem;margin-bottom:1.5rem;scrollbar-width:none}
+.sem-tabs::-webkit-scrollbar{display:none}
+.sem-btn{padding:.45rem 1rem;border-radius:20px;border:1.5px solid var(--b);background:none;color:var(--m);cursor:pointer;font-weight:700;font-size:.72rem;white-space:nowrap}
+.sem-btn.active{border-color:var(--a2);color:var(--a2);background:var(--cel)}
+
+/* Módulos */
+.mod-card{background:var(--card2);border:1px solid var(--b);border-radius:16px;margin-bottom:1rem;overflow:hidden}
+.mod-header{padding:1rem 1.2rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--card)}
+.mod-name{font-size:.88rem;font-weight:800;flex:1;padding-right:.5rem}
+.mod-body{display:none;padding:1.2rem;border-top:1px solid var(--b)}
 .mod-card.open .mod-body{display:block}
 
-.topic-box{background:rgba(255,255,255,.02);border:1px solid var(--b);border-radius:14px;padding:1rem;margin-bottom:1.2rem}
-.topic-header{font-size:.75rem;font-weight:900;color:var(--a2);margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.topic-box{background:rgba(255,255,255,.02);border:1px solid var(--b);border-radius:12px;padding:1rem;margin-bottom:1rem}
+.topic-title{font-size:.72rem;font-weight:900;color:var(--a2);text-transform:uppercase;margin-bottom:.8rem}
 
-.mat-grid{display:grid;grid-template-columns:1fr;gap:.8rem}
-.mat-slot{background:rgba(0,0,0,0.2);padding:.8rem;border-radius:12px;border:1px solid var(--b)}
-.slot-label{font-size:.6rem;font-weight:800;color:var(--m);margin-bottom:.4rem;text-transform:uppercase}
-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--b);border-radius:8px;padding:.6rem;color:#fff;font-size:.75rem;margin-bottom:.6rem}
-.btn-save{width:100%;background:var(--a);color:#fff;border:none;padding:.6rem;border-radius:8px;font-weight:700;cursor:pointer;font-size:.7rem}
+.mat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.7rem}
+.mat-slot{background:rgba(0,0,0,.2);padding:.8rem;border-radius:10px;border:1px solid var(--b)}
+.slot-label{font-size:.6rem;font-weight:800;color:var(--m);text-transform:uppercase;margin-bottom:.4rem}
+.slot-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--b);border-radius:7px;padding:.5rem;color:var(--t);font-size:.75rem;margin-bottom:.5rem;outline:none}
+.slot-input:focus{border-color:var(--a)}
+.btn-save{width:100%;background:var(--a);color:#fff;border:none;padding:.5rem;border-radius:7px;font-weight:700;cursor:pointer;font-size:.7rem}
+.btn-save:active{opacity:.8}
 
-#toast{position:fixed;bottom:1.5rem;right:1rem;left:1rem;background:var(--card2);border:1px solid var(--a);padding:1rem;border-radius:12px;text-align:center;display:none;z-index:1000}
+/* Cambio contraseña */
+.pass-card{background:var(--card);border:1px solid var(--b);border-radius:16px;padding:1.2rem;margin-top:1rem}
+.pass-card h4{font-size:.8rem;font-weight:800;color:var(--a2);margin-bottom:.8rem}
+.pass-input{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--b);border-radius:8px;padding:.6rem;color:var(--t);font-size:.82rem;margin-bottom:.6rem;outline:none}
+.btn-pass{width:100%;background:var(--a);color:#fff;border:none;padding:.7rem;border-radius:8px;font-weight:800;cursor:pointer}
 
-@media(min-width:640px){
-  .mat-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-  .hero h1{font-size:2.2rem}
-}
+/* Toast */
+#toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#0f172a;border:1.5px solid var(--a);padding:.8rem 1.6rem;border-radius:12px;font-size:.82rem;font-weight:700;display:none;z-index:999;white-space:nowrap;text-align:center}
+#err-msg{color:#f87171;font-size:.72rem;text-align:center;margin-top:.4rem;display:none}
+
+@media(max-width:480px){.mat-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 
 <header>
-  <img src="../images/logo.png" alt="EduConnect" class="logo-img">
-  <div style="display:flex;align-items:center;gap:.8rem">
-    <span id="prof-name" style="font-weight:700;font-size:.8rem">Profesor</span>
-    <button class="btn-out" onclick="logout()">Salir</button>
+  <img src="../images/logo.png" alt="EduConnect" class="logo-img" onerror="this.style.display='none'">
+  <div class="hdr-right">
+    <span class="hdr-name" id="prof-name">Profesor</span>
+    <button class="btn-out" id="btn-logout">Salir</button>
   </div>
 </header>
 
 <div class="hero">
-  <h1>Gestión de Contenidos</h1>
-  <div class="lvl-tag" id="lvl-tag">Nivel: ...</div>
+  <h1>Panel del Profesor</h1>
+  <div class="lvl-badge" id="lvl-badge">Cargando...</div>
 </div>
 
-<div class="wrap" id="modulos-container">
-  <div style="text-align:center;color:var(--m)">Cargando módulos...</div>
-</div>
-
-<!-- CAMBIO DE CONTRASEÑA -->
 <div class="wrap">
-  <div style="background:#131929;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:1.2rem;margin-top:.5rem">
-    <div style="font-size:.8rem;font-weight:800;color:#38bdf8;margin-bottom:.8rem">🔑 Cambiar Contraseña</div>
-    <input type="password" id="new-pass" placeholder="Nueva contraseña" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.6rem;color:#e8eaf0;font-size:.82rem;margin-bottom:.6rem">
-    <input type="password" id="new-pass2" placeholder="Repetir contraseña" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.6rem;color:#e8eaf0;font-size:.82rem;margin-bottom:.6rem">
-    <button onclick="cambiarPass()" style="width:100%;background:#0ea5e9;color:#fff;border:none;padding:.7rem;border-radius:8px;font-weight:800;cursor:pointer">Actualizar Contraseña</button>
+  <div class="sem-tabs" id="sem-tabs"></div>
+  <div id="mods-area"><p style="color:var(--m);text-align:center;padding:2rem">Cargando módulos...</p></div>
+
+  <!-- Cambio contraseña -->
+  <div class="pass-card">
+    <h4>🔑 Cambiar Contraseña</h4>
+    <input class="pass-input" type="password" id="np1" placeholder="Nueva contraseña (mín. 4 caracteres)">
+    <input class="pass-input" type="password" id="np2" placeholder="Repetir contraseña">
+    <button class="btn-pass" onclick="cambiarPass()">Actualizar Contraseña</button>
     <div id="pass-msg" style="font-size:.72rem;margin-top:.5rem;text-align:center"></div>
   </div>
 </div>
 
-<div id="toast">✅ Guardado correctamente</div>
+<div id="toast"></div>
 
 <script>
-const API_URL = "https://educonnect-backend-production-1d08.up.railway.app";
+const API = "https://educonnect-backend-production-1d08.up.railway.app";
 const TOKEN = localStorage.getItem('token');
-let NIVEL_ASIGNADO = "";
 
+// ── Malla curricular completa (local, no depende de la BD para la navegación)
+const MALLA = {
+  "Básico":     [{ sem:"1er SEMESTRE – BÁSICO",      mods:["Introducción a la Informática","Pensamiento Computacional","Lógica de Programación I","Algoritmos I","Módulo Emergente I (IA básica)"] }],
+  "Auxiliar":   [{ sem:"2do SEMESTRE – AUXILIAR",     mods:["Lógica de Programación II","Estructuras de Control","Funciones","Bases de Datos Básicas","Módulo Emergente II (Prompts)"] }],
+  "Medio":      [{ sem:"3er SEMESTRE – MEDIO I",      mods:["Programación con Python","Estructuras de Datos","Bases de Datos I","Sistemas Operativos y Redes","Módulo Emergente III"] },
+                 { sem:"4to SEMESTRE – MEDIO II",     mods:["Frontend","Backend Básico","Base de Datos II","Control de Versiones","Módulo Emergente IV (Contexto IA)"] }],
+  "Superior":   [{ sem:"5to SEMESTRE – SUPERIOR I",   mods:["Frontend Avanzado","Backend Avanzado","Arquitectura de Software","Seguridad Informática","Módulo Emergente V (SDD)"] },
+                 { sem:"6to SEMESTRE – SUPERIOR II",  mods:["DevOps Básico","Testing de Software","Despliegue","Gestión de Proyectos","Módulo Emergente VI (Flujo IA)"] }],
+  "Ingeniería": [{ sem:"7mo SEMESTRE – INGENIERÍA I",  mods:["Estructuras de Datos Avanzadas","Algoritmos","Complejidad Computacional","Bases de Datos Avanzadas","Módulo Emergente VII"] },
+                 { sem:"8vo SEMESTRE – INGENIERÍA II", mods:["Arquitectura Avanzada","Cloud Computing","Infraestructura","Seguridad Avanzada","Módulo Emergente VIII"] },
+                 { sem:"9no SEMESTRE – INGENIERÍA III",mods:["IA en Desarrollo","Spec-Driven Development","Ingeniería de Prompts","Automatización Avanzada","Módulo Emergente IX (Ética IA)"] },
+                 { sem:"10mo SEMESTRE – INGENIERÍA IV",mods:["Proyecto de Grado","Documentación Técnica","Emprendimiento Tecnológico","Inserción Laboral","Módulo Emergente X (IA aplicada)"] }]
+};
+
+let modNameToId = {};     // nombre → id en BD
+let NIVEL = "";
+let SEMESTRE_IDX = 0;
+
+// ── INIT
 window.addEventListener('DOMContentLoaded', async () => {
   const u = JSON.parse(localStorage.getItem('user') || '{}');
-  if (!TOKEN || u.rol !== 'profesor') { window.location.href = '../login.html'; return; }
-  document.getElementById('prof-name').textContent = u.nombre;
-  document.getElementById('lvl-tag').textContent = `Nivel: ${u.nivel_asignado}`;
-  NIVEL_ASIGNADO = u.nivel_asignado;
-  loadModulos();
+  if (!TOKEN || u.rol !== 'profesor') { window.location.replace('../login.html'); return; }
+
+  document.getElementById('prof-name').textContent = u.nombre || 'Profesor';
+  NIVEL = detectarNivel(u.nivel_asignado || '');
+  document.getElementById('lvl-badge').textContent = 'Nivel: ' + (u.nivel_asignado || 'No asignado');
+
+  document.getElementById('btn-logout').addEventListener('click', () => {
+    localStorage.clear();
+    window.location.replace('../login.html');
+  });
+
+  // Cargar IDs de módulos desde la BD
+  try {
+    const r = await fetch(API + '/modulos/');
+    const d = await r.json();
+    (d.modulos || []).forEach(m => { modNameToId[m.nombre.trim()] = m.id; });
+  } catch(e) { console.error('Error cargando módulos:', e); }
+
+  renderSemTabs();
+  renderModulos(SEMESTRE_IDX);
 });
 
-function logout() { localStorage.clear(); window.location.href = '../login.html'; }
+// Detecta el nivel base del usuario (Básico, Auxiliar, Medio, Superior, Ingeniería)
+function detectarNivel(nivelStr) {
+  const s = nivelStr.toLowerCase();
+  if (s.includes('ingenier')) return 'Ingeniería';
+  if (s.includes('superior')) return 'Superior';
+  if (s.includes('medio'))    return 'Medio';
+  if (s.includes('auxiliar')) return 'Auxiliar';
+  return 'Básico';
+}
 
-async function loadModulos() {
-  const r = await fetch(API_URL + '/modulos/');
-  const d = await r.json();
-  const base = NIVEL_ASIGNADO.split(' ')[0].toLowerCase().trim();
-  const mods = (d.modulos || []).filter(m => m.nivel.toLowerCase().includes(base));
-  const container = document.getElementById('modulos-container');
-  if (!mods.length) { container.innerHTML = 'No tienes módulos asignados.'; return; }
+// ── Pestañas de semestres
+function renderSemTabs() {
+  const sems = MALLA[NIVEL] || MALLA['Básico'];
+  const tabsEl = document.getElementById('sem-tabs');
+  if (sems.length <= 1) { tabsEl.style.display = 'none'; return; }
+  tabsEl.innerHTML = sems.map((s, i) => `
+    <button class="sem-btn ${i===0?'active':''}" onclick="switchSem(${i}, this)">${s.sem.split(' – ')[0]}</button>
+  `).join('');
+}
 
-  container.innerHTML = mods.map((mod, i) => `
-    <div class="mod-card" id="mc-${mod.id}">
-      <div class="mod-header" onclick="document.getElementById('mc-${mod.id}').classList.toggle('open')">
-        <div class="mod-name">Módulo ${i+1}: ${mod.nombre}</div>
+function switchSem(idx, btn) {
+  document.querySelectorAll('.sem-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  SEMESTRE_IDX = idx;
+  renderModulos(idx);
+}
+
+// ── Renderiza módulos del semestre seleccionado
+function renderModulos(semIdx) {
+  const sems = MALLA[NIVEL] || MALLA['Básico'];
+  const sem  = sems[semIdx] || sems[0];
+  const area = document.getElementById('mods-area');
+
+  area.innerHTML = sem.mods.map((modName, mi) => `
+    <div class="mod-card" id="mc-${mi}">
+      <div class="mod-header" onclick="toggleMod(${mi}, '${modName.replace(/'/g,"\\'")}')">
+        <div class="mod-name">Módulo ${mi+1}: ${modName}</div>
         <span>▼</span>
       </div>
-      <div class="mod-body">
+      <div class="mod-body" id="mb-${mi}">
         ${[1,2,3,4,5].map(t => `
           <div class="topic-box">
-            <div class="topic-header">📌 TEMA ${t}</div>
+            <div class="topic-title">📌 Tema ${t}</div>
             <div class="mat-grid">
-              ${renderSlot(mod.id, t, 'teoria', '📄 Teoría')}
-              ${renderSlot(mod.id, t, 'presentacion', '📊 PPT')}
-              ${renderSlot(mod.id, t, 'video', '🎥 Video')}
-              ${renderSlot(mod.id, t, 'audio', '🎵 Audio')}
-              ${renderSlot(mod.id, t, 'evaluacion', '📝 Evaluación')}
+              ${slot(mi, t, 'teoria',      '📄 Teoría')}
+              ${slot(mi, t, 'presentacion','📊 PPT')}
+              ${slot(mi, t, 'video',       '🎥 Video')}
+              ${slot(mi, t, 'audio',       '🎵 Audio')}
+              ${slot(mi, t, 'evaluacion',  '📝 Evaluación')}
             </div>
           </div>
         `).join('')}
       </div>
     </div>
   `).join('');
-  
-  mods.forEach(async (mod) => {
-    const res = await fetch(API_URL + `/modulos/${mod.id}/contenidos`);
-    const data = await res.json();
-    (data.contenidos || []).forEach(c => {
-      const input = document.getElementById(`in-${mod.id}-${c.tema_num}-${c.tipo}`);
-      if (input && c.url) input.value = c.url;
-    });
-  });
 }
 
-function renderSlot(modId, t, tipo, label) {
-  return `
-    <div class="mat-slot">
-      <div class="slot-label">${label}</div>
-      <input type="url" id="in-${modId}-${t}-${tipo}" placeholder="Link...">
-      <button class="btn-save" onclick="saveMat(${modId}, ${t}, '${tipo}')">Guardar</button>
-    </div>`;
+function slot(mi, t, tipo, label) {
+  return `<div class="mat-slot">
+    <div class="slot-label">${label}</div>
+    <input class="slot-input" type="url" id="sl-${mi}-${t}-${tipo}" placeholder="Pegar link...">
+    <button class="btn-save" onclick="guardar(${mi},${t},'${tipo}')">Guardar</button>
+  </div>`;
 }
 
-async function saveMat(modId, t, tipo) {
-  const url = document.getElementById(`in-${modId}-${t}-${tipo}`).value;
-  if (!url) return alert('Pega un link');
-  const r = await fetch(API_URL + '/modulos/contenido', {
-    method: 'POST',
-    headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ modulo_id: modId, tipo, titulo: tipo.toUpperCase(), url, tema_num: t })
-  });
-  if (r.ok) {
-    const toast = document.getElementById('toast');
-    toast.style.display = 'block';
-    setTimeout(() => toast.style.display = 'none', 2000);
-  }
-}
+// ── Abrir módulo y cargar contenidos existentes
+async function toggleMod(mi, modName) {
+  const card = document.getElementById('mc-'+mi);
+  card.classList.toggle('open');
+  if (!card.classList.contains('open')) return;
 
-async function cambiarPass() {
-  const p1 = document.getElementById('new-pass').value;
-  const p2 = document.getElementById('new-pass2').value;
-  const msg = document.getElementById('pass-msg');
-  if (!p1 || p1.length < 4) { msg.style.color='#f87171'; msg.textContent='Mínimo 4 caracteres'; return; }
-  if (p1 !== p2) { msg.style.color='#f87171'; msg.textContent='Las contraseñas no coinciden'; return; }
+  // Buscar id en BD (fuzzy: busca substring)
+  const modId = modNameToId[modName] || Object.entries(modNameToId).find(([k])=>k.toLowerCase().includes(modName.toLowerCase().slice(0,8)))?.[1];
+  if (!modId) return; // sin id no se puede cargar, pero el formulario sí funciona
+
   try {
-    const r = await fetch(API_URL + '/auth/update-password', {
+    const r = await fetch(API + '/modulos/' + modId + '/contenidos');
+    const d = await r.json();
+    (d.contenidos || []).forEach(c => {
+      const el = document.getElementById(`sl-${mi}-${c.tema_num}-${c.tipo}`);
+      if (el && c.url) el.value = c.url;
+    });
+  } catch {}
+}
+
+// ── Guardar material
+async function guardar(mi, t, tipo) {
+  const sems = MALLA[NIVEL] || MALLA['Básico'];
+  const modName = sems[SEMESTRE_IDX].mods[mi];
+  const url = document.getElementById(`sl-${mi}-${t}-${tipo}`).value.trim();
+  if (!url) { showToast('⚠️ Pega un link primero'); return; }
+
+  // Obtener modulo_id
+  let modId = modNameToId[modName] || Object.entries(modNameToId).find(([k])=>k.toLowerCase().includes(modName.toLowerCase().slice(0,8)))?.[1];
+
+  if (!modId) {
+    showToast('⚠️ Módulo no encontrado en la BD. Ejecuta /cargar-datos primero');
+    return;
+  }
+
+  try {
+    const r = await fetch(API + '/modulos/contenido', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ modulo_id: modId, tipo, titulo: tipo.toUpperCase(), url, tema_num: t })
+    });
+    if (r.ok) { showToast('✅ Guardado correctamente'); }
+    else { const d = await r.json(); showToast('❌ ' + (d.detail || 'Error al guardar')); }
+  } catch { showToast('❌ Error de conexión'); }
+}
+
+// ── Cambio de contraseña
+async function cambiarPass() {
+  const p1  = document.getElementById('np1').value;
+  const p2  = document.getElementById('np2').value;
+  const msg = document.getElementById('pass-msg');
+  if (p1.length < 4)  { msg.style.color='#f87171'; msg.textContent='Mínimo 4 caracteres'; return; }
+  if (p1 !== p2)      { msg.style.color='#f87171'; msg.textContent='Las contraseñas no coinciden'; return; }
+  try {
+    const r = await fetch(API + '/auth/update-password', {
       method: 'PUT',
       headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
       body: JSON.stringify({ new_password: p1 })
     });
     if (r.ok) {
       msg.style.color='#48d18e'; msg.textContent='✅ Contraseña actualizada';
-      document.getElementById('new-pass').value='';
-      document.getElementById('new-pass2').value='';
+      document.getElementById('np1').value=''; document.getElementById('np2').value='';
     } else { msg.style.color='#f87171'; msg.textContent='Error al actualizar'; }
   } catch { msg.style.color='#f87171'; msg.textContent='Error de conexión'; }
+}
+
+// ── Toast
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 2500);
 }
 </script>
 </body>
