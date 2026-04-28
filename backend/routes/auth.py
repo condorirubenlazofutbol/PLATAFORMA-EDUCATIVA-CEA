@@ -35,12 +35,16 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         if not conn:
             raise HTTPException(status_code=500, detail="Database connection error")
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, email, password, rol, nivel_asignado FROM usuarios WHERE email=%s", (form_data.username,))
+        cur.execute("SELECT id, nombre, email, password, rol, nivel_asignado, estado FROM usuarios WHERE email=%s", (form_data.username,))
         row = cur.fetchone()
         cur.close(); conn.close()
         
         if not row:
             raise HTTPException(status_code=401, detail="Usuario no encontrado")
+            
+        estado = row[6]
+        if estado == 'pausado':
+            raise HTTPException(status_code=403, detail="Tu cuenta está suspendida por falta de pago o por el administrador.")
             
         is_valid = False
         try:
@@ -151,7 +155,7 @@ def get_estudiantes():
         raise HTTPException(status_code=500, detail="Error de base de datos")
     try:
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, apellido, email, nivel_asignado FROM usuarios WHERE rol='estudiante' ORDER BY nivel_asignado, nombre")
+        cur.execute("SELECT id, nombre, apellido, email, nivel_asignado, carnet, estado FROM usuarios WHERE rol='estudiante' ORDER BY nivel_asignado, nombre")
         return {"estudiantes": rows_to_dicts(cur, cur.fetchall())}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -166,7 +170,7 @@ def get_profesores():
         raise HTTPException(status_code=500, detail="Error de base de datos")
     try:
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, apellido, email, nivel_asignado FROM usuarios WHERE rol='profesor' ORDER BY nivel_asignado")
+        cur.execute("SELECT id, nombre, apellido, email, nivel_asignado, carnet, estado FROM usuarios WHERE rol='profesor' ORDER BY nivel_asignado")
         return {"profesores": rows_to_dicts(cur, cur.fetchall())}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -209,6 +213,28 @@ def reset_password(usuario_id: int, data: PasswordResetBody):
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         conn.commit()
         return {"mensaje": "Contraseña restablecida correctamente"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+class EstadoUpdateBody(BaseModel):
+    estado: str
+
+@router.put("/usuarios/{usuario_id}/estado", dependencies=[Depends(get_current_user)])
+def update_estado(usuario_id: int, data: EstadoUpdateBody):
+    if data.estado not in ['activo', 'pausado']:
+        raise HTTPException(status_code=400, detail="Estado inválido")
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Error de base de datos")
+    try:
+        cur = conn.cursor()
+        cur.execute("UPDATE usuarios SET estado = %s WHERE id = %s", (data.estado, usuario_id))
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        conn.commit()
+        return {"mensaje": f"Estado actualizado a {data.estado}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:

@@ -106,6 +106,7 @@ def init_db():
         for col_sql in [
             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS nivel_asignado VARCHAR(100)",
             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS carnet VARCHAR(50)",
+            "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS estado VARCHAR(20) DEFAULT 'activo'",
             "ALTER TABLE modulos ADD COLUMN IF NOT EXISTS orden INT DEFAULT 0",
             "ALTER TABLE contenidos ADD COLUMN IF NOT EXISTS tema_num INT DEFAULT 1",
             "ALTER TABLE contenidos ALTER COLUMN url SET DEFAULT ''",
