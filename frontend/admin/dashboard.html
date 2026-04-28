@@ -95,6 +95,7 @@ td{padding:.6rem .8rem;border-bottom:1px solid rgba(255,255,255,.03)}
   <button class="tab active" data-page="resumen">📊 Resumen</button>
   <button class="tab" data-page="profesores">👨‍🏫 Profesores</button>
   <button class="tab" data-page="estudiantes">🎓 Estudiantes</button>
+  <button class="tab" data-page="reportes">📈 Reportes Académicos</button>
 </div>
 
 <div class="content">
@@ -196,6 +197,24 @@ td{padding:.6rem .8rem;border-bottom:1px solid rgba(255,255,255,.03)}
       <div class="tbl-wrap"><table><thead><tr><th>Nombre</th><th>Email</th><th>Nivel</th><th>⚙️</th></tr></thead><tbody id="tbl-est"><tr><td colspan="4" style="color:var(--m);text-align:center">Cargando...</td></tr></tbody></table></div>
     </div>
   </div>
+
+  <!-- REPORTES -->
+  <div id="page-reportes" class="page" style="display:none">
+    <div class="card" style="text-align:center; padding: 3rem 1rem;">
+      <h3 style="font-size: 1.5rem; color: var(--a2); margin-bottom: 2rem;">📈 Estado Global de la Academia</h3>
+      <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem;">
+        <div class="stat-card" style="background: rgba(14, 165, 233, 0.1); border-color: var(--a);">
+          <div class="stat-num" id="rep-mods" style="font-size: 3rem;">–</div>
+          <div class="stat-label" style="font-size: .8rem;">Módulos en Malla</div>
+        </div>
+        <div class="stat-card" style="background: rgba(16, 185, 129, 0.1); border-color: #10b981;">
+          <div class="stat-num" id="rep-mats" style="font-size: 3rem; color: #10b981;">–</div>
+          <div class="stat-label" style="font-size: .8rem;">Materiales Publicados</div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="loadReportes()" style="max-width: 200px; margin: 2rem auto 0;">🔄 Actualizar Datos</button>
+    </div>
+  </div>
 </div>
 
 <div id="toast"></div>
@@ -240,6 +259,7 @@ function setupTabs() {
 async function loadAll() {
   await Promise.all([loadProfesores(), loadEstudiantes()]);
   renderResumen();
+  loadReportes();
 }
 
 async function loadProfesores() {
@@ -301,7 +321,10 @@ function renderProfesores() {
         <td>${p.nombre} ${p.apellido || ''}</td>
         <td style="font-size:.7rem;color:var(--m)">${p.email}</td>
         <td><span class="tag">${p.nivel_asignado || '–'}</span></td>
-        <td><button onclick="delUser(${p.id},'prof')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:.8rem">🗑</button></td>
+        <td>
+          <button onclick="resetPass(${p.id}, '${p.nombre}')" style="background:none;border:none;color:var(--a2);cursor:pointer;font-size:.9rem;margin-right:.5rem" title="Restablecer Contraseña">🔑</button>
+          <button onclick="delUser(${p.id},'prof')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:.9rem" title="Eliminar">🗑</button>
+        </td>
       </tr>`).join('')
     : '<tr><td colspan="4" style="color:var(--m);text-align:center;padding:1rem">Sin profesores registrados</td></tr>';
 }
@@ -312,9 +335,22 @@ function renderEstudiantes() {
         <td>${e.nombre} ${e.apellido || ''}</td>
         <td style="font-size:.7rem;color:var(--m)">${e.email}</td>
         <td><span class="tag">${e.nivel_asignado || '–'}</span></td>
-        <td><button onclick="delUser(${e.id},'est')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:.8rem">🗑</button></td>
+        <td>
+          <button onclick="resetPass(${e.id}, '${e.nombre}')" style="background:none;border:none;color:var(--a2);cursor:pointer;font-size:.9rem;margin-right:.5rem" title="Restablecer Contraseña">🔑</button>
+          <button onclick="delUser(${e.id},'est')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:.9rem" title="Eliminar">🗑</button>
+        </td>
       </tr>`).join('')
     : '<tr><td colspan="4" style="color:var(--m);text-align:center;padding:1rem">Sin estudiantes inscritos</td></tr>';
+}
+
+async function loadReportes() {
+  try {
+    const r = await fetch(API + '/modulos/stats', { headers: { Authorization: 'Bearer ' + TOKEN } });
+    if (!r.ok) return;
+    const d = await r.json();
+    document.getElementById('rep-mods').textContent = d.modulos || 0;
+    document.getElementById('rep-mats').textContent = d.materiales_publicados || 0;
+  } catch(e) { console.error('Error reportes', e); }
 }
 
 // ── FORMS ──────────────────────────────────────────────────────────────────
@@ -388,6 +424,21 @@ async function delUser(id, type) {
     if (!r.ok) throw new Error('Error al eliminar');
     toast('🗑 Usuario eliminado');
     await loadAll();
+  } catch(err) { showErr(err.message); }
+}
+
+async function resetPass(id, nombre) {
+  const newPass = prompt(`Ingrese la nueva contraseña para ${nombre}:`);
+  if (!newPass) return;
+  if (newPass.length < 4) return alert('La contraseña debe tener al menos 4 caracteres');
+  try {
+    const r = await fetch(`${API}/auth/usuarios/${id}/password`, {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ new_password: newPass })
+    });
+    if (!r.ok) throw new Error('Error al restablecer contraseña');
+    toast('✅ Contraseña restablecida');
   } catch(err) { showErr(err.message); }
 }
 

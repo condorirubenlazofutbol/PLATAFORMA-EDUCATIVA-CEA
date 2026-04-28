@@ -195,10 +195,10 @@ function renderMods(idx) {
       </div>
       <div class="mod-body" id="mb-${mi}">
         <div class="tema-tabs">
-          ${[1,2,3,4,5].map(t => `<button class="tema-btn ${t===1?'active':''}" onclick="switchTema(${mi}, ${t})" id="tbtn-${mi}-${t}">Tema ${t}</button>`).join('')}
+          ${[1,2,3,4].map(t => `<button class="tema-btn ${t===1?'active':''}" onclick="switchTema(${mi}, ${t})" id="tbtn-${mi}-${t}">Tema ${t}</button>`).join('')}
         </div>
         <div class="tema-containers">
-          ${[1,2,3,4,5].map(t => `
+          ${[1,2,3,4].map(t => `
             <div class="tema-content ${t===1?'active':''}" id="tcont-${mi}-${t}">
               <div class="mat-grid" id="mgrid-${mi}-${t}">
                 ${TIPOS.map(tipo => `
@@ -216,7 +216,7 @@ function renderMods(idx) {
 }
 
 function switchTema(mi, t) {
-  for(let i=1; i<=5; i++) {
+  for(let i=1; i<=4; i++) {
     document.getElementById(`tbtn-${mi}-${i}`).classList.remove('active');
     document.getElementById(`tcont-${mi}-${i}`).classList.remove('active');
   }
@@ -239,13 +239,32 @@ async function toggleMod(mi, modName) {
     const items = (d.contenidos || []).filter(c => c.url);
 
     items.forEach(c => {
+      // Intentar encontrar el botón base
       const btn = document.getElementById(`btn-${mi}-${c.tema_num}-${c.tipo}`);
+      
       if(btn) {
+        // Es un material base (Teoría, Presentación, etc.)
         btn.classList.add('active-mat');
         btn.href = c.url;
         btn.target = "_blank";
-        // Convertir div a a
-        btn.outerHTML = btn.outerHTML.replace(/^<div/, '<a').replace(/<\/div>$/, '</a>');
+        if(btn.tagName.toLowerCase() !== 'a') {
+          btn.outerHTML = btn.outerHTML.replace(/^<div/, '<a').replace(/<\/div>$/, '</a>');
+        }
+      } else {
+        // Es un material extra, crearlo dinámicamente
+        const grid = document.getElementById(`mgrid-${mi}-${c.tema_num}`);
+        if(grid && !document.getElementById(`btn-extra-${c.id}`)) {
+          const a = document.createElement('a');
+          a.href = c.url;
+          a.target = "_blank";
+          a.className = 'mat-btn active-mat';
+          a.id = `btn-extra-${c.id}`;
+          a.innerHTML = `
+            <div class="mat-icon">🔗</div>
+            <div class="mat-title">${c.titulo}</div>
+          `;
+          grid.appendChild(a);
+        }
       }
     });
   } catch {}

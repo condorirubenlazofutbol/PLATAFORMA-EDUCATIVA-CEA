@@ -26,6 +26,29 @@ def get_modulos():
         return {"modulos": rows_to_dicts(cur, cur.fetchall())}
     finally: conn.close()
 
+@router.get("/stats")
+def get_stats():
+    conn = get_db_connection()
+    if not conn: raise HTTPException(status_code=500, detail="Error DB")
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT COUNT(*) FROM usuarios WHERE rol='estudiante'")
+        estudiantes = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM usuarios WHERE rol='profesor'")
+        profesores = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM modulos")
+        modulos = cur.fetchone()[0]
+        cur.execute("SELECT COUNT(*) FROM contenidos WHERE url != ''")
+        materiales = cur.fetchone()[0]
+        
+        return {
+            "estudiantes": estudiantes,
+            "profesores": profesores,
+            "modulos": modulos,
+            "materiales_publicados": materiales
+        }
+    finally: conn.close()
+
 @router.get("/{modulo_id}/contenidos")
 def get_contenidos(modulo_id: int):
     conn = get_db_connection()

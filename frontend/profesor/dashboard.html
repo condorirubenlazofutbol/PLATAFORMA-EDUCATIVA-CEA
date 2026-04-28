@@ -195,10 +195,10 @@ function renderModulos(semIdx) {
       </div>
       <div class="mod-body" id="mb-${mi}">
         <div class="tema-tabs">
-          ${[1,2,3,4,5].map(t => `<button class="tema-btn ${t===1?'active':''}" onclick="switchTema(${mi}, ${t})" id="tbtn-${mi}-${t}">Tema ${t}</button>`).join('')}
+          ${[1,2,3,4].map(t => `<button class="tema-btn ${t===1?'active':''}" onclick="switchTema(${mi}, ${t})" id="tbtn-${mi}-${t}">Tema ${t}</button>`).join('')}
         </div>
         <div class="tema-containers">
-          ${[1,2,3,4,5].map(t => `
+          ${[1,2,3,4].map(t => `
             <div class="tema-content ${t===1?'active':''}" id="tcont-${mi}-${t}">
               <div class="mat-list">
                 ${TIPOS.map(tipo => `
@@ -211,6 +211,18 @@ function renderModulos(semIdx) {
                     <button class="btn-save" onclick="guardar(${mi},${t},'${tipo.id}')">Guardar</button>
                   </div>
                 `).join('')}
+                
+                <!-- Extras Dinámicos -->
+                <div id="extras-container-${mi}-${t}"></div>
+                <div class="mat-item" style="background: rgba(14, 165, 233, 0.1); border-style: dashed;">
+                  <div class="mat-header">
+                    <span class="mat-icon">➕</span>
+                    <span class="mat-title">Agregar Material Extra</span>
+                  </div>
+                  <input class="slot-input" type="text" id="extra-tit-${mi}-${t}" placeholder="Título (Ej: PDF Adicional)" style="margin-bottom: .3rem">
+                  <input class="slot-input" type="url" id="extra-url-${mi}-${t}" placeholder="Enlace...">
+                  <button class="btn-save" style="background: var(--a2); color: var(--dark)" onclick="guardarExtra(${mi},${t})">Guardar Extra</button>
+                </div>
               </div>
             </div>
           `).join('')}
@@ -221,8 +233,7 @@ function renderModulos(semIdx) {
 }
 
 function switchTema(mi, t) {
-  // Desactivar todos los botones de este módulo
-  for(let i=1; i<=5; i++) {
+  for(let i=1; i<=4; i++) {
     document.getElementById(`tbtn-${mi}-${i}`).classList.remove('active');
     document.getElementById(`tcont-${mi}-${i}`).classList.remove('active');
   }
@@ -243,27 +254,70 @@ async function toggleMod(mi, modName) {
     const r = await fetch(API + '/modulos/' + modId + '/contenidos');
     const d = await r.json();
     (d.contenidos || []).forEach(c => {
-      const el = document.getElementById(`sl-${mi}-${c.tema_num}-${c.tipo}`);
-      if (el && c.url) el.value = c.url;
+      if (TIPOS.find(x => x.id === c.tipo)) {
+        const el = document.getElementById(`sl-${mi}-${c.tema_num}-${c.tipo}`);
+        if (el && c.url) el.value = c.url;
+      } else {
+        // Es un extra
+        if (c.url) renderExtraUI(mi, c.tema_num, c.tipo, c.titulo, c.url);
+      }
     });
   } catch {}
 }
 
-async function guardar(mi, t, tipo) {
+function renderExtraUI(mi, t, tipoId, titulo, url) {
+  const container = document.getElementById(`extras-container-${mi}-${t}`);
+  if (!container) return;
+  // Solo agregar si no existe ya para no duplicar en UI
+  if (document.getElementById(`sl-${mi}-${t}-${tipoId}`)) return;
+
+  const div = document.createElement('div');
+  div.className = 'mat-item';
+  div.innerHTML = `
+    <div class="mat-header">
+      <span class="mat-icon">🔗</span>
+      <span class="mat-title">${titulo}</span>
+    </div>
+    <input class="slot-input" type="url" id="sl-${mi}-${t}-${tipoId}" value="${url}" placeholder="Enlace...">
+    <button class="btn-save" onclick="guardar(${mi},${t},'${tipoId}', '${titulo}')">Actualizar Extra</button>
+  `;
+  container.appendChild(div);
+}
+
+async function guardarExtra(mi, t) {
+  const titInput = document.getElementById(`extra-tit-${mi}-${t}`);
+  const urlInput = document.getElementById(`extra-url-${mi}-${t}`);
+  const titulo = titInput.value.trim() || 'Material Extra';
+  const url = urlInput.value.trim();
+  if (!url) { showToast('⚠️ Ingresa un enlace'); return; }
+  
+  // Generar un ID único para el custom tipo
+  const tipoId = 'custom_' + Date.now();
+  await guardar(mi, t, tipoId, titulo, url);
+  
+  // Limpiar form de extras y renderizar nuevo
+  titInput.value = '';
+  urlInput.value = '';
+  renderExtraUI(mi, t, tipoId, titulo, url);
+}
+
+async function guardar(mi, t, tipo, overrideTitle, overrideUrl) {
   const sems = MALLA[NIVEL] || MALLA['Básico'];
   const modName = sems[SEMESTRE_IDX].mods[mi];
-  const url = document.getElementById(`sl-${mi}-${t}-${tipo}`).value.trim();
+  const url = overrideUrl || document.getElementById(`sl-${mi}-${t}-${tipo}`).value.trim();
   if (!url) { showToast('⚠️ Ingresa un enlace'); return; }
 
   let modId = modNameToId[modName] || Object.entries(modNameToId).find(([k])=>k.toLowerCase().includes(modName.toLowerCase().slice(0,8)))?.[1];
 
   if (!modId) { showToast('⚠️ Módulo no encontrado. Ejecuta /cargar-datos'); return; }
 
+  const tituloFinal = overrideTitle || TIPOS.find(x=>x.id===tipo)?.lbl || 'Extra';
+
   try {
     const r = await fetch(API + '/modulos/contenido', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ modulo_id: modId, tipo, titulo: TIPOS.find(x=>x.id===tipo).lbl, url, tema_num: t })
+      body: JSON.stringify({ modulo_id: modId, tipo, titulo: tituloFinal, url, tema_num: t })
     });
     if (r.ok) { showToast('✅ Guardado correctamente'); }
     else { showToast('❌ Error al guardar'); }
