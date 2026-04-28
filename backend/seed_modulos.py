@@ -13,7 +13,6 @@ def seed_data():
         )
         cursor = connection.cursor()
 
-        # Limpiar datos anteriores para evitar duplicados
         cursor.execute("DELETE FROM contenidos")
         cursor.execute("DELETE FROM modulos")
         
@@ -26,7 +25,8 @@ def seed_data():
                 ("Algoritmos I", ["Qué es un algoritmo", "Pseudocódigo", "Diagramas de flujo", "Ejercicios básicos"]),
                 ("Módulo Emergente I (IA básica)", ["Qué es la IA", "Uso incorrecto de la IA", "Limitaciones", "Uso responsable"])
             ]),
-            ("Básico", "2do SEMESTRE – AUXILIAR", [
+            # NIVEL AUXILIAR (SEPARADO)
+            ("Auxiliar", "2do SEMESTRE – AUXILIAR", [
                 ("Lógica de Programación II", ["Variables y tipos de datos", "Operadores", "Expresiones lógicas", "Evaluación"]),
                 ("Estructuras de Control", ["Condicionales", "Bucles", "Control de flujo", "Casos prácticos"]),
                 ("Funciones", ["Definición", "Parámetros", "Retorno", "Modularidad"]),
@@ -110,10 +110,10 @@ def seed_data():
                     )
         
         connection.commit()
-        print(f"Malla curricular cargada con éxito. Total módulos: {orden-1}")
+        print("Malla Auxiliar separada con éxito.")
 
     except Exception as e:
-        print(f"Error cargando malla: {e}")
+        print(f"Error: {e}")
     finally:
         if 'connection' in locals() and connection:
             cursor.close(); connection.close()

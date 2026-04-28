@@ -70,10 +70,8 @@ header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify
 const API_URL = "https://educonnect-backend-production-1d08.up.railway.app";
 const TOKEN = localStorage.getItem('token');
 const MALLA = [
-  { nivel: "Básico", semestres: [
-    { n: "1er SEMESTRE – BÁSICO", mods: ["Introducción a la Informática", "Pensamiento Computacional", "Lógica de Programación I", "Algoritmos I", "Módulo Emergente I (IA básica)"] },
-    { n: "2do SEMESTRE – AUXILIAR", mods: ["Lógica de Programación II", "Estructuras de Control", "Funciones", "Bases de Datos Básicas", "Módulo Emergente II (Prompts básicos)"] }
-  ]},
+  { nivel: "Básico", semestres: [{ n: "1er SEMESTRE – BÁSICO", mods: ["Introducción a la Informática", "Pensamiento Computacional", "Lógica de Programación I", "Algoritmos I", "Módulo Emergente I (IA básica)"] }] },
+  { nivel: "Auxiliar", semestres: [{ n: "2do SEMESTRE – AUXILIAR", mods: ["Lógica de Programación II", "Estructuras de Control", "Funciones", "Bases de Datos Básicas", "Módulo Emergente II (Prompts básicos)"] }] },
   { nivel: "Medio", semestres: [
     { n: "3er SEMESTRE – MEDIO I", mods: ["Programación con Python", "Estructuras de Datos", "Bases de Datos I", "Sistemas Operativos y Redes", "Módulo Emergente III (Prompt estructurado)"] },
     { n: "4to SEMESTRE – MEDIO II", mods: ["Frontend", "Backend Básico", "Base de Datos II", "Control de Versiones", "Módulo Emergente IV (Contexto IA)"] }
@@ -85,7 +83,7 @@ const MALLA = [
   { nivel: "Ingeniería", semestres: [
     { n: "7mo SEMESTRE – INGENIERÍA I", mods: ["Estructuras de Datos Avanzadas", "Algoritmos", "Complejidad Computacional", "Bases de Datos Avanzadas", "Módulo Emergente VII (Validación IA)"] },
     { n: "8vo SEMESTRE – INGENIERÍA II", mods: ["Arquitectura Avanzada", "Microservicios", "Infraestructura", "Seguridad Avanzada", "Módulo Emergente VIII (Automatización IA)"] },
-    { n: "9no SEMESTRE – INGENIERÍA III", mods: ["IA en Desarrollo", "Spec-Driven Development (SDD)", "Ingeniería de Prompts", "Automatización Avanzada", "Módulo Emergente IX (Ética IA)"] },
+    { n: "9no SEMESTRE – INGENIERÍA III", mods: ["IA en Desarrollo", "Spec-Driven Development (SDD)", "Ingiería de Prompts", "Automatización Avanzada", "Módulo Emergente IX (Ética IA)"] },
     { n: "10mo SEMESTRE – INGENIERÍA IV", mods: ["Proyecto de Grado", "Documentación Técnica", "Emprendimiento Tecnológico", "Inserción Laboral", "Módulo Emergente X (IA aplicada)"] }
   ]}
 ];
