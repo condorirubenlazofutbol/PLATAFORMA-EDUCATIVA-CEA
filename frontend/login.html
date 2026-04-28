@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduConnect Ruben – Acceso</title>
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0ea5e9">
+    <link rel="apple-touch-icon" href="images/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script src="js/api.js"></script>
     <style>
@@ -396,6 +400,16 @@
                 btn.textContent = 'Ingresar a EduConnect';
             }
         });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('SW registrado: ', registration.scope);
+                }).catch(err => {
+                    console.log('Fallo registro SW: ', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>
