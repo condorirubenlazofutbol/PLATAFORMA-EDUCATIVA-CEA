@@ -67,9 +67,12 @@ def instalar_datos_iniciales():
         import importlib
         import seed
         import seed_modulos
+        import database
         importlib.reload(seed)
         importlib.reload(seed_modulos)
+        importlib.reload(database)
         
+        database.init_db()
         reparados = seed_modulos.seed_data()
         
         # Verificación final
