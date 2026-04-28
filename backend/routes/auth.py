@@ -83,20 +83,21 @@ def register_profesor(nombre: str, apellido: str, carnet: str, nivel_asignado: s
         raise HTTPException(status_code=500, detail="Error de base de datos")
     try:
         cur = conn.cursor()
-        # Generar email: nombre.apellido@educonnect.com (sin espacios)
-        email = f"{nombre.strip().split(' ')[0].lower()}.{apellido.strip().split(' ')[0].lower()}@educonnect.com"
+        # Generar email limpio: juan.perez@educonnect.com
+        clean_n = nombre.strip().split(' ')[0].lower()
+        clean_a = apellido.strip().split(' ')[0].lower()
+        email = f"{clean_n}.{clean_a}@educonnect.com"
         
-        # Hash del carnet como password inicial
-        hashed = auth.get_password_hash(carnet)
+        hashed = auth.get_password_hash(str(carnet).strip())
         
         cur.execute(
             "INSERT INTO usuarios (nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id",
-            (nombre, apellido, email, hashed, "profesor", nivel_asignado, carnet)
+            (nombre.strip(), apellido.strip(), email, hashed, "profesor", nivel_asignado, str(carnet).strip())
         )
         new_id = cur.fetchone()[0]
         conn.commit()
         cur.close(); conn.close()
-        return {"id": new_id, "mensaje": f"Profesor {nombre} creado para nivel {nivel_asignado}"}
+        return {"id": new_id, "email": email, "mensaje": f"Profesor {nombre} creado"}
     except psycopg2.errors.UniqueViolation:
         raise HTTPException(status_code=400, detail="El email ya está registrado")
     except Exception as e:
@@ -106,31 +107,30 @@ def register_profesor(nombre: str, apellido: str, carnet: str, nivel_asignado: s
 
 @router.post("/register-estudiante", dependencies=[Depends(get_current_user)])
 def register_estudiante(data: RegistroEstudiante):
-    """El admin inscribe un nuevo estudiante. Email y Password se generan automáticamente."""
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Error de base de datos")
     try:
         cur = conn.cursor()
-        # Generar email y password inicial
-        email = f"{data.nombre.strip().split(' ')[0].lower()}.{data.apellido.strip().split(' ')[0].lower()}@educonnect.com"
-        hashed = auth.get_password_hash(data.carnet)
+        clean_n = data.nombre.strip().split(' ')[0].lower()
+        clean_a = data.apellido.strip().split(' ')[0].lower()
+        email = f"{clean_n}.{clean_a}@educonnect.com"
+        hashed = auth.get_password_hash(str(data.carnet).strip())
 
         cur.execute(
             "INSERT INTO usuarios (nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id",
-            (data.nombre, data.apellido, email, hashed, "estudiante", data.nivel_asignado, data.carnet)
+            (data.nombre.strip(), data.apellido.strip(), email, hashed, "estudiante", data.nivel_asignado, str(data.carnet).strip())
         )
         new_id = cur.fetchone()[0]
         conn.commit()
-        return {"id": new_id, "email": data.email, "mensaje": f"Estudiante {data.nombre} inscrito correctamente"}
+        return {"id": new_id, "email": email, "mensaje": f"Estudiante {data.nombre} inscrito"}
     except psycopg2.errors.UniqueViolation:
         conn.rollback()
-        raise HTTPException(status_code=400, detail="El email ya está registrado")
+        raise HTTPException(status_code=400, detail="El email ya existe")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        cur.close()
-        conn.close()
+        cur.close(); conn.close()
 
 @router.get("/estudiantes", dependencies=[Depends(get_current_user)])
 def get_estudiantes():
@@ -238,12 +238,18 @@ async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = 
         if not nombre or not carnet: continue
         
         try:
-            email = f"{str(nombre).strip().split(' ')[0].lower()}.{str(apellido).strip().split(' ')[0].lower()}@educonnect.com"
-            hashed = auth.get_password_hash(str(carnet))
+            # Limpieza profunda para email
+            clean_n = str(nombre).strip().split(' ')[0].lower()
+            clean_a = str(apellido).strip().split(' ')[0].lower()
+            email = f"{clean_n}.{clean_a}@educonnect.com"
+            
+            # Asegurar carnet como string y hash
+            s_carnet = str(carnet).strip()
+            hashed = auth.get_password_hash(s_carnet)
             
             cur.execute(
                 "INSERT INTO usuarios (nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s)",
-                (str(nombre), str(apellido), email, hashed, rol, nivel, str(carnet))
+                (str(nombre).strip(), str(apellido).strip(), email, hashed, rol, nivel, s_carnet)
             )
             registrados += 1
         except Exception as e:

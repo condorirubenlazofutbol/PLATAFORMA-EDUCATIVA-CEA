@@ -4,284 +4,90 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EduConnect Ruben – Plataforma Educativa</title>
-<meta name="description" content="Plataforma educativa EduConnect Ruben. Explora niveles y módulos académicos de Sistemas Informáticos.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script src="js/api.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-:root{--a:#6c63ff;--a2:#48d18e;--dark:#0b0f1a;--card:#131929;--card2:#1a2338;--b:rgba(255,255,255,.07);--t:#e8eaf0;--m:rgba(255,255,255,.45)}
+:root{--a:#6c63ff;--a2:#48d18e;--dark:#0b0f1a;--card:#131929;--card2:#1a2338;--b:rgba(255,255,255,.07);--t:#e8eaf0;--m:rgba(255,255,255,.45);--red:rgba(239, 68, 68, 0.18)}
 body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--t);min-height:100vh}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 20% 20%,rgba(108,99,255,.18) 0%,transparent 70%),radial-gradient(ellipse 50% 40% at 80% 80%,rgba(72,209,142,.12) 0%,transparent 70%);pointer-events:none;z-index:0}
 
-/* NAV */
 nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:1px solid var(--b);backdrop-filter:blur(14px);background:rgba(11,15,26,.85)}
-.logo-img{height:64px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(108,99,255,.4))}
-.nav-right{display:flex;align-items:center;gap:.75rem}
-.nav-link{color:var(--m);font-size:.88rem;font-weight:600;text-decoration:none;padding:.4rem .8rem;border-radius:8px;transition:color .2s}
-.nav-link:hover{color:var(--t)}
-.btn-login{background:linear-gradient(135deg,var(--a),#8b5cf6);color:#fff!important;padding:.5rem 1.2rem!important;border-radius:12px;font-weight:700;text-decoration:none;font-size:.85rem;transition:opacity .2s}
-.btn-login:hover{opacity:.88}
+.logo-img{height:60px;object-fit:contain}
+.btn-login{background:linear-gradient(135deg,var(--a),#8b5cf6);color:#fff;padding:.6rem 1.4rem;border-radius:12px;font-weight:800;text-decoration:none;font-size:.85rem}
 
-/* HERO */
 .hero{position:relative;z-index:1;text-align:center;padding:5rem 1.5rem 3.5rem}
-.hero-eyebrow{display:inline-block;background:rgba(108,99,255,.15);border:1px solid rgba(108,99,255,.3);color:var(--a);font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.35rem 1rem;border-radius:20px;margin-bottom:1.5rem}
-.hero h1{font-size:3rem;font-weight:900;line-height:1.1;margin-bottom:1rem}
+.hero h1{font-size:3.2rem;font-weight:900;line-height:1.1;margin-bottom:1rem}
 .hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--a2),var(--a));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{color:var(--m);font-size:1.05rem;max-width:520px;margin:0 auto 2rem;line-height:1.6}
-.hero-cta{display:inline-flex;gap:.75rem;flex-wrap:wrap;justify-content:center}
-.btn-cta{padding:.85rem 2rem;border-radius:14px;font-weight:700;font-size:.95rem;text-decoration:none;transition:all .2s;display:inline-block}
-.btn-cta-primary{background:linear-gradient(135deg,var(--a),#8b5cf6);color:#fff}
-.btn-cta-primary:hover{opacity:.88;transform:translateY(-2px)}
-.btn-cta-ghost{border:2px solid var(--b);color:var(--t)}
-.btn-cta-ghost:hover{border-color:rgba(255,255,255,.3);transform:translateY(-2px)}
 
-/* LOCK NOTICE */
-.lock-notice{position:relative;z-index:1;max-width:700px;margin:0 auto 2rem;text-align:center}
-        .level-card {
-            background: rgba(239, 68, 68, 0.08);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            border-radius: 24px;
-            padding: 2.5rem;
-            transition: transform .3s ease, border-color .3s;
-            position: relative;
-            overflow: hidden;
-        }
+.levels-wrap{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:0 1.5rem 5rem}
+.lvl-block{margin-bottom:2.5rem;animation:fadeIn .5s ease both}
+/* ROJO SUAVE PARA NIVELES */
+.lvl-header{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;padding:1.2rem 1.5rem;background:var(--red);border:2px solid rgba(239, 68, 68, 0.3);border-radius:20px}
+.lvl-name{font-size:1.2rem;font-weight:900}
 
-        .level-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(239, 68, 68, 0.4);
-        }
-
-/* LEVELS */
-.levels-wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:0 1.5rem 5rem}
-.section-title{font-size:1.3rem;font-weight:800;margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem}
-
-.lvl-block{margin-bottom:2.5rem}
-.lvl-header{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;padding:.85rem 1.2rem;background:rgba(239, 68, 68, 0.15);border:1px solid rgba(239, 68, 68, 0.3);border-radius:16px}
-.lvl-icon{font-size:1.8rem}
-.lvl-info h2{font-size:1.05rem;font-weight:800;color:#fff}
-.lvl-info p{font-size:.8rem;color:rgba(255,255,255,0.6);margin-top:.1rem}
-.lvl-badge{margin-left:auto;background:rgba(239, 68, 68, 0.2);color:#ff7c7c;font-size:.72rem;font-weight:700;padding:.25rem .7rem;border-radius:12px;border:1px solid rgba(239, 68, 68, 0.4);white-space:nowrap}
-
-/* SEMESTER TABS */
-.sem-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.8rem}
-.sem-tab{padding:.38rem 1rem;border-radius:20px;border:1px solid var(--b);background:transparent;color:var(--m);cursor:pointer;font-weight:600;font-size:.78rem;font-family:'Inter',sans-serif;transition:all .2s}
-.sem-tab.active{border-color:var(--a2);color:var(--a2);background:rgba(72,209,142,.08)}
-
-/* MODULE CARDS */
-.mods-grid{display:grid;gap:.7rem}
-.mod-card{background:var(--card2);border:1px solid var(--b);border-radius:14px;overflow:hidden;transition:border-color .2s}
-.mod-card:hover{border-color:rgba(108,99,255,.3)}
+.mod-card{background:var(--card2);border:1px solid var(--b);border-radius:14px;margin-bottom:.6rem;overflow:hidden}
 .mod-header{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.2rem;cursor:pointer}
-.mod-left{display:flex;align-items:center;gap:.75rem}
-.mod-num{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--a),#8b5cf6);display:grid;place-items:center;font-weight:800;font-size:.78rem;flex-shrink:0}
 .mod-name{font-size:.9rem;font-weight:700}
-.chevron{color:var(--m);font-size:.9rem;transition:transform .2s}
-.mod-card.open .chevron{transform:rotate(180deg)}
-.mod-body{display:none;padding:.2rem 1.2rem 1rem}
+.mod-body{display:none;padding:1.2rem;border-top:1px solid var(--b)}
 .mod-card.open .mod-body{display:block}
 
-/* TOPICS (public - names only) */
-.topic-list{list-style:none;display:grid;gap:.35rem}
-.topic-item{display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid var(--b);font-size:.82rem;color:var(--m)}
-.topic-item::before{content:'📌';font-size:.8rem}
+.topic-item{display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid var(--b);font-size:.82rem;color:var(--m);margin-bottom:.4rem}
+.locked{display:block;margin-top:.8rem;font-size:.75rem;color:var(--a2);font-weight:700}
 
-/* LOCK OVERLAY on topics */
-.locked-msg{display:flex;align-items:center;gap:.5rem;padding:.6rem .9rem;border-radius:10px;background:rgba(108,99,255,.07);border:1px dashed rgba(108,99,255,.2);font-size:.78rem;color:var(--a);margin-top:.5rem}
-
-/* FOOTER */
-footer{position:relative;z-index:1;text-align:center;padding:1.5rem;border-top:1px solid var(--b);color:var(--m);font-size:.78rem}
-
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.lvl-block{animation:fadeIn .4s ease both}
-#toast.show{transform:translateY(0);opacity:1}
-
-@media(max-width:640px){
-  nav{padding:0.8rem 1rem}
-  .logo-img{height:48px}
-  .hero{padding:3rem 1rem 2rem}
-  .hero h1{font-size:1.8rem}
-  .hero p{font-size:0.9rem}
-  .lvl-header{flex-direction:column;align-items:flex-start;gap:0.5rem;padding:1.2rem}
-  .lvl-badge{margin-left:0;margin-top:0.3rem}
-  .btn-cta{width:100%;text-align:center}
-}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:640px){.hero h1{font-size:2.2rem}.lvl-header{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
 <body>
 
 <nav>
   <img src="images/logo.png" alt="EduConnect" class="logo-img" onerror="this.style.display='none'">
-  <div class="nav-right">
-    <a href="index.html" class="nav-link">Inicio</a>
-    <a href="login.html" class="btn-login btn-cta">Iniciar Sesión</a>
-  </div>
+  <a href="login.html" class="btn-login">Iniciar Sesión</a>
 </nav>
 
 <div class="hero">
-  <span class="hero-eyebrow">✦ Plataforma Académica Pro</span>
-  <h1>Aprende con la mejor<br><em>estructura académica</em></h1>
-  <p>Explora los niveles, módulos y temas de nuestro programa de Sistemas Informáticos. Inicia sesión para acceder al material completo de tu curso.</p>
-  <div class="hero-cta">
-    <a href="login.html" class="btn-cta btn-cta-primary">🚀 Ingresar a mi cuenta</a>
-    <a href="#niveles" class="btn-cta btn-cta-ghost">📚 Ver el programa</a>
-  </div>
-</div>
-
-<div class="lock-notice">
-  <div class="lock-banner">
-    🔒 <span><strong>Vista pública</strong> · Los materiales del profesor (videos, PDFs, etc.) solo están disponibles para estudiantes inscritos</span>
-  </div>
+  <h1>Aprende con <em>EduConnect</em></h1>
+  <p style="color:var(--m);max-width:600px;margin:1rem auto">Explora nuestro programa académico avanzado de Sistemas Informáticos.</p>
 </div>
 
 <div class="levels-wrap" id="niveles">
-  <div class="section-title">📚 Estructura del Programa</div>
-  <div id="levels-container">
-    <p style="color:var(--m);text-align:center;padding:3rem">Cargando programa académico...</p>
-  </div>
+  <div id="levels-container"></div>
 </div>
-
-<footer>© 2026 EduConnect Ruben · Plataforma Educativa Pro · Todos los derechos reservados</footer>
 
 <script>
 const CURRICULUM = [
-  {id:'basico',name:'Básico',icon:'🔰',badge:'1 Semestre · 5 Módulos',desc:'Cimentando las bases del conocimiento profesional.',
-   semesters:[{id:'S1',label:'Semestre Único',modules:[
-     {n:'Introducción a la Informática',topics:['Qué es informática','Hardware y software','Dispositivos de entrada y salida','Uso básico del computador']},
-     {n:'Pensamiento Computacional',topics:['Qué es pensamiento computacional','Resolución de problemas','Abstracción','Descomposición']},
-     {n:'Lógica de Programación I',topics:['Secuencias','Algoritmos cotidianos','Introducción a variables','Representación de soluciones']},
-     {n:'Algoritmos I',topics:['Qué es un algoritmo','Pseudocódigo','Diagramas de flujo','Ejercicios básicos']},
-     {n:'Ofimática Básica',topics:['Procesadores de texto','Hojas de cálculo','Presentaciones digitales','Herramientas en la nube']}
-   ]}]},
-  {id:'auxiliar',name:'Auxiliar',icon:'⚙️',badge:'1 Semestre · 5 Módulos',desc:'Desarrollando habilidades prácticas esenciales.',
-   semesters:[{id:'S1',label:'Semestre Único',modules:[
-     {n:'Sistemas Operativos',topics:['Instalación de SO','Administración de archivos','Configuración de red','Seguridad básica']},
-     {n:'Programación Básica',topics:['Variables y tipos','Condicionales','Bucles','Funciones simples']},
-     {n:'Hardware Esencial',topics:['Componentes internos','Mantenimiento preventivo','Diagnóstico de fallas','Periféricos']},
-     {n:'Redes Locales',topics:['Conceptos de red','Protocolos básicos','Configuración LAN','Solución de problemas']},
-     {n:'Base de Datos Básica',topics:['Introducción a BD','Tablas y registros','Consultas SQL básicas','Formularios de captura']}
-   ]}]},
-  {id:'medio',name:'Medio',icon:'📚',badge:'2 Semestres · 5 Módulos c/u',desc:'Fortaleciendo tu perfil con formación intermedia.',
-   semesters:[
-     {id:'M1',label:'Medio 1',modules:[
-       {n:'Programación Intermedia',topics:['POO conceptos','Clases y objetos','Herencia','Polimorfismo']},
-       {n:'Diseño Web I',topics:['HTML5 semántico','CSS avanzado','Flexbox y Grid','Responsive Design']},
-       {n:'Base de Datos Intermedia',topics:['Normalización','Relaciones','Stored Procedures','Índices']},
-       {n:'Inglés Técnico I',topics:['Vocabulario IT','Lectura de documentación','Presentaciones','Listening técnico']},
-       {n:'Emprendimiento Digital',topics:['Modelo de negocio','Marketing digital','Plan de negocios','Pitch']}
-     ]},
-     {id:'M2',label:'Medio 2',modules:[
-       {n:'Programación Web',topics:['JavaScript moderno','Fetch API','Frameworks intro','Despliegue web']},
-       {n:'Diseño Web II',topics:['React básico','Componentes','Estado y props','Hooks']},
-       {n:'Redes Intermedias',topics:['Subredes','VLANs','Routing básico','Firewall']},
-       {n:'Programación Móvil I',topics:['Intro mobile dev','Android Studio','Layouts','Primera app']},
-       {n:'Proyecto Integrador I',topics:['Requerimientos','Diseño de solución','Implementación','Presentación']}
-     ]}
-   ]},
-  {id:'superior',name:'Superior',icon:'🚀',badge:'2 Semestres · 5 Módulos c/u',desc:'Alcanzando la excelencia en capacidades técnicas.',
-   semesters:[
-     {id:'S1',label:'Superior 1',modules:[
-       {n:'Arquitectura de Software',topics:['Patrones de diseño','MVC y capas','Microservicios','APIs RESTful']},
-       {n:'Bases de Datos Avanzadas',topics:['NoSQL','Redis','Optimización','Replicación']},
-       {n:'DevOps & Cloud',topics:['Docker','CI/CD','AWS/GCP','Monitoreo']},
-       {n:'Seguridad Informática',topics:['OWASP Top 10','Criptografía','Pentesting','Políticas']},
-       {n:'Inglés Técnico II',topics:['Redacción técnica','Reuniones en inglés','Certificaciones','Portafolio']}
-     ]},
-     {id:'S2',label:'Superior 2',modules:[
-       {n:'Inteligencia Artificial',topics:['Fundamentos de IA','Machine Learning','Modelos predictivos','IA aplicada']},
-       {n:'Desarrollo Full Stack',topics:['Node.js backend','React frontend','PostgreSQL','Cloud deploy']},
-       {n:'Gestión de Proyectos TI',topics:['Metodologías ágiles','Scrum & Kanban','Riesgos','PMI']},
-       {n:'Programación Móvil II',topics:['React Native','APIs nativas','App Store','Performance']},
-       {n:'Proyecto Integrador II',topics:['Análisis avanzado','Arquitectura','Desarrollo completo','Defensa']}
-     ]}
-   ]},
-  {id:'ingenieria',name:'Ingeniería',icon:'🏗️',badge:'4 Semestres · 4 Módulos c/u',desc:'Especialización técnica avanzada.',
-   semesters:[
-     {id:'I1',label:'Ingeniería 1',modules:[
-       {n:'Fundamentos de Ing. de Software',topics:['Ciclo de vida','Requerimientos','Modelado UML','Estándares IEEE']},
-       {n:'Matemáticas Discretas',topics:['Lógica proposicional','Teoría de grafos','Combinatoria','Álgebra booleana']},
-       {n:'Arquitecturas de Computadoras',topics:['Procesador','Memoria y jerarquía','Bus y E/S','Pipeline']},
-       {n:'Cálculo para Ingeniería',topics:['Límites y derivadas','Integrales','Series','Aplicaciones']}
-     ]},
-     {id:'I2',label:'Ingeniería 2',modules:[
-       {n:'Estructuras de Datos',topics:['Listas enlazadas','Árboles y grafos','Hash tables','Ordenación']},
-       {n:'Sistemas Operativos Avanzados',topics:['Procesos','Memoria virtual','Sistema de archivos','Concurrencia']},
-       {n:'Compiladores',topics:['Análisis léxico','Análisis sintáctico','Generación de código','Optimización']},
-       {n:'Redes Avanzadas',topics:['Protocolos capa 3','BGP y OSPF','SDN','Redes definidas por software']}
-     ]},
-     {id:'I3',label:'Ingeniería 3',modules:[
-       {n:'Ingeniería de Datos',topics:['Big Data','ETL y pipelines','Data Warehousing','Visualización']},
-       {n:'Machine Learning Avanzado',topics:['Regresión y clasificación','Redes neuronales','NLP','MLOps']},
-       {n:'Ciberseguridad Avanzada',topics:['Forense digital','Ethical hacking','Zero-trust','Respuesta a incidentes']},
-       {n:'Sistemas Distribuidos',topics:['Teorema CAP','Consenso distribuido','Kafka','Tolerancia a fallos']}
-     ]},
-     {id:'I4',label:'Ingeniería 4',modules:[
-       {n:'Proyecto de Grado I',topics:['Selección del tema','Marco teórico','Metodología','Cronograma']},
-       {n:'Proyecto de Grado II',topics:['Desarrollo del sistema','Pruebas','Documentación','Defensa']},
-       {n:'Innovación y Tecnología',topics:['Tendencias 2025','IoT y Edge','Blockchain aplicado','Computación cuántica']},
-       {n:'Liderazgo y Gestión TI',topics:['CTO/CIO roles','Estrategia TI','Equipos','Visión empresarial']}
-     ]}
-   ]}
+  {id:'basico',name:'Básico',icon:'🔰',desc:'Cimentando las bases del conocimiento.',modules:['Introducción a la Informática','Pensamiento Computacional','Lógica de Programación I','Algoritmos I','Ofimática Básica']},
+  {id:'auxiliar',name:'Auxiliar',icon:'⚙️',desc:'Habilidades prácticas esenciales.',modules:['Sistemas Operativos','Programación Básica','Hardware Esencial','Redes Locales','Base de Datos Básica']},
+  {id:'medio',name:'Medio',icon:'📚',desc:'Formación técnica intermedia.',modules:['Programación Intermedia','Diseño Web I','Base de Datos Intermedia','Inglés Técnico I','Emprendimiento Digital']},
+  {id:'superior',name:'Superior',icon:'🚀',desc:'Excelencia en capacidades técnicas.',modules:['Arquitectura de Software','Bases de Datos Avanzadas','DevOps & Cloud','Seguridad Informática','Inglés Técnico II']},
+  {id:'ingenieria',name:'Ingeniería',icon:'🏗️',desc:'Especialización tecnológica avanzada.',modules:['Fundamentos de Ing. Software','Matemáticas Discretas','Arquitecturas','Cálculo para Ingeniería']}
 ];
-
-let activeSem = {};
 
 function render() {
   const container = document.getElementById('levels-container');
-  container.innerHTML = CURRICULUM.map(lvl => {
-    const firstSem = lvl.semesters[0];
-    activeSem[lvl.id] = firstSem.id;
-    return `
+  container.innerHTML = CURRICULUM.map(lvl => `
     <div class="lvl-block">
       <div class="lvl-header">
-        <span class="lvl-icon">${lvl.icon}</span>
-        <div class="lvl-info">
-          <h2>Nivel ${lvl.name}</h2>
-          <p>${lvl.desc}</p>
-        </div>
-        <span class="lvl-badge">${lvl.badge}</span>
+        <span style="font-size:2rem">${lvl.icon}</span>
+        <div class="lvl-name">Nivel ${lvl.name}</div>
       </div>
-      ${lvl.semesters.length > 1 ? `
-        <div class="sem-tabs">
-          ${lvl.semesters.map((s,i) => `<button class="sem-tab ${i===0?'active':''}" onclick="switchSem('${lvl.id}','${s.id}',this)">${s.label}</button>`).join('')}
-        </div>` : ''}
-      <div class="mods-grid" id="mods-${lvl.id}">
-        ${renderMods(lvl, firstSem)}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderMods(lvl, sem) {
-  return sem.modules.map((mod, i) => `
-    <div class="mod-card" id="mc-${lvl.id}-${sem.id}-${i}">
-      <div class="mod-header" onclick="toggleMod('mc-${lvl.id}-${sem.id}-${i}')">
-        <div class="mod-left">
-          <div class="mod-num">${i+1}</div>
-          <div class="mod-name">${mod.n}</div>
-        </div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="mod-body">
-        <ul class="topic-list">
-          ${mod.topics.map(t => `<li class="topic-item">${t}</li>`).join('')}
-        </ul>
-        <div class="locked-msg">🔒 Inicia sesión para acceder al material completo de este módulo</div>
+      <div class="mods-grid">
+        ${lvl.modules.map((m,i) => `
+          <div class="mod-card" id="mc-${lvl.id}-${i}">
+            <div class="mod-header" onclick="document.getElementById('mc-${lvl.id}-${i}').classList.toggle('open')">
+              <div class="mod-name">${i+1}. ${m}</div>
+              <span style="font-size:0.7rem;color:var(--m)">▼</span>
+            </div>
+            <div class="mod-body">
+              ${[1,2,3,4,5].map(t => `<div class="topic-item">📌 Tema ${t}</div>`).join('')}
+              <span class="locked">🔒 Inicia sesión para ver el material</span>
+            </div>
+          </div>
+        `).join('')}
       </div>
     </div>`).join('');
 }
-
-function switchSem(lvlId, semId, btn) {
-  btn.closest('.lvl-block').querySelectorAll('.sem-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  activeSem[lvlId] = semId;
-  const lvl = CURRICULUM.find(l => l.id === lvlId);
-  const sem = lvl.semesters.find(s => s.id === semId);
-  document.getElementById('mods-' + lvlId).innerHTML = renderMods(lvl, sem);
-}
-
-function toggleMod(id) { document.getElementById(id).classList.toggle('open'); }
-
 render();
 </script>
 </body>

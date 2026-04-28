@@ -16,28 +16,21 @@ header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify
 .logo-img{height:64px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(108,99,255,.4))}
 .user-bar{display:flex;align-items:center;gap:.75rem}
 .avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));display:grid;place-items:center;font-weight:800;font-size:.9rem;flex-shrink:0}
-.u-name{font-weight:600;font-size:.88rem}
-.btn-out{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.4);padding:.38rem .9rem;border-radius:20px;cursor:pointer;font-weight:700;font-size:.78rem;font-family:'Inter',sans-serif;transition:all .2s}
-.btn-out:hover{background:#f87171;color:#fff}
+.btn-out{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.4);padding:.38rem .9rem;border-radius:20px;cursor:pointer;font-weight:700;font-size:.78rem;font-family:'Inter',sans-serif;transition:all .2s}
 
 .hero{position:relative;z-index:1;text-align:center;padding:3.5rem 1rem 2.5rem}
 .hero h1{font-size:2rem;font-weight:900;background:linear-gradient(90deg,#fff 30%,var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.5rem}
-.hero p{color:var(--m);font-size:.95rem}
 
 .levels-grid{position:relative;z-index:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;max-width:1100px;margin:0 auto 2.5rem;padding:0 1.5rem}
-.lvl-card{background:rgba(239, 68, 68, 0.15);border:1px solid rgba(239, 68, 68, 0.3);border-radius:20px;padding:1.8rem 1.4rem;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
-.lvl-card:hover{transform:translateY(-4px);border-color:rgba(239, 68, 68, 0.5);box-shadow:0 16px 40px rgba(0,0,0,.4)}
-.lvl-card.active{border-color:var(--red);box-shadow:0 0 0 2px rgba(239, 68, 68, 0.4)}
-.lvl-icon{font-size:2.4rem;margin-bottom:1rem}
-.lvl-name{font-size:1rem;font-weight:800;margin-bottom:.3rem}
-.lvl-desc{font-size:.76rem;color:var(--m);line-height:1.4}
-.lvl-badge{display:inline-block;margin-top:.8rem;background:rgba(239, 68, 68, 0.2);color:#ff7c7c;font-size:.68rem;font-weight:700;padding:.25rem .7rem;border-radius:20px;border:1px solid rgba(239, 68, 68, 0.4)}
+/* ROJO SUAVE MEJORADO */
+.lvl-card{background:rgba(239, 68, 68, 0.15);border:2px solid rgba(239, 68, 68, 0.3);border-radius:24px;padding:1.8rem 1.4rem;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.lvl-card:hover{transform:translateY(-4px);border-color:rgba(239, 68, 68, 0.5);box-shadow:0 16px 40px rgba(239, 68, 68, 0.15)}
+.lvl-card.active{border-color:var(--red);box-shadow:0 0 0 4px rgba(239, 68, 68, 0.2)}
+.lvl-name{font-size:1.1rem;font-weight:800;margin-top:1rem}
+.lvl-badge{display:inline-block;margin-top:.8rem;background:rgba(239, 68, 68, 0.2);color:#ff8080;font-size:.68rem;font-weight:800;padding:.3rem .8rem;border-radius:20px;border:1px solid rgba(239, 68, 68, 0.4)}
 
 .content-area{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 1.5rem 4rem}
 .section-card{background:var(--card);border:1px solid var(--b);border-radius:18px;padding:1.5rem;margin-bottom:1.5rem}
-
-.btn-primary{background:var(--a);color:#fff;border:none;padding:.6rem 1.2rem;border-radius:10px;font-weight:700;cursor:pointer}
-input{background:rgba(255,255,255,.06);border:1px solid var(--b);border-radius:8px;padding:.58rem .8rem;color:var(--t);outline:none;font-family:'Inter',sans-serif}
 
 .sem-tabs{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem}
 .sem-tab{padding:.5rem 1.3rem;border-radius:25px;border:2px solid var(--b);background:transparent;color:var(--m);cursor:pointer;font-weight:700;font-size:.82rem;transition:all .2s}
@@ -45,29 +38,23 @@ input{background:rgba(255,255,255,.06);border:1px solid var(--b);border-radius:8
 
 .module-card{background:var(--card2);border:1px solid var(--b);border-radius:16px;margin-bottom:.9rem;overflow:hidden;transition:border-color .2s}
 .module-header{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;cursor:pointer}
-.mod-left{display:flex;align-items:center;gap:.9rem}
-.mod-num{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--a),#8b5cf6);display:grid;place-items:center;font-weight:800;font-size:.82rem}
 .mod-name{font-size:.95rem;font-weight:700}
-.module-body{display:none;padding:0 1.4rem 1.4rem}
+.module-body{display:none;padding:1.4rem}
 .module-card.open .module-body{display:block}
-.topic-item{display:flex;align-items:center;gap:.7rem;padding:.6rem .8rem;border-radius:10px;margin-bottom:.4rem;background:rgba(255,255,255,.03);border:1px solid var(--b);font-size:.85rem;color:var(--m)}
 
-.material-link{display:flex;align-items:center;gap:.6rem;padding:.55rem .85rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-decoration:none;margin-top:.4rem;transition:all .2s}
-.material-link:hover{background:rgba(108,99,255,0.08);border-color:var(--a)}
-.m-type{font-size:.65rem;font-weight:800;text-transform:uppercase;color:var(--a2)}
+.topic-item{background:rgba(255,255,255,.03);border:1px solid var(--b);border-radius:12px;padding:1rem;margin-bottom:1rem}
+.topic-name{font-size:.85rem;font-weight:800;color:var(--a2);margin-bottom:.8rem;display:block}
 
-#toast{position:fixed;bottom:2rem;right:2rem;background:var(--card2);border:1px solid var(--b);border-radius:14px;padding:.85rem 1.4rem;font-size:.85rem;font-weight:600;z-index:9999;transform:translateY(80px);opacity:0;transition:all .35s;pointer-events:none}
-#toast.show{transform:translateY(0);opacity:1}
-@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.mat-link{display:flex;align-items:center;gap:.6rem;padding:.6rem .9rem;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--b);text-decoration:none;margin-top:.4rem;transition:all .2s}
+.mat-link:hover{background:rgba(108,99,255,0.08);border-color:var(--a)}
+.m-ico{font-size:1.1rem}
+.m-txt{font-size:.82rem;font-weight:600;flex:1}
+.m-tag{font-size:.62rem;font-weight:800;text-transform:uppercase;color:var(--a);padding:.2rem .5rem;background:rgba(108,99,255,0.15);border-radius:6px}
+
 @media(max-width:640px){
   header{padding:0.8rem 1rem}
-  .logo-img{height:48px}
-  .hero{padding:2rem 1rem 1.5rem}
-  .hero h1{font-size:1.4rem}
-  .levels-grid{grid-template-columns:1fr;gap:0.8rem;padding:0 1rem}
-  .lvl-card{padding:1.4rem 1.2rem}
-  .content-area{padding:0 1rem 3rem}
-  .sem-tab{padding:0.4rem 1rem;font-size:0.75rem}
+  .hero{padding:2rem 1rem}
+  .levels-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -77,14 +64,13 @@ input{background:rgba(255,255,255,.06);border:1px solid var(--b);border-radius:8
   <img src="../images/logo.png" alt="EduConnect" class="logo-img" onerror="this.style.display='none'">
   <div class="user-bar">
     <div class="avatar" id="avatar">?</div>
-    <span class="u-name" id="u-name">Cargando...</span>
     <button class="btn-out" onclick="logout()">Salir</button>
   </div>
 </header>
 
 <div class="hero">
   <h1 id="welcome-msg">¡Hola!</h1>
-  <p>Tu ruta de aprendizaje personalizada en EduConnect</p>
+  <p style="color:var(--m)">Tu ruta de aprendizaje personalizada</p>
 </div>
 
 <div class="levels-grid" id="levels-grid"></div>
@@ -92,38 +78,33 @@ input{background:rgba(255,255,255,.06);border:1px solid var(--b);border-radius:8
 <div class="content-area">
   <!-- PASSWORD CHANGE -->
   <div class="section-card">
-    <div style="font-weight:700;margin-bottom:.8rem;font-size:.85rem;color:var(--m);text-transform:uppercase">🔑 Seguridad: Cambiar Contraseña</div>
-    <div style="display:flex;gap:.8rem;max-width:500px">
-      <input type="password" id="new-pass" placeholder="Nueva clave (mín. 4 caracteres)" style="flex:1">
-      <button class="btn-primary" onclick="cambiarPass()">Actualizar</button>
+    <div style="font-weight:700;margin-bottom:.8rem;font-size:.7rem;color:var(--m);text-transform:uppercase;letter-spacing:0.1em">🔑 Seguridad</div>
+    <div style="display:flex;gap:.8rem">
+      <input type="password" id="new-pass" placeholder="Nueva contraseña" style="flex:1;background:rgba(0,0,0,0.2);border:1px solid var(--b);border-radius:8px;padding:.6rem;color:#fff">
+      <button onclick="cambiarPass()" style="background:var(--a);color:#fff;border:none;padding:.6rem 1.2rem;border-radius:8px;font-weight:700;cursor:pointer">Actualizar</button>
     </div>
   </div>
 
-  <div id="main-content">
-    <div style="text-align:center;padding:3rem;color:var(--m)">Selecciona tu nivel arriba para ver tus módulos</div>
-  </div>
+  <div id="main-content"></div>
 </div>
 
-<div id="toast"></div>
-
 <script>
+const API_URL = "https://educonnect-backend-production-1d08.up.railway.app";
 const TOKEN = localStorage.getItem('token');
 const CURRICULUM = [
-  {id:'basico', name:'Básico', icon:'🔰', badge:'Semestre 1', desc:'Bases de informática', semesters:[{id:'S1', label:'Semestre 1', modules:['Introducción a la Informática','Pensamiento Computacional','Lógica de Programación I','Algoritmos I','Ofimática Básica']}]},
-  {id:'auxiliar', name:'Auxiliar', icon:'⚙️', badge:'Semestre 1', desc:'Habilidades prácticas', semesters:[{id:'S1', label:'Semestre 1', modules:['Sistemas Operativos','Programación Básica','Hardware Esencial','Redes Locales','Base de Datos Básica']}]},
-  {id:'medio', name:'Medio', icon:'📚', badge:'Semestres 1-2', desc:'Formación intermedia', semesters:[
+  {id:'basico', name:'Básico', icon:'🔰', badge:'Semestre 1', semesters:[{id:'S1', label:'Semestre 1', modules:['Introducción a la Informática','Pensamiento Computacional','Lógica de Programación I','Algoritmos I','Ofimática Básica']}]},
+  {id:'auxiliar', name:'Auxiliar', icon:'⚙️', badge:'Semestre 1', semesters:[{id:'S1', label:'Semestre 1', modules:['Sistemas Operativos','Programación Básica','Hardware Esencial','Redes Locales','Base de Datos Básica']}]},
+  {id:'medio', name:'Medio', icon:'📚', badge:'Semestre 1-2', semesters:[
     {id:'M1', label:'Medio 1', modules:['Programación Intermedia','Diseño Web I','Base de Datos Intermedia','Inglés Técnico I','Emprendimiento Digital']},
     {id:'M2', label:'Medio 2', modules:['Programación Web','Diseño Web II','Redes Intermedias','Programación Móvil I','Proyecto Integrador I']}
   ]},
-  {id:'superior', name:'Superior', icon:'🚀', badge:'Semestres 1-2', desc:'Excelencia técnica', semesters:[
+  {id:'superior', name:'Superior', icon:'🚀', badge:'Semestre 1-2', semesters:[
     {id:'S1', label:'Superior 1', modules:['Arquitectura de Software','Bases de Datos Avanzadas','DevOps & Cloud','Seguridad Informática','Inglés Técnico II']},
     {id:'S2', label:'Superior 2', modules:['Inteligencia Artificial','Desarrollo Full Stack','Gestión de Proyectos TI','Programación Móvil II','Proyecto Integrador II']}
   ]},
-  {id:'ingenieria', name:'Ingeniería', icon:'🏗️', badge:'Semestres 1-4', desc:'Especialización avanzada', semesters:[
+  {id:'ingenieria', name:'Ingeniería', icon:'🏗️', badge:'Semestre 1-4', semesters:[
     {id:'I1', label:'Ingeniería 1', modules:['Fundamentos de Ing. Software','Matemáticas Discretas','Arquitecturas','Cálculo']},
-    {id:'I2', label:'Ingeniería 2', modules:['Estructuras de Datos','SO Avanzados','Compiladores','Redes Avanzadas']},
-    {id:'I3', label:'Ingeniería 3', modules:['Ingeniería de Datos','Machine Learning','Ciberseguridad','Sistemas Distribuidos']},
-    {id:'I4', label:'Ingeniería 4', modules:['Proyecto de Grado I','Proyecto de Grado II','Innovación','Gestión TI']}
+    {id:'I2', label:'Ingeniería 2', modules:['Estructuras de Datos','SO Avanzados','Compiladores','Redes Avanzadas']}
   ]}
 ];
 
@@ -131,10 +112,9 @@ let modNameToId = {};
 
 window.addEventListener('DOMContentLoaded', async () => {
   const u = JSON.parse(localStorage.getItem('user') || '{}');
-  if (!TOKEN || u.rol !== 'estudiante') { window.location.href = '../login.html'; return; }
-  document.getElementById('u-name').textContent = u.nombre;
-  document.getElementById('avatar').textContent = u.nombre[0].toUpperCase();
+  if (!TOKEN) { window.location.href = '../login.html'; return; }
   document.getElementById('welcome-msg').textContent = `¡Hola, ${u.nombre}!`;
+  document.getElementById('avatar').textContent = u.nombre[0].toUpperCase();
   
   const r = await fetch(API_URL + '/modulos/');
   const d = await r.json();
@@ -145,33 +125,24 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 function logout() { localStorage.clear(); window.location.href = '../login.html'; }
 
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'show';
-  setTimeout(() => t.className = '', 3500);
-}
-
 async function cambiarPass() {
   const pass = document.getElementById('new-pass').value;
-  if (pass.length < 4) return toast('Mínimo 4 caracteres');
-  try {
-    const r = await fetch(API_URL + '/auth/update-password', {
-      method: 'PUT', headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ new_password: pass })
-    });
-    if (r.ok) { toast('✅ Contraseña actualizada'); document.getElementById('new-pass').value = ''; }
-  } catch { toast('Error de conexión'); }
+  if (pass.length < 4) return alert('Mínimo 4 caracteres');
+  const r = await fetch(API_URL + '/auth/update-password', {
+    method: 'PUT', headers: { 'Authorization': 'Bearer ' + TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ new_password: pass })
+  });
+  if (r.ok) { alert('✅ Contraseña actualizada'); document.getElementById('new-pass').value = ''; }
 }
 
 function renderLevels(asignado) {
   const grid = document.getElementById('levels-grid');
-  const base = (asignado || '').split(' - ')[0];
-  const filtered = CURRICULUM.filter(l => l.name === base);
-  grid.innerHTML = filtered.map(l => `
+  const base = (asignado || '').split(' - ')[0].toLowerCase().trim();
+  const filtered = CURRICULUM.filter(l => l.name.toLowerCase() === base || l.id === base);
+  grid.innerHTML = (filtered.length ? filtered : CURRICULUM).map(l => `
     <div class="lvl-card" onclick="selectLevel('${l.id}')">
-      <div class="lvl-icon">${l.icon}</div>
+      <div style="font-size:2.5rem">${l.icon}</div>
       <div class="lvl-name">Nivel ${l.name}</div>
-      <div class="lvl-desc">${l.desc}</div>
       <span class="lvl-badge">${l.badge}</span>
     </div>
   `).join('');
@@ -185,8 +156,7 @@ function selectLevel(id) {
     <div class="sem-tabs">${lvl.semesters.map(s => `<button class="sem-tab" onclick="renderModules('${id}','${s.id}',this)">${s.label}</button>`).join('')}</div>
     <div id="modules-list"></div>
   `;
-  const firstTab = container.querySelector('.sem-tab');
-  if (firstTab) firstTab.click();
+  container.querySelector('.sem-tab').click();
 }
 
 function renderModules(lvlId, semId, btn) {
@@ -198,11 +168,16 @@ function renderModules(lvlId, semId, btn) {
   list.innerHTML = sem.modules.map((m, i) => `
     <div class="module-card" id="mc-${i}">
       <div class="module-header" onclick="toggleMod(${i},'${m}')">
-        <div class="mod-left"><div class="mod-num">${i+1}</div><div class="mod-name">${m}</div></div>
-        <span class="mod-chevron">▼</span>
+        <div class="mod-name">${i+1}. ${m}</div>
+        <span style="font-size:0.7rem;color:var(--m)">▼</span>
       </div>
       <div class="module-body" id="mb-${i}">
-        <div id="mat-${i}" style="margin-top:1rem"></div>
+        ${[1,2,3,4,5].map(t => `
+          <div class="topic-item">
+            <span class="topic-name">TEMA ${t}</span>
+            <div id="mat-${i}-${t}">⏳ Cargando...</div>
+          </div>
+        `).join('')}
       </div>
     </div>
   `).join('');
@@ -212,22 +187,25 @@ async function toggleMod(idx, name) {
   const card = document.getElementById('mc-'+idx);
   card.classList.toggle('open');
   if (card.classList.contains('open')) {
-    const matEl = document.getElementById('mat-'+idx);
-    matEl.innerHTML = '⏳ Cargando materiales...';
     const dbId = modNameToId[name];
-    if (!dbId) { matEl.innerHTML = 'Sin materiales.'; return; }
+    if (!dbId) return;
     try {
       const r = await fetch(API_URL + '/modulos/' + dbId + '/contenidos');
       const d = await r.json();
       const items = (d.contenidos || []).filter(c => c.url);
-      if (!items.length) { matEl.innerHTML = '📭 El profesor aún no ha subido material.'; return; }
-      matEl.innerHTML = items.map(c => `
-        <a href="${c.url}" target="_blank" class="material-link">
-          <span>📂</span>
-          <span style="flex:1">${c.titulo}</span>
-          <span class="m-type">${c.tipo}</span>
-        </a>`).join('');
-    } catch { matEl.innerHTML = 'Error al cargar.'; }
+      const icons = {teoria:'📄',presentacion:'📊',video:'🎥',audio:'🎵',evaluacion:'📝'};
+      for (let t = 1; t <= 5; t++) {
+        const matEl = document.getElementById(`mat-${idx}-${t}`);
+        const tItems = items.filter(c => c.tema_num === t);
+        if (!tItems.length) { matEl.innerHTML = '<span style="font-size:0.75rem;color:var(--m)">Sin material</span>'; continue; }
+        matEl.innerHTML = tItems.map(c => `
+          <a href="${c.url}" target="_blank" class="mat-link">
+            <span class="m-ico">${icons[c.tipo]||'📂'}</span>
+            <span class="m-txt">${c.titulo || 'Ver material'}</span>
+            <span class="m-tag">${c.tipo}</span>
+          </a>`).join('');
+      }
+    } catch { }
   }
 }
 </script>
