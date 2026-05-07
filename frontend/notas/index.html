@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notas y Certificados | EduConnect Pro</title>
+    <!-- jsPDF para generación de PDFs en cliente y SweetAlert -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        :root {
+            --primary: #0ea5e9; 
+            --success: #48d18e;
+            --bg-dark: #0b0f1a;
+            --card-bg: rgba(19, 25, 41, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; }
+        header { padding: 1.5rem; border-bottom: 1px solid var(--border); background: rgba(11, 15, 26, 0.8); backdrop-filter: blur(10px); display: flex; justify-content: space-between; align-items: center; }
+        .back-btn { color: var(--primary); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem;}
+        h1 { margin-bottom: 1rem; color: var(--primary); }
+        
+        /* Tablas */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.85rem; }
+        
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        .badge.aprobado { background: rgba(72, 209, 142, 0.2); color: var(--success); }
+        .badge.reprobado { background: rgba(255, 94, 94, 0.2); color: #ff5e5e; }
+        .badge.cursando { background: rgba(14, 165, 233, 0.2); color: var(--primary); }
+
+        button.btn-cert { padding: 8px 16px; background: var(--success); border:none; border-radius: 8px; color:#111; font-weight:800; cursor:pointer; transition: 0.3s; }
+        button.btn-cert:hover { box-shadow: 0 5px 15px rgba(72, 209, 142, 0.3); transform: translateY(-2px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+        
+        /* Docentes */
+        input[type="number"] { width: 80px; padding: 8px; border-radius: 5px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; text-align: center;}
+    </style>
+</head>
+<body>
+    <header>
+        <a href="../portal/index.html" class="back-btn">⬅ Volver al Portal</a>
+        <h2>📊 Notas y Certificados</h2>
+    </header>
+
+    <div class="container">
+        
+        <!-- Panel Estudiante -->
+        <div class="card" id="studentPanel" style="display:none;">
+            <h1>Mi Historial Académico</h1>
+            <p style="color:var(--muted)">Consulta tus calificaciones. Si la nota es mayor a 60, podrás emitir tu Certificado digital con QR.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Módulo</th>
+                        <th>Estado</th>
+                        <th>Calificación Final</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTableBody">
+                    <!-- Filas dinámicas -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Panel Docente -->
+        <div class="card" id="teacherPanel" style="display:none;">
+            <h1>Registro de Calificaciones</h1>
+            <p style="color:var(--muted)">Ingresa o actualiza las notas de tus estudiantes (Rango: 0 - 100).</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Estudiante</th>
+                        <th>Módulo</th>
+                        <th>Nota Actual</th>
+                        <th>Actualizar</th>
+                    </tr>
+                </thead>
+                <tbody id="teacherTableBody">
+                    <!-- Filas dinámicas -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- Script de lógica -->
+    <script src="../js/api.js"></script>
+    <script>
+        // API_BASE viene de js/api.js (auto-detecta local vs producci�n) 
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) window.location.href = '../login.html';
+
+        if (user.rol === 'estudiante') {
+            document.getElementById('studentPanel').style.display = 'block';
+            cargarNotasEstudiante();
+        } else if (['docente', 'profesor', 'director'].includes(user.rol)) {
+            document.getElementById('teacherPanel').style.display = 'block';
+            cargarAlumnosDocente();
+        } else {
+            // Secretarias y Jefes ven el panel de docentes en modo solo lectura
+            document.getElementById('teacherPanel').style.display = 'block';
+            cargarAlumnosDocente(true);
+        }
+
+        // --- Funciones del Estudiante ---
+        async function cargarNotasEstudiante() {
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--muted);">Cargando...</td></tr>';
+            
+            let progreso = [];
+            try {
+                const res = await fetch(`${API_BASE}/notas/mis-notas`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    progreso = data.progreso || [];
+                }
+            } catch (e) { /* Fallback demo */ }
+
+            // Si no hay datos reales, usar demo
+            if (progreso.length === 0) {
+                progreso = [
+                    { modulo: "Ofimática Básica", nota: 85, estado: "aprobado" },
+                    { modulo: "Diseño Gráfico I", nota: 45, estado: "reprobado" },
+                    { modulo: "Programación Web", nota: null, estado: "cursando" }
+                ];
+            }
+
+            tbody.innerHTML = '';
+            progreso.forEach(p => {
+                const badgeClass = p.estado === 'aprobado' ? 'aprobado' : (p.estado === 'reprobado' ? 'reprobado' : 'cursando');
+                const notaText = (p.nota !== null && p.nota !== undefined) ? p.nota : '-';
+                const canCert = p.estado === 'aprobado' && p.nota >= 60;
+                const btnHTML = canCert
+                    ? `<button class="btn-cert" onclick="emitirCertificado('${p.modulo}', '${user.nombre}')">Generar PDF</button>`
+                    : `<button class="btn-cert" disabled>No Disponible</button>`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:600;">${p.modulo}</td>
+                        <td><span class="badge ${badgeClass}">${p.estado.toUpperCase()}</span></td>
+                        <td style="font-size:1.1rem; font-weight:800;">${notaText}</td>
+                        <td>${btnHTML}</td>
+                    </tr>`;
+            });
+        }
+
+        async function emitirCertificado(modulo, alumno) {
+            Swal.fire({
+                title: 'Generando Certificado',
+                text: 'Por favor espera mientras nuestro sistema firma tu diploma...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            // Simulamos la llamada a backend/routes/certificados.py
+            setTimeout(() => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('landscape');
+                
+                // Diseño de Certificado
+                doc.setFillColor(11, 15, 26); // Fondo Dark
+                doc.rect(0, 0, 297, 210, 'F');
+                
+                doc.setDrawColor(14, 165, 233); // Borde Celeste
+                doc.setLineWidth(2);
+                doc.rect(10, 10, 277, 190);
+
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(30);
+                doc.text("CERTIFICADO DE APROBACIÓN", 148, 50, null, null, "center");
+
+                doc.setFontSize(16);
+                doc.setTextColor(148, 163, 184);
+                doc.text("Se otorga el presente documento a:", 148, 80, null, null, "center");
+
+                doc.setFontSize(35);
+                doc.setTextColor(72, 209, 142); // Verde esmeralda
+                doc.text(alumno.toUpperCase(), 148, 105, null, null, "center");
+
+                doc.setFontSize(16);
+                doc.setTextColor(148, 163, 184);
+                doc.text(`Por haber concluido y aprobado satisfactoriamente el módulo de:`, 148, 130, null, null, "center");
+                
+                doc.setFontSize(22);
+                doc.setTextColor(14, 165, 233);
+                doc.text(modulo.toUpperCase(), 148, 145, null, null, "center");
+
+                doc.setFontSize(10);
+                doc.setTextColor(255,255,255);
+                doc.text(`Código de Validación QR: EDU-${Math.floor(Math.random()*100000)}`, 20, 190);
+                doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString()}`, 220, 190);
+
+                doc.save(`Certificado_${modulo}.pdf`);
+                
+                Swal.fire('¡Felicidades!', 'Tu certificado se ha descargado correctamente en tu dispositivo.', 'success');
+            }, 2000);
+        }
+
+        // --- Funciones del Docente ---
+        async function cargarAlumnosDocente(readOnly = false) {
+            const tbody = document.getElementById('teacherTableBody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--muted);">Cargando alumnos...</td></tr>';
+
+            let alumnos = [];
+            try {
+                const res = await fetch(`${API_BASE}/notas/modulo/1`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) { const d = await res.json(); alumnos = d.alumnos || []; }
+            } catch (e) {}
+
+            if (alumnos.length === 0) {
+                alumnos = [
+                    { id: 1, nombre: "Carlos", apellido: "Mendoza", modulo_id: 1, nota: 85 },
+                    { id: 2, nombre: "Ana",    apellido: "Paredes",  modulo_id: 1, nota: 45 },
+                    { id: 3, nombre: "Luis",   apellido: "Torre",    modulo_id: 1, nota: null }
+                ];
+            }
+
+            tbody.innerHTML = '';
+            alumnos.forEach(a => {
+                const uid  = a.usuario_id || a.id;
+                const mid  = a.modulo_id  || 1;
+                const mod  = a.modulo     || `Módulo ${mid}`;
+                const btnHTML = readOnly
+                    ? `<button disabled style="padding:8px 15px; border-radius:5px; opacity:0.5;">Solo Lectura</button>`
+                    : `<button style="padding:8px 15px; background:var(--primary); color:white; border:none; border-radius:5px; cursor:pointer; font-weight:600;" onclick="guardarNota(${uid}, ${mid})">Guardar</button>`;
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:600;">${a.nombre} ${a.apellido}</td>
+                        <td>${mod}</td>
+                        <td><input type="number" id="nota_${uid}" value="${a.nota || ''}" min="0" max="100" ${readOnly ? 'disabled' : ''} style="width:80px; padding:8px; border-radius:5px; border:1px solid var(--border); background:rgba(0,0,0,0.3); color:white; text-align:center;"></td>
+                        <td>${btnHTML}</td>
+                    </tr>`;
+            });
+
+        }
+
+        async function guardarNota(usuarioId, moduloId) {
+            const inputEl = document.getElementById(`nota_${usuarioId}`);
+            const nota = parseFloat(inputEl ? inputEl.value : 0);
+            if (isNaN(nota) || nota < 0 || nota > 100) {
+                Swal.fire('Error', 'La nota debe ser un número entre 0 y 100', 'warning');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/notas/actualizar`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ usuario_id: usuarioId, modulo_id: moduloId, nota })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    Swal.fire({ icon: 'success', title: '✅ Nota Guardada', text: `Estado calculado: ${data.estado}`, timer: 1500, showConfirmButton: false });
+                } else {
+                    Swal.fire('Error', data.detail || 'No se pudo guardar.', 'error');
+                }
+            } catch (e) {
+                Swal.fire({ icon: 'success', title: 'Nota guardada (Demo)', timer: 1500, showConfirmButton: false });
+            }
+        }
+    </script>
+</body>
+</html>

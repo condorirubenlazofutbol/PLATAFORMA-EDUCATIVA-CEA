@@ -100,3 +100,31 @@ def delete_usuario(id: int):
         conn.commit()
         return {"mensaje": "Usuario eliminado"}
     finally: conn.close()
+
+
+class ContenidoSimple(BaseModel):
+    titulo: str
+    tipo: str
+    url: str
+
+@router.post("/{modulo_id}/contenidos", dependencies=[Depends(get_current_user)])
+def add_contenido_a_modulo(modulo_id: int, data: ContenidoSimple, current_user: dict = Depends(get_current_user)):
+    """Añade un material directamente a un módulo por su ID. Usado desde el Aula Virtual."""
+    if current_user["rol"] not in ["docente", "profesor", "director", "jefe_carrera", "administrador"]:
+        raise HTTPException(status_code=403, detail="Sin permisos para publicar materiales")
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO contenidos (modulo_id, tipo, titulo, url, tema_num) VALUES (%s, %s, %s, %s, 1) RETURNING id",
+            (modulo_id, data.tipo, data.titulo, data.url)
+        )
+        new_id = cur.fetchone()[0]
+        conn.commit()
+        return {"id": new_id, "mensaje": "Material publicado correctamente"}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close(); conn.close()
+

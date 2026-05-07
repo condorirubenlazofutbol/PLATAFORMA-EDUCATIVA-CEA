@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal | EduConnect Pro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap');
+        :root {
+            --primary: #0ea5e9;
+            --secondary: #48d18e;
+            --violet: #8b5cf6;
+            --amber: #f59e0b;
+            --bg-dark: #0b0f1a;
+            --card-bg: rgba(19, 25, 41, 0.75);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+        /* Background gradients */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.12), transparent 30%),
+                radial-gradient(circle at 90% 80%, rgba(72, 209, 142, 0.1), transparent 30%);
+            z-index: -1; pointer-events: none;
+        }
+
+        /* ── Topbar ── */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 2.5rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(11, 15, 26, 0.9);
+            backdrop-filter: blur(16px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .logo-text { font-size: 1.3rem; font-weight: 900; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-right { display: flex; align-items: center; gap: 1.2rem; }
+        
+        .user-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 0.4rem 1rem 0.4rem 0.5rem;
+        }
+        .avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: #0b0f1a;
+        }
+        .user-details { line-height: 1.2; }
+        .user-name { font-weight: 700; font-size: 0.9rem; }
+        .user-role { font-size: 0.72rem; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .btn-logout {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 94, 94, 0.08);
+            color: #ff7070;
+            border: 1px solid rgba(255, 94, 94, 0.25);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover { background: rgba(255, 94, 94, 0.2); }
+
+        /* ── Hero / Bienvenida ── */
+        .welcome-section {
+            padding: 3rem 2.5rem 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .welcome-section h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.4rem; }
+        .welcome-section h1 span { background: linear-gradient(90deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .welcome-section p { color: var(--muted); font-size: 1rem; }
+
+        /* ── Stats Strip ── */
+        .stats-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto 2.5rem;
+            padding: 0 2.5rem;
+        }
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .stat-icon { font-size: 2rem; }
+        .stat-val { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
+        .stat-label { font-size: 0.78rem; color: var(--muted); }
+
+        /* ── Apps Grid ── */
+        .section-label {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2.5rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+        }
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2.5rem 4rem;
+        }
+
+        .app-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 2rem;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--card-accent, var(--primary));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .app-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,0.4); border-color: var(--card-accent, var(--primary)); }
+        .app-card:hover::before { opacity: 1; }
+
+        .app-icon-wrap {
+            width: 56px; height: 56px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.05);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem;
+            border: 1px solid var(--border);
+        }
+        .app-title { font-size: 1.1rem; font-weight: 700; }
+        .app-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.5; flex: 1; }
+        .app-arrow {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--card-accent, var(--primary));
+            font-weight: 600;
+        }
+
+        /* Colores por subsistema */
+        .c-notas    { --card-accent: #0ea5e9; }
+        .c-modulos  { --card-accent: #0ea5e9; }
+        .c-malla    { --card-accent: #8b5cf6; }
+        .c-votacion { --card-accent: #f59e0b; }
+        .c-planes   { --card-accent: #48d18e; }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 640px) {
+            header { padding: 1rem 1.2rem; }
+            .welcome-section, .stats-strip, .apps-grid, .section-label { padding-left: 1.2rem; padding-right: 1.2rem; }
+            .welcome-section h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <span style="font-size:1.6rem;">🎓</span>
+            <div class="logo-text">EduConnect Pro</div>
+        </div>
+        <div class="header-right">
+            <div class="user-chip">
+                <div class="avatar" id="avatarInitial">?</div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">Cargando...</div>
+                    <div class="user-role" id="userRole">--</div>
+                </div>
+            </div>
+            <button class="btn-logout" onclick="logout()">Salir</button>
+        </div>
+    </header>
+
+    <!-- Bienvenida -->
+    <div class="welcome-section">
+        <h1>¡Hola, <span id="welcomeName">Bienvenido</span>! 👋</h1>
+        <p id="welcomeSub">Selecciona uno de tus módulos disponibles para comenzar.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-strip" id="statsStrip">
+        <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div><div class="stat-val" id="statModulos">--</div><div class="stat-label">Módulos activos</div></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div><div class="stat-val" id="statAccesos">5</div><div class="stat-label">Subsistemas disponibles</div></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div><div class="stat-val" id="statRol">--</div><div class="stat-label">Tu rol institucional</div></div>
+        </div>
+    </div>
+
+    <!-- Label -->
+    <div class="section-label">Tus Aplicaciones</div>
+
+    <!-- Grid de Apps -->
+    <div class="apps-grid" id="appsGrid">
+
+        <a href="../notas/index.html" class="app-card c-notas" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
+            <div class="app-icon-wrap">📊</div>
+            <div>
+                <div class="app-title">Notas y Certificados</div>
+                <div class="app-desc">Revisa calificaciones, registra avances y emite certificados digitales con código QR.</div>
+            </div>
+            <div class="app-arrow">Acceder <span>→</span></div>
+        </a>
+
+        <a href="../modulos/index.html" class="app-card c-modulos" data-roles="director,docente,estudiante,jefe_carrera,administrador">
+            <div class="app-icon-wrap">📚</div>
+            <div>
+                <div class="app-title">Aula Virtual</div>
+                <div class="app-desc">Materiales de estudio, evaluaciones, tareas y seguimiento de progreso por módulo.</div>
+            </div>
+            <div class="app-arrow">Acceder <span>→</span></div>
+        </a>
+
+        <a href="../malla_curricular/index.html" class="app-card c-malla" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
+            <div class="app-icon-wrap">🗺️</div>
+            <div>
+                <div class="app-title">Malla Curricular</div>
+                <div class="app-desc">Visualiza el programa de estudios completo organizado por semestres y niveles.</div>
+            </div>
+            <div class="app-arrow">Acceder <span>→</span></div>
+        </a>
+
+        <a href="../votacion/index.html" class="app-card c-votacion" data-roles="director,secretaria,estudiante,administrador">
+            <div class="app-icon-wrap">🗳️</div>
+            <div>
+                <div class="app-title">Votaciones</div>
+                <div class="app-desc">Participa en elecciones estudiantiles e institucionales. Tu voto es anónimo y seguro.</div>
+            </div>
+            <div class="app-arrow">Acceder <span>→</span></div>
+        </a>
+
+        <a href="../planes/index.html" class="app-card c-planes" data-roles="docente,jefe_carrera,director,administrador">
+            <div class="app-icon-wrap">🤖</div>
+            <div>
+                <div class="app-title">Planes IA (Docentes)</div>
+                <div class="app-desc">Genera planes de clase completos con Inteligencia Artificial y descárgalos en PDF al instante.</div>
+            </div>
+            <div class="app-arrow">Acceder <span>→</span></div>
+        </a>
+
+        <a href="../comunicados/index.html" class="app-card" style="--card-accent: #f97316;" data-roles="director,secretaria,docente,estudiante,jefe_carrera,administrador">
+            <div class="app-icon-wrap">📢</div>
+            <div>
+                <div class="app-title">Comunicados</div>
+                <div class="app-desc">Tablón de avisos institucionales. Los directivos pueden publicar y gestionar comunicados.</div>
+            </div>
+            <div class="app-arrow">Acceder <span>→</span></div>
+        </a>
+
+        <a href="../secretaria/index.html" class="app-card" style="--card-accent: #8b5cf6;" data-roles="secretaria,director,administrador">
+            <div class="app-icon-wrap">📋</div>
+            <div>
+                <div class="app-title">Panel Secretaría</div>
+                <div class="app-desc">Inscribir estudiantes, gestionar usuarios, publicar comunicados y crear votaciones.</div>
+            </div>
+            <div class="app-arrow">Acceder <span>→</span></div>
+        </a>
+
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // API_BASE viene de js/api.js (auto-detecta local vs producci�n)
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token || !user.nombre) window.location.href = '../login.html';
+
+        // Poblar datos del usuario
+        const firstName = user.nombre ? user.nombre.split(' ')[0] : 'Usuario';
+        document.getElementById('welcomeName').textContent = firstName;
+        document.getElementById('userName').textContent = user.nombre || 'Usuario';
+        document.getElementById('userRole').textContent = user.rol || '--';
+        document.getElementById('statRol').textContent = formatRol(user.rol);
+        document.getElementById('avatarInitial').textContent = (user.nombre || 'U')[0].toUpperCase();
+
+        // Subtítulo según rol
+        const subTitles = {
+            director: 'Tienes acceso completo a todos los subsistemas institucionales.',
+            secretaria: 'Administra inscripciones, comunicados y votaciones.',
+            jefe_carrera: 'Gestiona la malla curricular y supervisa el progreso académico.',
+            docente: 'Publica materiales, registra notas y genera planes con IA.',
+            estudiante: 'Consulta tus módulos, notas y participa en las votaciones.'
+        };
+        document.getElementById('welcomeSub').textContent = subTitles[user.rol] || 'Selecciona un módulo para comenzar.';
+
+        // Filtrar tarjetas según rol
+        const cards = document.querySelectorAll('.app-card');
+        let visible = 0;
+        cards.forEach(card => {
+            const allowedRoles = card.getAttribute('data-roles').split(',');
+            if (!allowedRoles.includes(user.rol)) {
+                card.classList.add('hidden');
+            } else {
+                visible++;
+            }
+        });
+        document.getElementById('statAccesos').textContent = visible;
+
+        // Cargar conteo de módulos
+        fetch(`${API_BASE}/modulos`, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(r => r.ok ? r.json() : [])
+            .then(data => { document.getElementById('statModulos').textContent = data.length || '--'; })
+            .catch(() => { document.getElementById('statModulos').textContent = '4'; });
+
+        function formatRol(rol) {
+            const map = { director:'Director', jefe_carrera:'Jefe de Carrera', secretaria:'Secretaria', docente:'Docente', estudiante:'Estudiante', administrador:'Admin' };
+            return map[rol] || rol;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../login.html';
+        }
+    </script>
+</body>
+</html>

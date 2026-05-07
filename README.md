@@ -1,93 +1,154 @@
-# 🎓 EduConnect Ruben – Plataforma Educativa Pro & Escalable
+# 🎓 EduConnect Pro v21.0
 
-> Sistema LMS (Learning Management System) de alto rendimiento, diseñado para la escalabilidad académica. Incluye roles de Administrador, Profesor y Estudiante con una arquitectura moderna PWA.
-
----
-
-## 🌐 URLs de Producción
-
-| Recurso | URL |
-|---|---|
-| **Plataforma Web** | [https://condorirubenlazofutbol.github.io/Educonnect-Ruben/](https://condorirubenlazofutbol.github.io/Educonnect-Ruben/) |
-| **Página de Acceso** | [https://condorirubenlazofutbol.github.io/Educonnect-Ruben/login.html](https://condorirubenlazofutbol.github.io/Educonnect-Ruben/login.html) |
-| **Backend API** | [https://educonnect-backend-production-1d08.up.railway.app](https://educonnect-backend-production-1d08.up.railway.app) |
-| **Documentación API** | [/docs](https://educonnect-backend-production-1d08.up.railway.app/docs) |
+Plataforma educativa multi-subsistema con roles jerárquicos, IA pedagógica, votaciones, certificados y gestión académica integral.
 
 ---
 
-## 🚀 Características de Escalabilidad y Potencia
-
-### 📱 PWA (Progressive Web App)
-La plataforma es **instalable** en dispositivos Android, iOS y Windows/Mac. Funciona como una aplicación nativa, con icono en el escritorio y carga optimizada, garantizando acceso rápido para los estudiantes desde cualquier lugar.
-
-### 🛡️ Administración Avanzada y Control Total
-Diseñado para gestionar grandes volúmenes de usuarios:
-- **Buscador Inteligente:** Filtra miles de alumnos por **Número de Carnet** o Nombre en milisegundos.
-- **Control de Pagos (Pausar/Reanudar):** Suspensión inmediata del acceso para alumnos en mora sin borrar sus datos ni progreso.
-- **Gestión Masiva:** Carga de semestres completos mediante archivos Excel (.xlsx).
-- **Seguridad Pro:** Reseteo de contraseñas por carnet y cambio de credenciales de administrador integrado.
-
-### 👨‍🏫 Gestión de Contenidos Dinámicos
-- **Malla Curricular Robusta:** Estructura escalable de 10 Semestres (Básico hasta Ingeniería).
-- **Materiales Ilimitados:** Los profesores pueden añadir materiales extra dinámicos (PDF, Video, PPT, Audio) más allá de la malla base.
-
-### 🌐 Optimización SEO y Social Media
-Configurado con **Open Graph**, permitiendo que al compartir el enlace en WhatsApp o redes sociales, aparezca la marca oficial y una vista previa profesional.
-
----
-
-## 🏗️ Arquitectura Técnica
+## 🗂 Estructura del Proyecto
 
 ```
 Educonnect-Ruben/
-├── backend/                  # FastAPI (Python 3.11) + PostgreSQL
-│   ├── main.py               # Migraciones automáticas y Startup
-│   ├── database.py           # Gestión de Pool de conexiones
-│   └── routes/               # Lógica de negocio modularizada
-├── frontend/                 # Frontend ligero (Vanilla JS / HTML5 / CSS3)
-│   ├── instalar/             # Recursos PWA (Service Worker, Manifest, Iconos)
-│   ├── admin/                # Panel de Control Administrativo
-│   ├── profesor/             # Gestión de Módulos y Materiales
-│   └── student/              # Interfaz de Aprendizaje
-└── requirements.txt
+├── backend/                    ← API FastAPI (Python)
+│   ├── main.py                 ← Entrada principal
+│   ├── database.py             ← Esquema PostgreSQL
+│   ├── models.py               ← Modelos Pydantic
+│   ├── security.py             ← JWT y hashing
+│   ├── seed_modulos.py         ← Datos iniciales
+│   ├── requirements.txt
+│   └── routes/
+│       ├── auth.py             ← Login, registro, JWT
+│       ├── modulos.py          ← Materias y contenidos
+│       ├── notas.py            ← Calificaciones y progreso
+│       ├── certificados.py     ← Emisión de certificados
+│       ├── comunicados.py      ← Avisos institucionales
+│       ├── votaciones.py       ← Elecciones y votos
+│       ├── evaluaciones.py     ← Evaluaciones
+│       └── ai_tools.py         ← Generador con IA
+│
+├── frontend/                   ← Sitio estático
+│   ├── index.html              ← Landing page pública
+│   ├── login.html              ← Acceso unificado
+│   ├── instalar/               ← PWA (manifest, pwa.js)
+│   ├── images/                 ← Logo y share-icon
+│   ├── js/api.js               ← URL automática (local/prod)
+│   ├── portal/                 ← Dashboard principal
+│   ├── notas/                  ← Calificaciones y certificados
+│   ├── modulos/                ← Aula virtual
+│   ├── malla_curricular/       ← Programa de estudios
+│   ├── planes/                 ← Generador IA (Docentes)
+│   ├── votacion/               ← Sistema electoral
+│   ├── comunicados/            ← Tablón de avisos
+│   └── secretaria/             ← Panel de Secretaría
+│
+├── .env.example                ← Plantilla de variables
+├── railway.json                ← Config de Railway
+└── render.yaml                 ← Config de Render
 ```
 
 ---
 
 ## 👥 Roles del Sistema
 
-| Rol | Capacidades |
-|---|---|
-| **Administrador** | Control total de usuarios, reportes académicos, carga masiva, búsqueda por CI y suspensión de acceso. |
-| **Profesor** | Gestión de sus módulos asignados, publicación de materiales extra y seguimiento de temas. |
-| **Estudiante** | Acceso a contenidos por niveles, navegación por pestañas de semestres y consumo de materiales. |
+| Rol | Acceso |
+|-----|--------|
+| `director` | Todo |
+| `jefe_carrera` | Malla, Notas (read), Planes IA |
+| `secretaria` | Panel Secretaría, Comunicados, Votaciones, Usuarios |
+| `docente` | Aula Virtual, Notas (write), Planes IA |
+| `estudiante` | Notas, Módulos, Votaciones, Malla |
 
 ---
 
-## 📐 Capacidad de la Malla
-- **10 Semestres** (Básico, Auxiliar, Medio, Superior, Ingeniería).
-- **5 Módulos** estándar por semestre.
-- **4 Temas** estructurados por módulo (Optimizados para UX).
-- **Tipos de material:** Teoría (PDF), PPT, Video, Audio y Evaluación.
+## 🚀 Despliegue en Railway
+
+### Paso 1: Backend
+1. En Railway, crea un nuevo proyecto.
+2. Conecta tu repositorio de GitHub.
+3. Railway detecta `railway.json` automáticamente.
+4. Agrega las **Variables de Entorno**:
+
+```env
+DATABASE_URL=<url-de-tu-postgres-en-railway>
+SECRET_KEY=<clave-aleatoria-de-32-caracteres>
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=480
+```
+
+5. Para activar la IA real, agrega también:
+```env
+OPENAI_API_KEY=sk-proj-...
+```
+
+### Paso 2: Base de Datos
+1. En Railway, agrega un servicio **PostgreSQL**.
+2. Railway inyecta `DATABASE_URL` automáticamente al backend.
+3. Para inicializar las tablas, visita:
+   ```
+   https://tu-backend.railway.app/cargar-datos
+   ```
+
+### Paso 3: Frontend
+1. El frontend es **HTML estático puro** — no necesita servidor.
+2. Sube la carpeta `frontend/` a Railway Static, Netlify, Vercel o GitHub Pages.
+3. El archivo `frontend/js/api.js` ya detecta automáticamente si está en producción.
 
 ---
 
-## 🚀 Stack Tecnológico
+## 💻 Desarrollo Local
 
-| Capa | Tecnología | Razón de uso |
-|---|---|---|
-| **Backend** | FastAPI | Velocidad asíncrona y escalabilidad horizontal. |
-| **Base de Datos** | PostgreSQL | Robustez relacional y seguridad de datos. |
-| **Frontend** | Vanilla JS | Carga instantánea sin dependencias pesadas. |
-| **Infraestructura** | Railway | Despliegue continuo (CI/CD) automático. |
-| **Seguridad** | JWT + bcrypt | Estándar de la industria para sesiones seguras. |
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/tu-usuario/Educonnect-Ruben.git
+cd Educonnect-Ruben
+
+# 2. Crear entorno virtual Python
+python -m venv venv
+.\venv\Scripts\activate   # Windows
+# source venv/bin/activate  # Linux/Mac
+
+# 3. Instalar dependencias
+pip install -r backend/requirements.txt
+
+# 4. Configurar variables de entorno
+copy .env.example .env
+# Edita .env con tus credenciales de PostgreSQL local
+
+# 5. Inicializar la base de datos
+python backend/database.py
+
+# 6. Iniciar el servidor
+uvicorn backend.main:app --reload
+
+# 7. Abrir el frontend
+# Abre frontend/index.html en tu navegador
+```
+
+Luego visita `http://localhost:8000/docs` para ver la documentación interactiva de la API.
 
 ---
 
-## 👨‍💻 Equipo y Desarrollo
+## 📡 Endpoints Principales
 
-- **Líder de Proyecto:** Ruben Lazo
-- **Soporte de Ingeniería:** Antigravity AI (Google DeepMind)
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/auth/login` | Inicio de sesión |
+| GET  | `/auth/me` | Perfil del usuario actual |
+| GET  | `/notas/mis-notas` | Notas del estudiante |
+| PUT  | `/notas/actualizar` | Guardar calificación |
+| GET  | `/modulos/` | Lista de módulos |
+| POST | `/votaciones/elecciones` | Crear votación |
+| POST | `/votaciones/votar` | Emitir voto |
+| POST | `/comunicados/avisos` | Publicar aviso |
+| POST | `/ai/generar-planificacion` | Generar plan con IA |
+| POST | `/certificados/emitir` | Emitir certificado |
 
 ---
-*EduConnect Ruben v20.0 – "Educación sin límites, tecnología sin fronteras"*
+
+## 🌐 URLs del Proyecto (Producción)
+
+- **Backend API:** https://educonnect-backend-production-1d08.up.railway.app
+- **Docs API:** https://educonnect-backend-production-1d08.up.railway.app/docs
+
+---
+
+Desarrollado con ❤️ por **Ruben Lazo** · Powered by **EduConnect Pro v21.0**

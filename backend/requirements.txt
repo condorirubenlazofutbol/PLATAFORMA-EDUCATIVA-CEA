@@ -1,8 +1,9 @@
 fastapi[standard]
+uvicorn[standard]
 psycopg2-binary
 passlib[bcrypt]
 python-jose[cryptography]
 python-multipart
 python-dotenv
-pydantic
+pydantic[email]
 openpyxl

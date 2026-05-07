@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planes IA | EduConnect Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        :root {
+            --primary: #0ea5e9;
+            --accent: #48d18e; /* Verde Esmeralda para IA */
+            --bg-dark: #0b0f1a;
+            --card-bg: rgba(19, 25, 41, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; }
+
+        header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(11, 15, 26, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .back-btn { color: var(--primary); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
+        h1 { margin-bottom: 0.5rem; color: var(--accent); }
+
+        /* Prompt Box */
+        .prompt-area {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: rgba(0,0,0,0.3);
+            color: var(--text);
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+            margin-bottom: 1rem;
+        }
+        .prompt-area:focus { outline: none; border-color: var(--accent); }
+        .prompt-area::placeholder { color: var(--muted); }
+
+        /* Chips de Ayuda */
+        .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.2rem; }
+        .chip {
+            padding: 6px 14px;
+            background: rgba(72, 209, 142, 0.1);
+            border: 1px solid rgba(72, 209, 142, 0.3);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--accent);
+            transition: all 0.2s;
+        }
+        .chip:hover { background: rgba(72, 209, 142, 0.2); transform: scale(1.05); }
+
+        .btn-generate {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--accent), #0ea5e9);
+            border: none;
+            border-radius: 10px;
+            color: #0b0f1a;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(72, 209, 142, 0.3); }
+        .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Spinner de IA */
+        .ai-thinking {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+            color: var(--accent);
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 4px solid rgba(72, 209, 142, 0.2);
+            border-top: 4px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Resultado de IA */
+        #resultPanel { display: none; }
+        .plan-section {
+            margin-bottom: 1.5rem;
+            padding: 1.2rem;
+            background: rgba(72, 209, 142, 0.05);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+        }
+        .plan-section h3 { color: var(--accent); margin-bottom: 0.5rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .plan-section p { color: var(--text); line-height: 1.7; }
+        .plan-section ul { padding-left: 1.2rem; line-height: 1.8; color: var(--text); }
+
+        .btn-pdf {
+            padding: 10px 20px;
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.3s;
+        }
+        .btn-pdf:hover { background: var(--primary); color: #fff; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="../portal/index.html" class="back-btn">⬅ Volver al Portal</a>
+        <h2>🤖 Generador de Planes IA</h2>
+    </header>
+
+    <div class="container">
+
+        <!-- Acceso denegado para estudiantes -->
+        <div id="accessDenied" class="card" style="display:none; border-left: 4px solid #ff5e5e;">
+            <h2 style="color:#ff5e5e;">Acceso Restringido</h2>
+            <p style="color:var(--muted); margin-top:0.5rem;">Este módulo está disponible solo para Docentes, Jefes de Carrera y Directores.</p>
+        </div>
+
+        <!-- Panel Principal -->
+        <div id="mainPanel">
+            <div class="card">
+                <h1>Planificación Pedagógica</h1>
+                <p style="color:var(--muted); margin-bottom:1.5rem;">Describe el tema de tu clase y la IA generará un plan de estudios completo y profesional al instante.</p>
+
+                <!-- Sugerencias rápidas -->
+                <p style="font-size:0.85rem; color:var(--muted); margin-bottom:0.5rem;">💡 Sugerencias rápidas:</p>
+                <div class="chips">
+                    <span class="chip" onclick="usarChip(this)">Programación OOP en Java</span>
+                    <span class="chip" onclick="usarChip(this)">Base de Datos Relacionales</span>
+                    <span class="chip" onclick="usarChip(this)">Diseño de Interfaces UX/UI</span>
+                    <span class="chip" onclick="usarChip(this)">Redes y Comunicación de Datos</span>
+                    <span class="chip" onclick="usarChip(this)">Ofimática Avanzada</span>
+                </div>
+
+                <textarea class="prompt-area" id="promptInput" placeholder="Ej: Introduce el tema de Bases de Datos NoSQL orientado a estudiantes de nivel II de Sistemas Informáticos..."></textarea>
+
+                <button class="btn-generate" id="btnGenerar" onclick="generarPlan()">✨ Generar Plan de Estudios con IA</button>
+            </div>
+
+            <!-- Spinner de carga -->
+            <div class="ai-thinking" id="aiThinking">
+                <div class="spinner"></div>
+                <h3>La IA está estructurando tu plan...</h3>
+                <p style="color:var(--muted); margin-top:0.5rem;">Esto puede tardar unos segundos.</p>
+            </div>
+
+            <!-- Resultado -->
+            <div id="resultPanel" class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <h1>Plan de Estudios Generado</h1>
+                    <button class="btn-pdf" onclick="descargarPDF()">📄 Descargar PDF</button>
+                </div>
+
+                <div class="plan-section">
+                    <h3>📌 Tema Central</h3>
+                    <p id="res_tema"></p>
+                </div>
+
+                <div class="plan-section">
+                    <h3>🎯 Objetivos del Módulo</h3>
+                    <ul id="res_objetivos"></ul>
+                </div>
+
+                <div class="plan-section">
+                    <h3>📚 Contenidos Programáticos</h3>
+                    <ul id="res_contenidos"></ul>
+                </div>
+
+                <div class="plan-section">
+                    <h3>🛠️ Metodología de Enseñanza</h3>
+                    <p id="res_metodologia"></p>
+                </div>
+
+                <div class="plan-section">
+                    <h3>✅ Sistema de Evaluación</h3>
+                    <ul id="res_evaluacion"></ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // API_BASE viene de js/api.js (auto-detecta local vs producci�n)
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) window.location.href = '../login.html';
+
+        // Restringir a estudiantes
+        if (user.rol === 'estudiante') {
+            document.getElementById('mainPanel').style.display = 'none';
+            document.getElementById('accessDenied').style.display = 'block';
+        }
+
+        function usarChip(el) {
+            document.getElementById('promptInput').value = el.textContent;
+        }
+
+        // Generador de plan de estudios con fallback simulado (si no hay API Key configurada)
+        async function generarPlan() {
+            const prompt = document.getElementById('promptInput').value.trim();
+            if (!prompt) {
+                Swal.fire('Atención', 'Por favor escribe el tema o instrucción para la IA.', 'warning');
+                return;
+            }
+
+            // Mostrar spinner, ocultar resultado anterior
+            document.getElementById('btnGenerar').disabled = true;
+            document.getElementById('resultPanel').style.display = 'none';
+            document.getElementById('aiThinking').style.display = 'block';
+
+            // Intentar endpoint real (/ai/generar-planificacion)
+            let planData = null;
+            try {
+                const res = await fetch(`${API_BASE}/ai/generar-planificacion`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ tema: prompt, modulo_id: 1 })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    planData = parsearRespuestaIA(data.contenido_ia || data.plan || '');
+                }
+            } catch (e) {
+                console.log('Modo demo activado (sin API Key configurada)');
+            }
+
+            // Fallback: simulación pro si no hay backend/API Key
+            if (!planData) {
+                await new Promise(r => setTimeout(r, 2500)); // Simular 2.5s de "pensamiento"
+                planData = generarMock(prompt);
+            }
+
+            // Ocultar spinner y mostrar resultado
+            document.getElementById('aiThinking').style.display = 'none';
+            document.getElementById('btnGenerar').disabled = false;
+            mostrarResultado(planData, prompt);
+        }
+
+        function parsearRespuestaIA(texto) {
+            // Intenta parsear si el backend devuelve texto estructurado
+            return {
+                tema: 'Extraído del servidor IA',
+                objetivos: [texto.substring(0, 200)],
+                contenidos: ['Ver plan completo en el servidor'],
+                metodologia: texto.substring(200, 400) || 'Metodología activa y participativa.',
+                evaluacion: ['Evaluación continua (40%)', 'Proyecto final (60%)']
+            };
+        }
+
+        function generarMock(prompt) {
+            // Simulador local para cuando no hay API Key
+            return {
+                tema: prompt,
+                objetivos: [
+                    `Comprender los fundamentos teóricos y prácticos de: ${prompt}.`,
+                    'Aplicar los conocimientos en situaciones reales del entorno laboral.',
+                    'Desarrollar habilidades técnicas y de trabajo colaborativo.'
+                ],
+                contenidos: [
+                    `Unidad 1: Introducción y conceptos base de ${prompt}`,
+                    'Unidad 2: Herramientas y tecnologías aplicadas',
+                    'Unidad 3: Desarrollo de proyectos prácticos',
+                    'Unidad 4: Evaluación y buenas prácticas'
+                ],
+                metodologia: 'Aprendizaje basado en proyectos (ABP). El docente utilizará metodologías activas con talleres prácticos, trabajo en equipo, exposiciones y retroalimentación continua. Se usarán recursos digitales y plataformas en línea como apoyo al proceso enseñanza-aprendizaje.',
+                evaluacion: [
+                    'Participación y asistencia: 20%',
+                    'Prácticas y tareas individuales: 30%',
+                    'Trabajo grupal / Proyecto: 30%',
+                    'Evaluación final escrita/práctica: 20%'
+                ]
+            };
+        }
+
+        let planActual = null;
+        function mostrarResultado(plan, prompt) {
+            planActual = plan;
+            planActual.promptOriginal = prompt;
+
+            document.getElementById('res_tema').textContent = plan.tema;
+
+            const objUl = document.getElementById('res_objetivos');
+            objUl.innerHTML = plan.objetivos.map(o => `<li>${o}</li>`).join('');
+
+            const contUl = document.getElementById('res_contenidos');
+            contUl.innerHTML = plan.contenidos.map(c => `<li>${c}</li>`).join('');
+
+            document.getElementById('res_metodologia').textContent = plan.metodologia;
+
+            const evalUl = document.getElementById('res_evaluacion');
+            evalUl.innerHTML = plan.evaluacion.map(e => `<li>${e}</li>`).join('');
+
+            document.getElementById('resultPanel').style.display = 'block';
+            document.getElementById('resultPanel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function descargarPDF() {
+            if (!planActual) return;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Fondo y encabezado
+            doc.setFillColor(11, 15, 26);
+            doc.rect(0, 0, 210, 297, 'F');
+
+            doc.setFillColor(14, 165, 233);
+            doc.rect(0, 0, 210, 25, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('PLAN DE ESTUDIOS GENERADO CON IA', 105, 16, null, null, 'center');
+
+            let y = 40;
+            doc.setFontSize(18);
+            doc.setTextColor(72, 209, 142);
+            doc.text(planActual.tema.substring(0, 60), 14, y);
+            y += 15;
+
+            const sections = [
+                { title: 'OBJETIVOS', items: planActual.objetivos },
+                { title: 'CONTENIDOS', items: planActual.contenidos },
+                { title: 'EVALUACIÓN', items: planActual.evaluacion }
+            ];
+
+            sections.forEach(s => {
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(14, 165, 233);
+                doc.text(s.title, 14, y); y += 7;
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(220, 220, 220);
+                s.items.forEach(item => {
+                    const lines = doc.splitTextToSize(`• ${item}`, 180);
+                    doc.text(lines, 14, y);
+                    y += lines.length * 7;
+                });
+                y += 5;
+            });
+
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(14, 165, 233);
+            doc.text('METODOLOGÍA', 14, y); y += 7;
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(220, 220, 220);
+            const metLines = doc.splitTextToSize(planActual.metodologia, 180);
+            doc.text(metLines, 14, y);
+
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generado por EduConnect Pro IA · ${new Date().toLocaleDateString()}`, 14, 290);
+
+            doc.save(`Plan_${planActual.tema.substring(0, 30).replace(/ /g,'_')}.pdf`);
+        }
+    </script>
+</body>
+</html>

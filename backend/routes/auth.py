@@ -8,18 +8,13 @@ import security as auth, psycopg2, io, openpyxl
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-class RegistroEstudiante(BaseModel):
+class RegistroUsuario(BaseModel):
     nombre: str
     apellido: str
     carnet: str
+    rol: str
+    subsistema_id: int
     nivel_asignado: Optional[str] = None
-
-class RegistroProfesorBody(BaseModel):
-    nombre: str
-    apellido: str
-    email: str
-    password: str
-    nivel_asignado: str
 
 class TokenData(BaseModel):
     username: str | None = None
@@ -35,7 +30,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         if not conn:
             raise HTTPException(status_code=500, detail="Database connection error")
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, email, password, rol, nivel_asignado, estado FROM usuarios WHERE email=%s", (form_data.username,))
+        cur.execute("SELECT id, nombre, email, password, rol, nivel_asignado, estado, subsistema_id FROM usuarios WHERE email=%s", (form_data.username,))
         row = cur.fetchone()
         cur.close(); conn.close()
         
@@ -57,7 +52,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
         token = auth.create_access_token(data={"sub": row[2]})
         return {"access_token": token, "token_type": "bearer",
-                "rol": row[4], "nombre": row[1], "nivel_asignado": row[5]}
+                "rol": row[4], "nombre": row[1], "nivel_asignado": row[5], "subsistema_id": row[7]}
     except HTTPException as he:
         raise he
     except Exception as e:
@@ -73,49 +68,15 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     if not conn:
         raise HTTPException(status_code=500, detail="Database error")
     cur = conn.cursor()
-    cur.execute("SELECT id, nombre, apellido, email, rol, nivel_asignado FROM usuarios WHERE email=%s", (payload.get("sub"),))
+    cur.execute("SELECT id, nombre, apellido, email, rol, nivel_asignado, subsistema_id FROM usuarios WHERE email=%s", (payload.get("sub"),))
     row = cur.fetchone()
     cur.close(); conn.close()
     if not row:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    return {"id": row[0], "nombre": row[1], "apellido": row[2], "email": row[3], "rol": row[4], "nivel_asignado": row[5]}
+    return {"id": row[0], "nombre": row[1], "apellido": row[2], "email": row[3], "rol": row[4], "nivel_asignado": row[5], "subsistema_id": row[6]}
 
-@router.post("/register-profesor", dependencies=[Depends(get_current_user)])
-def register_profesor(nombre: str, apellido: str, carnet: str, nivel_asignado: str):
-    conn = get_db_connection()
-    if not conn:
-        raise HTTPException(status_code=500, detail="Error de base de datos")
-    try:
-        cur = conn.cursor()
-        clean_n = nombre.strip().split(' ')[0].lower()
-        clean_a = apellido.strip().split(' ')[0].lower()
-        email = f"{clean_n}.{clean_a}@educonnect.com"
-        hashed = auth.get_password_hash(str(carnet).strip())
-        try:
-            cur.execute(
-                "INSERT INTO usuarios (nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id",
-                (nombre.strip(), apellido.strip(), email, hashed, "profesor", nivel_asignado, str(carnet).strip())
-            )
-        except Exception:
-            conn.rollback()
-            cur.execute(
-                "INSERT INTO usuarios (nombre, apellido, email, password, rol, nivel_asignado) VALUES (%s,%s,%s,%s,%s,%s) RETURNING id",
-                (nombre.strip(), apellido.strip(), email, hashed, "profesor", nivel_asignado)
-            )
-        new_id = cur.fetchone()[0]
-        conn.commit()
-        return {"id": new_id, "email": email, "mensaje": f"Profesor {nombre} creado"}
-    except psycopg2.errors.UniqueViolation:
-        conn.rollback()
-        raise HTTPException(status_code=400, detail="El email ya está registrado")
-    except Exception as e:
-        conn.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        conn.close()
-
-@router.post("/register-estudiante", dependencies=[Depends(get_current_user)])
-def register_estudiante(data: RegistroEstudiante):
+@router.post("/register-usuario", dependencies=[Depends(get_current_user)])
+def register_usuario(data: RegistroUsuario):
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Error de base de datos")
@@ -127,21 +88,22 @@ def register_estudiante(data: RegistroEstudiante):
         hashed = auth.get_password_hash(str(data.carnet).strip())
         try:
             cur.execute(
-                "INSERT INTO usuarios (nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id",
-                (data.nombre.strip(), data.apellido.strip(), email, hashed, "estudiante", data.nivel_asignado, str(data.carnet).strip())
+                "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
+                (data.subsistema_id, data.nombre.strip(), data.apellido.strip(), email, hashed, data.rol, data.nivel_asignado, str(data.carnet).strip())
             )
         except Exception:
             conn.rollback()
+            # fallback sin carnet
             cur.execute(
-                "INSERT INTO usuarios (nombre, apellido, email, password, rol, nivel_asignado) VALUES (%s,%s,%s,%s,%s,%s) RETURNING id",
-                (data.nombre.strip(), data.apellido.strip(), email, hashed, "estudiante", data.nivel_asignado)
+                "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id",
+                (data.subsistema_id, data.nombre.strip(), data.apellido.strip(), email, hashed, data.rol, data.nivel_asignado)
             )
         new_id = cur.fetchone()[0]
         conn.commit()
-        return {"id": new_id, "email": email, "mensaje": f"Estudiante {data.nombre} inscrito"}
+        return {"id": new_id, "email": email, "mensaje": f"Usuario {data.nombre} ({data.rol}) creado"}
     except psycopg2.errors.UniqueViolation:
         conn.rollback()
-        raise HTTPException(status_code=400, detail="El email ya existe. Verifica el carnet.")
+        raise HTTPException(status_code=400, detail="El email ya está registrado. Verifica el carnet.")
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -256,7 +218,7 @@ def update_my_password(data: PasswordResetBody, current_user: dict = Depends(get
         conn.close()
 
 @router.post("/bulk-register", dependencies=[Depends(get_current_user)])
-async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = File(...)):
+async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
     """Carga masiva de usuarios (estudiante o profesor) desde Excel (.xlsx)."""
     if not file.filename.endswith('.xlsx'):
         raise HTTPException(status_code=400, detail="El archivo debe ser .xlsx")
@@ -270,6 +232,8 @@ async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = 
     
     conn = get_db_connection()
     cur = conn.cursor()
+    
+    subsistema_id = current_user.get("subsistema_id")
     
     for row in sheet.iter_rows(min_row=2, values_only=True):
         nombre, apellido, carnet = row
@@ -286,8 +250,8 @@ async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = 
             hashed = auth.get_password_hash(s_carnet)
             
             cur.execute(
-                "INSERT INTO usuarios (nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s)",
-                (str(nombre).strip(), str(apellido).strip(), email, hashed, rol, nivel, s_carnet)
+                "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                (subsistema_id, str(nombre).strip(), str(apellido).strip(), email, hashed, rol, nivel, s_carnet)
             )
             registrados += 1
         except Exception as e:

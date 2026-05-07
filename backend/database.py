@@ -43,16 +43,30 @@ def init_db():
     try:
         cursor = connection.cursor()
 
+        # 1. Tabla de Subsistemas (Sedes, Carreras o Colegios)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS subsistemas (
+                id SERIAL PRIMARY KEY,
+                nombre VARCHAR(150) UNIQUE NOT NULL,
+                descripcion TEXT,
+                estado VARCHAR(20) DEFAULT 'activo'
+            )
+        ''')
+
+        # 2. Tabla de Usuarios (con subsistema_id)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS usuarios (
                 id SERIAL PRIMARY KEY,
+                subsistema_id INT,
                 nombre VARCHAR(100) NOT NULL,
                 apellido VARCHAR(100) NOT NULL,
                 email VARCHAR(150) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
-                rol VARCHAR(20) NOT NULL DEFAULT 'estudiante',
+                rol VARCHAR(20) NOT NULL DEFAULT 'estudiante', -- director, jefe_carrera, secretaria, docente, estudiante
                 nivel_asignado VARCHAR(100),
-                carnet VARCHAR(50)
+                carnet VARCHAR(50),
+                estado VARCHAR(20) DEFAULT 'activo',
+                FOREIGN KEY (subsistema_id) REFERENCES subsistemas(id) ON DELETE SET NULL
             )
         ''')
 
@@ -102,8 +116,77 @@ def init_db():
             )
         ''')
 
-        # Add columns if they dont exist yet (safe migrations)
+        # 3. Nuevas tablas Pro: Avisos
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS avisos_institucionales (
+                id SERIAL PRIMARY KEY,
+                subsistema_id INT,
+                autor_id INT NOT NULL,
+                titulo VARCHAR(200) NOT NULL,
+                contenido TEXT NOT NULL,
+                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (subsistema_id) REFERENCES subsistemas(id) ON DELETE CASCADE,
+                FOREIGN KEY (autor_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            )
+        ''')
+
+        # 4. Nuevas tablas Pro: Planificaciones (Registro Pedagógico)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS planificaciones (
+                id SERIAL PRIMARY KEY,
+                docente_id INT NOT NULL,
+                modulo_id INT NOT NULL,
+                contenido_ia TEXT NOT NULL,
+                fecha_generacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (docente_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (modulo_id) REFERENCES modulos(id) ON DELETE CASCADE
+            )
+        ''')
+
+        # 5. Nuevas tablas Pro: Certificados
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS certificados (
+                id SERIAL PRIMARY KEY,
+                estudiante_id INT NOT NULL,
+                modulo_id INT NOT NULL,
+                codigo_qr VARCHAR(255) UNIQUE NOT NULL,
+                fecha_emision TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (estudiante_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (modulo_id) REFERENCES modulos(id) ON DELETE CASCADE
+            )
+        ''')
+
+        # 6. Nuevas tablas Pro: Elecciones y Votos (Votación)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS elecciones (
+                id SERIAL PRIMARY KEY,
+                subsistema_id INT,
+                titulo VARCHAR(200) NOT NULL,
+                descripcion TEXT,
+                fecha_inicio TIMESTAMP NOT NULL,
+                fecha_fin TIMESTAMP NOT NULL,
+                estado VARCHAR(20) DEFAULT 'activa',
+                FOREIGN KEY (subsistema_id) REFERENCES subsistemas(id) ON DELETE CASCADE
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS votos (
+                id SERIAL PRIMARY KEY,
+                eleccion_id INT NOT NULL,
+                estudiante_id INT NOT NULL,
+                candidato_id INT NOT NULL,
+                fecha_voto TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (eleccion_id) REFERENCES elecciones(id) ON DELETE CASCADE,
+                FOREIGN KEY (estudiante_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (candidato_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                UNIQUE (eleccion_id, estudiante_id)
+            )
+        ''')
+
+        # Add columns if they dont exist yet (safe migrations for existing users)
         for col_sql in [
+            "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS subsistema_id INT",
             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS nivel_asignado VARCHAR(100)",
             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS carnet VARCHAR(50)",
             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS estado VARCHAR(20) DEFAULT 'activo'",

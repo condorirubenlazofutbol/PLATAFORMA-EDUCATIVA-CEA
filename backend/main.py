@@ -6,12 +6,12 @@ from dotenv import load_dotenv
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from routes import auth, modulos, evaluaciones
+from routes import auth, modulos, evaluaciones, comunicados, ai_tools, certificados, votaciones, notas
 from database import init_db
 
 load_dotenv()
 
-app = FastAPI(title="Educonnect-Ruben API", description="LMS Backend – EduConnect Ruben v5.0")
+app = FastAPI(title="Educonnect-Ruben API", description="LMS Backend – EduConnect Ruben v21.0 PRO")
 
 @app.on_event("startup")
 def startup_event():
@@ -44,6 +44,11 @@ app.add_middleware(
 app.include_router(auth.router,         prefix="/auth",         tags=["Authentication"])
 app.include_router(modulos.router,      prefix="/modulos",      tags=["Modulos"])
 app.include_router(evaluaciones.router, prefix="/evaluaciones", tags=["Evaluaciones"])
+app.include_router(comunicados.router,  prefix="/comunicados",  tags=["Comunicados"])
+app.include_router(ai_tools.router,     prefix="/ai",           tags=["AI Tools"])
+app.include_router(certificados.router, prefix="/certificados", tags=["Certificados"])
+app.include_router(votaciones.router,   prefix="/votaciones",   tags=["Votaciones"])
+app.include_router(notas.router,        prefix="/notas",        tags=["Notas"])
 
 @app.get("/")
 def read_root():
@@ -59,7 +64,7 @@ def read_root():
     return {
         "client":   "Educonnect-Ruben",
         "status":   "online",
-        "version":  "5.0.0 PRO",
+        "version":  "21.0.0 PRO",
         "database": db_status == "connected",
         "author":   "Antigravity AI"
     }
@@ -88,7 +93,7 @@ def instalar_datos_iniciales():
 
         return {
             "status":           "success",
-            "version":          "5.0.0 PRO",
+            "version":          "21.0.0 PRO",
             "modulos_creados":  reparados,
             "total_en_bd":      total_mods,
             "usuarios":         [{"email": u[0], "rol": u[1]} for u in users]

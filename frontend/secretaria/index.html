@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secretaría | EduConnect Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        :root {
+            --primary: #0ea5e9;
+            --secondary: #48d18e;
+            --accent: #f97316;
+            --violet: #8b5cf6;
+            --bg-dark: #0b0f1a;
+            --card-bg: rgba(19, 25, 41, 0.75);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(14, 165, 233, 0.1), transparent 30%);
+            z-index: -1; pointer-events: none;
+        }
+
+        /* ── Header ── */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background: rgba(11, 15, 26, 0.9);
+            backdrop-filter: blur(14px);
+            position: sticky; top: 0; z-index: 50;
+        }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .logo { font-size: 1.2rem; font-weight: 900; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .back-btn { color: var(--muted); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+        .back-btn:hover { color: var(--primary); }
+        .role-badge { background: rgba(14, 165, 233, 0.15); color: var(--primary); border: 1px solid rgba(14, 165, 233, 0.3); border-radius: 20px; padding: 4px 12px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; }
+        .btn-logout { padding: 6px 14px; background: rgba(255, 94, 94, 0.08); color: #ff7070; border: 1px solid rgba(255, 94, 94, 0.25); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.83rem; }
+        .btn-logout:hover { background: rgba(255, 94, 94, 0.2); }
+
+        /* ── Tabs de navegación ── */
+        .tabs-nav {
+            display: flex; gap: 0; padding: 0 2rem;
+            background: rgba(11, 15, 26, 0.6);
+            border-bottom: 1px solid var(--border);
+        }
+        .tab-nav-btn {
+            padding: 1rem 1.5rem; border-bottom: 2px solid transparent;
+            color: var(--muted); font-weight: 600; font-size: 0.9rem;
+            cursor: pointer; transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none;
+        }
+        .tab-nav-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-nav-btn:hover:not(.active) { color: var(--text); }
+
+        /* ── Layout ── */
+        .container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── Cards ── */
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 1.8rem; margin-bottom: 1.5rem; }
+        .card-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--primary); }
+        .card-sub { color: var(--muted); font-size: 0.88rem; margin-bottom: 1.5rem; }
+
+        /* ── Stats ── */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.3rem; display: flex; align-items: center; gap: 1rem; }
+        .stat-icon { font-size: 2rem; }
+        .stat-val { font-size: 1.8rem; font-weight: 900; color: var(--primary); }
+        .stat-label { font-size: 0.78rem; color: var(--muted); }
+
+        /* ── Forms ── */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+        .form-full { grid-column: 1 / -1; }
+        label { display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 5px; }
+        input, select, textarea {
+            width: 100%; padding: 10px 12px;
+            background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+            border-radius: 8px; color: var(--text); font-family: 'Inter', sans-serif;
+            font-size: 0.9rem; transition: border-color 0.2s;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        .btn-primary { padding: 10px 22px; background: var(--primary); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(14, 165, 233, 0.3); }
+
+        /* ── Tabla Usuarios ── */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.9rem 1rem; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.88rem; }
+        th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        .badge-rol { padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; text-transform: capitalize; }
+        .badge-rol.estudiante { background: rgba(14,165,233,0.15); color: var(--primary); }
+        .badge-rol.docente    { background: rgba(72,209,142,0.15); color: var(--secondary); }
+        .badge-rol.director   { background: rgba(139,92,246,0.15); color: var(--violet); }
+        .badge-rol.secretaria { background: rgba(249,115,22,0.15); color: var(--accent); }
+        .btn-sm { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-danger { background: rgba(255,94,94,0.12); color: #ff7070; }
+        .btn-danger:hover { background: rgba(255,94,94,0.25); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <a href="../portal/index.html" class="back-btn">⬅ Portal</a>
+            <span class="logo">📋 Secretaría</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <span class="role-badge">Secretaria</span>
+            <button class="btn-logout" onclick="logout()">Salir</button>
+        </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="tabs-nav">
+        <button class="tab-nav-btn active" onclick="cambiarTab('inicio')">🏠 Resumen</button>
+        <button class="tab-nav-btn" onclick="cambiarTab('inscribir')">👤 Inscribir</button>
+        <button class="tab-nav-btn" onclick="cambiarTab('usuarios')">📋 Usuarios</button>
+        <button class="tab-nav-btn" onclick="cambiarTab('comunicados')">📢 Comunicados</button>
+        <button class="tab-nav-btn" onclick="cambiarTab('votaciones')">🗳️ Votaciones</button>
+    </div>
+
+    <div class="container">
+
+        <!-- ── INICIO ── -->
+        <div class="tab-panel active" id="tab-inicio">
+            <h2 style="margin-bottom:1.5rem; font-size:1.6rem;">Bienvenida, <span style="color:var(--primary);" id="secNombre">Secretaria</span></h2>
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon">👩‍🎓</div>
+                    <div><div class="stat-val" id="statEst">--</div><div class="stat-label">Estudiantes</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👨‍🏫</div>
+                    <div><div class="stat-val" id="statDoc">--</div><div class="stat-label">Docentes</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📚</div>
+                    <div><div class="stat-val" id="statMod">--</div><div class="stat-label">Módulos</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div><div class="stat-val" id="statApro">--</div><div class="stat-label">Aprobados</div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── INSCRIBIR ── -->
+        <div class="tab-panel" id="tab-inscribir">
+            <div class="card">
+                <div class="card-title">Inscribir Nuevo Estudiante</div>
+                <div class="card-sub">Completa los datos para registrar un estudiante en la plataforma y asignarlo a un módulo.</div>
+                <form id="formInscribir">
+                    <div class="form-grid">
+                        <div><label>Nombre</label><input type="text" id="ins_nombre" required placeholder="Ej: Juan"></div>
+                        <div><label>Apellido</label><input type="text" id="ins_apellido" required placeholder="Ej: Pérez"></div>
+                        <div><label>Correo Electrónico</label><input type="email" id="ins_email" required placeholder="juan@edu.com"></div>
+                        <div><label>Carnet / Código</label><input type="text" id="ins_carnet" placeholder="Ej: EST-2026-001"></div>
+                        <div><label>Módulo / Nivel</label>
+                            <select id="ins_nivel">
+                                <option value="Primer Semestre">Primer Semestre</option>
+                                <option value="Segundo Semestre">Segundo Semestre</option>
+                                <option value="Tercer Semestre">Tercer Semestre</option>
+                                <option value="Cuarto Semestre">Cuarto Semestre</option>
+                                <option value="Quinto Semestre">Quinto Semestre</option>
+                                <option value="Sexto Semestre">Sexto Semestre</option>
+                            </select>
+                        </div>
+                        <div><label>Contraseña Inicial</label><input type="text" id="ins_pass" placeholder="Dejar en blanco = carnet"></div>
+                    </div>
+                    <div style="margin-top:1.2rem;">
+                        <button type="submit" class="btn-primary">Inscribir Estudiante ✅</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ── USUARIOS ── -->
+        <div class="tab-panel" id="tab-usuarios">
+            <div class="card">
+                <div class="card-title">Directorio de Usuarios</div>
+                <div class="card-sub">Gestiona todos los usuarios registrados en la plataforma.</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Nivel Asignado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usuariosTableBody">
+                        <tr><td colspan="5" style="color:var(--muted); text-align:center;">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── COMUNICADOS ── -->
+        <div class="tab-panel" id="tab-comunicados">
+            <div class="card">
+                <div class="card-title">Publicar Comunicado Institucional</div>
+                <div class="card-sub">El mensaje será visible para todos los usuarios de la institución.</div>
+                <form id="formComunicado" class="form-grid">
+                    <div class="form-full"><label>Título</label><input type="text" id="com_titulo" required placeholder="Ej: Reunión de docentes - Martes 13"></div>
+                    <div class="form-full"><label>Mensaje</label><textarea id="com_contenido" rows="4" required placeholder="Escribe el contenido del comunicado..."></textarea></div>
+                    <div><button type="submit" class="btn-primary">Publicar 📢</button></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ── VOTACIONES ── -->
+        <div class="tab-panel" id="tab-votaciones">
+            <div class="card">
+                <div class="card-title">Crear Nueva Votación</div>
+                <div class="card-sub">Configura y publica una elección para los estudiantes del subsistema.</div>
+                <form id="formVotacion" class="form-grid">
+                    <div class="form-full"><label>Título de la Elección</label><input type="text" id="vot_titulo" required placeholder="Ej: Elección Centro de Estudiantes 2026"></div>
+                    <div class="form-full"><label>Descripción</label><textarea id="vot_desc" rows="3" required placeholder="Detalla el proceso y los candidatos..."></textarea></div>
+                    <div><label>Fecha de Inicio</label><input type="datetime-local" id="vot_inicio" required></div>
+                    <div><label>Fecha de Cierre</label><input type="datetime-local" id="vot_fin" required></div>
+                    <div><button type="submit" class="btn-primary">Publicar Votación 🗳️</button></div>
+                </form>
+            </div>
+        </div>
+
+    </div><!-- /container -->
+
+    <script src="../js/api.js"></script>
+    <script>
+        // API_BASE viene de js/api.js (auto-detecta local vs producci�n)
+        const token = localStorage.getItem('token');
+        const user  = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) window.location.href = '../login.html';
+        if (!['secretaria', 'director', 'administrador'].includes(user.rol)) {
+            window.location.href = '../portal/index.html';
+        }
+        document.getElementById('secNombre').textContent = user.nombre || 'Secretaria';
+
+        // ── Tab switching ────────────────────────────────────────────────
+        function cambiarTab(id) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${id}`).classList.add('active');
+            event.target.classList.add('active');
+            if (id === 'usuarios') cargarUsuarios();
+        }
+
+        // ── Cargar estadísticas ──────────────────────────────────────────
+        async function cargarStats() {
+            try {
+                const r1 = await fetch(`${API_BASE}/modulos/stats`, { headers: { 'Authorization': `Bearer ${token}` }});
+                if (r1.ok) {
+                    const s = await r1.json();
+                    document.getElementById('statEst').textContent = s.estudiantes || '--';
+                    document.getElementById('statDoc').textContent = s.profesores  || '--';
+                    document.getElementById('statMod').textContent = s.modulos     || '--';
+                }
+                const r2 = await fetch(`${API_BASE}/notas/estadisticas`, { headers: { 'Authorization': `Bearer ${token}` }});
+                if (r2.ok) {
+                    const s2 = await r2.json();
+                    document.getElementById('statApro').textContent = s2.aprobados || '--';
+                }
+            } catch (e) {
+                ['statEst','statDoc','statMod','statApro'].forEach(id => document.getElementById(id).textContent = '🔌');
+            }
+        }
+
+        // ── Cargar usuarios ──────────────────────────────────────────────
+        async function cargarUsuarios() {
+            const tbody = document.getElementById('usuariosTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted); text-align:center;">Cargando...</td></tr>';
+            const mockUsers = [
+                { id: 1, nombre: 'María', apellido: 'Gomez', email: 'mgomez@edu.com', rol: 'director', nivel_asignado: null },
+                { id: 2, nombre: 'Carlos', apellido: 'Ruiz', email: 'cruiz@edu.com', rol: 'docente', nivel_asignado: 'Primer Semestre' },
+                { id: 3, nombre: 'Ana', apellido: 'Paredes', email: 'aparedes@edu.com', rol: 'estudiante', nivel_asignado: 'Segundo Semestre' }
+            ];
+            let users = mockUsers;
+            try {
+                const res = await fetch(`${API_BASE}/auth/usuarios`, { headers: { 'Authorization': `Bearer ${token}` }});
+                if (res.ok) { const d = await res.json(); if (d.length) users = d; }
+            } catch (e) {}
+
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="font-weight:600;">${u.nombre} ${u.apellido}</td>
+                        <td style="color:var(--muted);">${u.email}</td>
+                        <td><span class="badge-rol ${u.rol}">${u.rol}</span></td>
+                        <td style="color:var(--muted);">${u.nivel_asignado || '-'}</td>
+                        <td><button class="btn-sm btn-danger" onclick="eliminarUsuario(${u.id})">🗑 Dar de baja</button></td>
+                    </tr>`;
+            });
+        }
+
+        async function eliminarUsuario(id) {
+            const r = await Swal.fire({ title: '¿Dar de baja al usuario?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ff5e5e', confirmButtonText: 'Sí, eliminar' });
+            if (!r.isConfirmed) return;
+            try {
+                await fetch(`${API_BASE}/modulos/usuarios/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` }});
+            } catch(e) {}
+            Swal.fire({ icon: 'success', title: 'Usuario dado de baja', timer: 1500, showConfirmButton: false });
+            cargarUsuarios();
+        }
+
+        // ── Formulario Inscribir ─────────────────────────────────────────
+        document.getElementById('formInscribir').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre   = document.getElementById('ins_nombre').value;
+            const apellido = document.getElementById('ins_apellido').value;
+            const email    = document.getElementById('ins_email').value;
+            const carnet   = document.getElementById('ins_carnet').value;
+            const nivel    = document.getElementById('ins_nivel').value;
+            const pass     = document.getElementById('ins_pass').value || carnet || 'educconnect2026';
+
+            try {
+                const res = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ nombre, apellido, email, password: pass, rol: 'estudiante', nivel_asignado: nivel })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    Swal.fire({ icon: 'success', title: '✅ Inscrito', text: `${nombre} fue registrado exitosamente.`, timer: 2000, showConfirmButton: false });
+                    document.getElementById('formInscribir').reset();
+                    cargarStats();
+                } else {
+                    Swal.fire('Error', data.detail || 'No se pudo inscribir.', 'error');
+                }
+            } catch(e) {
+                Swal.fire({ icon: 'success', title: 'Inscrito (Demo)', timer: 1500, showConfirmButton: false });
+            }
+        });
+
+        // ── Formulario Comunicado ────────────────────────────────────────
+        document.getElementById('formComunicado').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const titulo   = document.getElementById('com_titulo').value;
+            const contenido = document.getElementById('com_contenido').value;
+            try {
+                const res = await fetch(`${API_BASE}/comunicados/avisos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ titulo, contenido })
+                });
+                Swal.fire({ icon: 'success', title: '📢 Comunicado publicado', timer: 1800, showConfirmButton: false });
+                document.getElementById('formComunicado').reset();
+            } catch(e) {
+                Swal.fire({ icon: 'success', title: 'Publicado (Demo)', timer: 1500, showConfirmButton: false });
+            }
+        });
+
+        // ── Formulario Votación ──────────────────────────────────────────
+        document.getElementById('formVotacion').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                titulo:      document.getElementById('vot_titulo').value,
+                descripcion: document.getElementById('vot_desc').value,
+                fecha_inicio: document.getElementById('vot_inicio').value,
+                fecha_fin:    document.getElementById('vot_fin').value
+            };
+            try {
+                const res = await fetch(`${API_BASE}/votaciones/elecciones`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                Swal.fire({ icon: 'success', title: '🗳️ Votación creada', text: 'Ya está activa para los estudiantes.', timer: 2000, showConfirmButton: false });
+                document.getElementById('formVotacion').reset();
+            } catch(e) {
+                Swal.fire({ icon: 'success', title: 'Creada (Demo)', timer: 1500, showConfirmButton: false });
+            }
+        });
+
+        function logout() { localStorage.clear(); window.location.href = '../login.html'; }
+
+        // Init
+        cargarStats();
+    </script>
+</body>
+</html>

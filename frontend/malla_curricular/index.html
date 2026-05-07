@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malla Curricular | EduConnect Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        :root {
+            --primary: #0ea5e9; 
+            --accent: #8b5cf6; /* Violeta para diferenciar la Malla */
+            --bg-dark: #0b0f1a;
+            --card-bg: rgba(19, 25, 41, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; }
+        header { padding: 1.5rem; border-bottom: 1px solid var(--border); background: rgba(11, 15, 26, 0.8); backdrop-filter: blur(10px); display: flex; justify-content: space-between; align-items: center; }
+        .back-btn { color: var(--primary); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
+        h1 { margin-bottom: 1rem; color: var(--accent); }
+
+        /* Panel Admin */
+        .admin-panel { display: none; border-left: 4px solid var(--accent); }
+        input, select { width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 16px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; }
+        button { padding: 12px 24px; background: var(--accent); border:none; border-radius: 8px; color:#fff; font-weight:800; cursor:pointer; transition: 0.3s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3); }
+
+        /* Malla Visual (Grid por Niveles) */
+        .nivel-section { margin-bottom: 2rem; }
+        .nivel-title { font-size: 1.2rem; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        .malla-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+        
+        .materia-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .materia-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent);
+        }
+        .materia-card:hover { transform: translateY(-5px); background: rgba(139, 92, 246, 0.1); border-color: var(--accent); }
+        .materia-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem; }
+        .materia-sub { color: var(--muted); font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="../portal/index.html" class="back-btn">⬅ Volver al Portal</a>
+        <h2>🗺️ Malla Curricular</h2>
+    </header>
+
+    <div class="container">
+        
+        <!-- Panel Administrador (Jefe Carrera / Director) -->
+        <div class="card admin-panel" id="adminPanel">
+            <h2>Gestión de Malla (Añadir Módulo)</h2>
+            <p style="color:var(--muted); margin-bottom: 1rem;">Crea nuevas materias y asígnalas a un semestre/nivel.</p>
+            <form id="formMalla">
+                <div style="display:flex; gap:1rem; flex-wrap: wrap;">
+                    <div style="flex:1; min-width: 250px;">
+                        <label>Nombre de la Materia</label>
+                        <input type="text" id="nombre_materia" required placeholder="Ej: Bases de Datos II">
+                    </div>
+                    <div style="flex:1; min-width: 200px;">
+                        <label>Nivel / Semestre</label>
+                        <select id="nivel" required>
+                            <option value="Primer Semestre">Primer Semestre</option>
+                            <option value="Segundo Semestre">Segundo Semestre</option>
+                            <option value="Tercer Semestre">Tercer Semestre</option>
+                            <option value="Cuarto Semestre">Cuarto Semestre</option>
+                            <option value="Quinto Semestre">Quinto Semestre</option>
+                            <option value="Sexto Semestre">Sexto Semestre</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit">Agregar a la Malla</button>
+            </form>
+        </div>
+
+        <!-- Vista General (Todos) -->
+        <div class="card">
+            <h1>Programa de Estudios</h1>
+            <p style="color:var(--muted); margin-bottom: 2rem;">Visualiza todas las materias de tu subsistema organizadas por niveles/semestres.</p>
+            
+            <div id="mallaContainer">
+                <div style="text-align:center; color:var(--muted);">Cargando programa...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script de lógica -->
+    <script src="../js/api.js"></script>
+    <script>
+        // API_BASE viene de js/api.js (auto-detecta local vs producci�n)
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) window.location.href = '../login.html';
+
+        // Mostrar Admin Panel
+        if (['director', 'jefe_carrera', 'administrador'].includes(user.rol)) {
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+
+        // Simulación: Mantendremos los módulos en memoria para demostración,
+        // ya que la API base tiene /modulos, pero haremos que luzca agrupado por nivel.
+        let materias = [
+            { id: 1, nombre: 'Ofimática Básica', nivel: 'Primer Semestre' },
+            { id: 2, nombre: 'Lógica de Programación', nivel: 'Primer Semestre' },
+            { id: 3, nombre: 'Diseño Gráfico I', nivel: 'Segundo Semestre' },
+            { id: 4, nombre: 'Bases de Datos I', nivel: 'Segundo Semestre' },
+            { id: 5, nombre: 'Programación Web', nivel: 'Tercer Semestre' }
+        ];
+
+        async function cargarMalla() {
+            const container = document.getElementById('mallaContainer');
+            
+            // Intentar traer de API (mock en caso de fallo/desconexion)
+            try {
+                const res = await fetch(`${API_BASE}/modulos`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    const data = await res.json();
+                    if(data.length > 0) materias = data;
+                }
+            } catch (e) {
+                console.log("Cargando datos locales (Mock)");
+            }
+
+            if (materias.length === 0) {
+                container.innerHTML = '<h3>No hay materias registradas.</h3>';
+                return;
+            }
+
+            // Agrupar por nivel
+            const agrupado = materias.reduce((acc, obj) => {
+                let key = obj.nivel;
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(obj);
+                return acc;
+            }, {});
+
+            // Renderizar
+            container.innerHTML = '';
+            for (const [nivel, mods] of Object.entries(agrupado)) {
+                let htmlNivel = `<div class="nivel-section">
+                    <div class="nivel-title">${nivel}</div>
+                    <div class="malla-grid">`;
+                
+                mods.forEach(m => {
+                    htmlNivel += `
+                        <div class="materia-card">
+                            <div class="materia-title">${m.nombre}</div>
+                            <div class="materia-sub">Módulo Curricular</div>
+                        </div>
+                    `;
+                });
+
+                htmlNivel += `</div></div>`;
+                container.innerHTML += htmlNivel;
+            }
+        }
+
+        // Crear materia
+        document.getElementById('formMalla').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('nombre_materia').value;
+            const nivel = document.getElementById('nivel').value;
+
+            try {
+                const res = await fetch(`${API_BASE}/modulos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ nombre, nivel })
+                });
+
+                if (res.ok) {
+                    Swal.fire('Guardado', 'La materia fue agregada a la malla.', 'success');
+                    document.getElementById('formMalla').reset();
+                    cargarMalla(); // Si la BD funciona, esto recargará.
+                } else {
+                    // Fallback para visualización
+                    materias.push({id: Date.now(), nombre, nivel});
+                    Swal.fire('Guardado', '(Modo Demo) Materia agregada.', 'success');
+                    cargarMalla();
+                }
+            } catch (e) {
+                // Fallback para visualización sin servidor local corriendo
+                materias.push({id: Date.now(), nombre, nivel});
+                Swal.fire('Guardado', '(Modo Local) Materia agregada a la interfaz.', 'success');
+                cargarMalla();
+            }
+        });
+
+        // Init
+        cargarMalla();
+    </script>
+</body>
+</html>

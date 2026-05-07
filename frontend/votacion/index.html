@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votaciones Institucionales | EduConnect Pro</title>
+    <!-- SweetAlert2 para modales bonitos -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        :root {
+            --primary: #0ea5e9; 
+            --accent: #f59e0b; /* Ambar para Votaciones */
+            --bg-dark: #0b0f1a;
+            --card-bg: rgba(19, 25, 41, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; }
+        header { padding: 1.5rem; border-bottom: 1px solid var(--border); background: rgba(11, 15, 26, 0.8); backdrop-filter: blur(10px); display: flex; justify-content: space-between; align-items: center; }
+        .back-btn { color: var(--primary); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
+        h1 { margin-bottom: 1rem; color: var(--accent); }
+        
+        /* Formularios */
+        .admin-panel { display: none; border-left: 4px solid var(--accent); }
+        input, textarea { width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 16px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; }
+        button { padding: 12px 24px; background: var(--accent); border:none; border-radius: 8px; color:#111; font-weight:800; cursor:pointer; transition: 0.3s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
+        
+        /* Grid de Elecciones */
+        .elecciones-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .eleccion-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display:flex; flex-direction: column; justify-content: space-between;}
+        .eleccion-card h3 { color: #fff; margin-bottom: 10px; }
+        .eleccion-card p { color: var(--muted); font-size: 0.9rem; margin-bottom: 15px; }
+        .btn-votar { background: var(--primary); color: white; width: 100%; text-align: center; }
+        .btn-votar:hover { box-shadow: 0 5px 15px rgba(14, 165, 233, 0.3); }
+
+        .loading { text-align: center; color: var(--muted); padding: 2rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="../portal/index.html" class="back-btn">⬅ Volver al Portal</a>
+        <h2>🗳️ Sistema de Votaciones</h2>
+    </header>
+
+    <div class="container">
+        
+        <!-- Panel de Administración (Solo Directores/Secretarias) -->
+        <div class="card admin-panel" id="adminPanel">
+            <h2>Crear Nueva Elección</h2>
+            <p style="color:var(--muted); margin-bottom: 1rem;">Configura una nueva votación para tu subsistema.</p>
+            <form id="formEleccion">
+                <label>Título de la Elección</label>
+                <input type="text" id="titulo" required placeholder="Ej: Centro de Estudiantes 2026">
+                
+                <label>Descripción</label>
+                <textarea id="descripcion" rows="3" required placeholder="Detalles de la elección..."></textarea>
+                
+                <div style="display:flex; gap:1rem;">
+                    <div style="flex:1;">
+                        <label>Fecha de Inicio</label>
+                        <input type="datetime-local" id="fecha_inicio" required>
+                    </div>
+                    <div style="flex:1;">
+                        <label>Fecha de Cierre</label>
+                        <input type="datetime-local" id="fecha_fin" required>
+                    </div>
+                </div>
+                <button type="submit">Publicar Elección</button>
+            </form>
+        </div>
+
+        <!-- Vista de Estudiantes -->
+        <div class="card">
+            <h1>Elecciones Activas</h1>
+            <p style="color:var(--muted)">Aquí verás las elecciones activas en tu carrera/colegio. Elige con responsabilidad.</p>
+            
+            <div id="eleccionesContainer" class="elecciones-grid">
+                <div class="loading">Cargando elecciones...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script de lógica -->
+    <script src="../js/api.js"></script>
+    <script>
+        // API_BASE viene de js/api.js (auto-detecta local vs producci�n) // Asegúrate de ajustar según tu entorno
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) window.location.href = '../login.html';
+
+        // Mostrar panel admin según rol
+        if (['director', 'secretaria', 'administrador'].includes(user.rol)) {
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+
+        // Cargar Elecciones
+        async function cargarElecciones() {
+            const container = document.getElementById('eleccionesContainer');
+            try {
+                const res = await fetch(`${API_BASE}/votaciones/elecciones/activas`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if(!res.ok) throw new Error("Error al cargar elecciones");
+                const data = await res.json();
+                
+                if (data.elecciones.length === 0) {
+                    container.innerHTML = '<div style="grid-column: 1 / -1; padding:15px; border:1px solid var(--border); border-radius:8px; background:rgba(255,255,255,0.05); text-align:center;"><h3>No hay elecciones activas en este momento.</h3></div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                data.elecciones.forEach(el => {
+                    const btnHtml = user.rol === 'estudiante' 
+                        ? `<button class="btn-votar" onclick="votar(${el.id}, '${el.titulo}')">Ingresar a Votar</button>`
+                        : `<button class="btn-votar" style="background:#555; cursor:not-allowed;" disabled>Modo Vista Admin</button>`;
+
+                    container.innerHTML += `
+                        <div class="eleccion-card">
+                            <div>
+                                <h3>${el.titulo}</h3>
+                                <p>${el.descripcion}</p>
+                                <p style="font-size:0.8rem; color:var(--accent);">Cierra: ${new Date(el.fecha_fin).toLocaleString()}</p>
+                            </div>
+                            <div style="margin-top:1rem;">
+                                ${btnHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                container.innerHTML = `<div style="color:#ff5e5e; padding:1rem;">Error de conexión. Intente más tarde.</div>`;
+            }
+        }
+
+        // Lógica para votar (Simulada para visualización)
+        function votar(eleccionId, titulo) {
+            Swal.fire({
+                title: `Votación: ${titulo}`,
+                html: `
+                    <p style="margin-bottom:1rem; color:#666;">Selecciona a tu candidato:</p>
+                    <select id="candidato" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc;">
+                        <option value="1">Frente Renovación (Candidato A)</option>
+                        <option value="2">Unidad Estudiantil (Candidato B)</option>
+                        <option value="3">Voto en Blanco</option>
+                    </select>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Emitir Voto',
+                confirmButtonColor: '#0ea5e9',
+                cancelButtonText: 'Cancelar'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const candidatoId = document.getElementById('candidato').value;
+                    try {
+                        const res = await fetch(`${API_BASE}/votaciones/votar`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({ eleccion_id: eleccionId, candidato_id: parseInt(candidatoId) })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            Swal.fire('¡Voto Registrado!', 'Tu voto ha sido procesado exitosamente y de forma anónima.', 'success');
+                        } else {
+                            Swal.fire('Atención', data.detail || 'No se pudo registrar el voto.', 'warning');
+                        }
+                    } catch (e) {
+                        Swal.fire('Error', 'Fallo de conexión al servidor.', 'error');
+                    }
+                }
+            });
+        }
+
+        // Lógica para crear elección
+        document.getElementById('formEleccion').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                titulo: document.getElementById('titulo').value,
+                descripcion: document.getElementById('descripcion').value,
+                fecha_inicio: document.getElementById('fecha_inicio').value,
+                fecha_fin: document.getElementById('fecha_fin').value
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/votaciones/elecciones`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    Swal.fire('¡Elección Creada!', 'La votación ya es pública para los estudiantes.', 'success');
+                    document.getElementById('formEleccion').reset();
+                    cargarElecciones();
+                } else {
+                    Swal.fire('Error', 'No se pudo crear la elección.', 'error');
+                }
+            } catch (e) {
+                Swal.fire('Error', 'Fallo de conexión.', 'error');
+            }
+        });
+
+        // Init
+        cargarElecciones();
+    </script>
+</body>
+</html>

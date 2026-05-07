@@ -2,7 +2,24 @@ node_modules/
 .env
 __pycache__/
 *.pyc
+*.pyo
 .venv/
 venv/
 env/
 .DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Archivos temporales Python
+*.egg-info/
+dist/
+build/
+
+# Base de datos local (SQLite si se usa)
+*.db
+*.sqlite3

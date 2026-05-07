@@ -384,14 +384,10 @@
                         nivel_asignado: data.nivel_asignado
                     }));
 
-                    // Redirección con pequeño delay para el toast
+                    // Redirección al Portal Unificado
                     setTimeout(() => {
-                        let target = 'student/dashboard.html';
-                        if (data.rol === 'administrador') target = 'admin/dashboard.html';
-                        else if (data.rol === 'profesor') target = 'profesor/dashboard.html';
-                        
-                        console.log('Navegando a:', target);
-                        window.location.href = target;
+                        console.log('Navegando a: portal/index.html');
+                        window.location.href = 'portal/index.html';
                     }, 800);
                 } else {
                     console.error('Error de login:', data.detail);
