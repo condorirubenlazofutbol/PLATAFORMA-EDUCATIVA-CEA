@@ -3,183 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Votaciones Institucionales | EduConnect Pro</title>
-    <!-- SweetAlert2 para modales bonitos -->
+    <title>Votaciones | EduConnect Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         :root {
-            --primary: #0ea5e9; 
-            --accent: #f59e0b; /* Ambar para Votaciones */
+            --primary: #0ea5e9;
+            --rose: #f43f5e;
             --bg-dark: #0b0f1a;
             --card-bg: rgba(19, 25, 41, 0.7);
-            --border: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.08);
             --text: #f8fafc;
             --muted: #94a3b8;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; }
-        header { padding: 1.5rem; border-bottom: 1px solid var(--border); background: rgba(11, 15, 26, 0.8); backdrop-filter: blur(10px); display: flex; justify-content: space-between; align-items: center; }
-        .back-btn { color: var(--primary); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 5px; }
-        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
-        
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
-        h1 { margin-bottom: 1rem; color: var(--accent); }
-        
-        /* Formularios */
-        .admin-panel { display: none; border-left: 4px solid var(--accent); }
-        input, textarea { width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 16px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; }
-        button { padding: 12px 24px; background: var(--accent); border:none; border-radius: 8px; color:#111; font-weight:800; cursor:pointer; transition: 0.3s; }
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
-        
-        /* Grid de Elecciones */
-        .elecciones-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
-        .eleccion-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display:flex; flex-direction: column; justify-content: space-between;}
-        .eleccion-card h3 { color: #fff; margin-bottom: 10px; }
-        .eleccion-card p { color: var(--muted); font-size: 0.9rem; margin-bottom: 15px; }
-        .btn-votar { background: var(--primary); color: white; width: 100%; text-align: center; }
-        .btn-votar:hover { box-shadow: 0 5px 15px rgba(14, 165, 233, 0.3); }
+        body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; overflow-x: hidden; }
 
-        .loading { text-align: center; color: var(--muted); padding: 2rem; }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background: radial-gradient(circle at 80% 20%, rgba(244, 63, 94, 0.05), transparent 25%);
+            z-index: -1; pointer-events: none;
+        }
+
+        header {
+            padding: 1.5rem 2.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border);
+            background: rgba(11, 15, 26, 0.85);
+            backdrop-filter: blur(12px);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .back-link { color: var(--primary); text-decoration: none; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+
+        .container { max-width: 1000px; margin: 3rem auto; padding: 0 1.5rem; }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 2.5rem; margin-bottom: 2rem; }
+        .card h1 { font-size: 1.8rem; font-weight: 900; margin-bottom: 1rem; }
+        
+        /* Admin Panel */
+        .admin-panel { display: none; border-left: 5px solid var(--primary); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; }
+        .form-full { grid-column: 1 / -1; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+        input, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; }
+        input:focus, textarea:focus { border-color: var(--primary); outline: none; }
+        .btn-create { grid-column: 1 / -1; padding: 14px; background: var(--primary); color: #000; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; margin-top: 0.5rem; }
+
+        /* Elecciones Grid */
+        .elecciones-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+        .eleccion-card { 
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem;
+            display: flex; flex-direction: column; justify-content: space-between; border-top: 4px solid var(--primary);
+            transition: 0.3s;
+        }
+        .eleccion-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .eleccion-card h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .eleccion-card p { font-size: 0.9rem; color: var(--muted); line-height: 1.5; margin-bottom: 1rem; }
+        .eleccion-meta { font-size: 0.75rem; color: var(--primary); font-weight: 700; text-transform: uppercase; margin-bottom: 1.5rem; }
+
+        .btn-votar { width: 100%; padding: 12px; background: var(--primary); color: #000; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-votar:hover { background: #fff; }
+
+        .loading { text-align: center; color: var(--muted); padding: 3rem; }
+        .empty-state { text-align: center; padding: 3rem; color: var(--muted); border: 1px dashed var(--border); border-radius: 16px; }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .elecciones-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
+
     <header>
-        <a href="../portal/index.html" class="back-btn">⬅ Volver al Portal</a>
-        <h2>🗳️ Sistema de Votaciones</h2>
+        <a href="../portal/index.html" class="back-link">← Volver al Portal</a>
+        <h2 style="font-weight: 900; font-size: 1.1rem; letter-spacing: 0.05em; text-transform: uppercase;">Sistema de Votaciones 🗳️</h2>
     </header>
 
     <div class="container">
         
-        <!-- Panel de Administración (Solo Directores/Secretarias) -->
+        <!-- Panel Admin -->
         <div class="card admin-panel" id="adminPanel">
-            <h2>Crear Nueva Elección</h2>
-            <p style="color:var(--muted); margin-bottom: 1rem;">Configura una nueva votación para tu subsistema.</p>
-            <form id="formEleccion">
-                <label>Título de la Elección</label>
-                <input type="text" id="titulo" required placeholder="Ej: Centro de Estudiantes 2026">
-                
-                <label>Descripción</label>
-                <textarea id="descripcion" rows="3" required placeholder="Detalles de la elección..."></textarea>
-                
-                <div style="display:flex; gap:1rem;">
-                    <div style="flex:1;">
-                        <label>Fecha de Inicio</label>
-                        <input type="datetime-local" id="fecha_inicio" required>
-                    </div>
-                    <div style="flex:1;">
-                        <label>Fecha de Cierre</label>
-                        <input type="datetime-local" id="fecha_fin" required>
-                    </div>
+            <h1>Crear Nueva Elección</h1>
+            <p style="color: var(--muted);">Define el título y los tiempos de la votación institucional.</p>
+            
+            <form id="formEleccion" class="form-grid">
+                <div class="form-full">
+                    <label>Título de la Elección</label>
+                    <input type="text" id="titulo" required placeholder="Ej: Elección Centro de Estudiantes 2026">
                 </div>
-                <button type="submit">Publicar Elección</button>
+                <div class="form-full">
+                    <label>Descripción / Propuestas</label>
+                    <textarea id="descripcion" rows="3" required placeholder="Describe los candidatos o el propósito..."></textarea>
+                </div>
+                <div>
+                    <label>Fecha de Inicio</label>
+                    <input type="datetime-local" id="fecha_inicio" required>
+                </div>
+                <div>
+                    <label>Fecha de Cierre</label>
+                    <input type="datetime-local" id="fecha_fin" required>
+                </div>
+                <button type="submit" class="btn-create">Publicar Votación Ahora</button>
             </form>
         </div>
 
-        <!-- Vista de Estudiantes -->
+        <!-- Vista Elecciones -->
         <div class="card">
             <h1>Elecciones Activas</h1>
-            <p style="color:var(--muted)">Aquí verás las elecciones activas en tu carrera/colegio. Elige con responsabilidad.</p>
+            <p style="color: var(--muted); margin-bottom: 1rem;">Participa democráticamente en los procesos de tu institución.</p>
             
-            <div id="eleccionesContainer" class="elecciones-grid">
-                <div class="loading">Cargando elecciones...</div>
+            <div id="eleccionesContainer">
+                <div class="loading">Buscando elecciones activas...</div>
             </div>
         </div>
 
     </div>
 
-    <!-- Script de lógica -->
     <script src="../js/api.js"></script>
     <script>
-        // API_BASE viene de js/api.js (auto-detecta local vs producci�n) // Asegúrate de ajustar según tu entorno
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
 
         if (!token) window.location.href = '../login.html';
 
-        // Mostrar panel admin según rol
+        // Mostrar panel admin si aplica
         if (['director', 'secretaria', 'administrador'].includes(user.rol)) {
             document.getElementById('adminPanel').style.display = 'block';
         }
 
-        // Cargar Elecciones
         async function cargarElecciones() {
             const container = document.getElementById('eleccionesContainer');
             try {
                 const res = await fetch(`${API_BASE}/votaciones/elecciones/activas`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if(!res.ok) throw new Error("Error al cargar elecciones");
                 const data = await res.json();
                 
-                if (data.elecciones.length === 0) {
-                    container.innerHTML = '<div style="grid-column: 1 / -1; padding:15px; border:1px solid var(--border); border-radius:8px; background:rgba(255,255,255,0.05); text-align:center;"><h3>No hay elecciones activas en este momento.</h3></div>';
+                if (!data.elecciones || data.elecciones.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">🗳️</span>
+                            <h3>No hay elecciones activas</h3>
+                            <p>Vuelve más tarde para participar en nuevos procesos.</p>
+                        </div>
+                    `;
                     return;
                 }
 
-                container.innerHTML = '';
-                data.elecciones.forEach(el => {
-                    const btnHtml = user.rol === 'estudiante' 
-                        ? `<button class="btn-votar" onclick="votar(${el.id}, '${el.titulo}')">Ingresar a Votar</button>`
-                        : `<button class="btn-votar" style="background:#555; cursor:not-allowed;" disabled>Modo Vista Admin</button>`;
-
-                    container.innerHTML += `
-                        <div class="eleccion-card">
-                            <div>
-                                <h3>${el.titulo}</h3>
-                                <p>${el.descripcion}</p>
-                                <p style="font-size:0.8rem; color:var(--accent);">Cierra: ${new Date(el.fecha_fin).toLocaleString()}</p>
-                            </div>
-                            <div style="margin-top:1rem;">
-                                ${btnHtml}
-                            </div>
+                container.className = 'elecciones-grid';
+                container.innerHTML = data.elecciones.map(el => `
+                    <div class="eleccion-card">
+                        <div>
+                            <h3>${el.titulo}</h3>
+                            <p>${el.descripcion}</p>
+                            <div class="eleccion-meta">Cierre: ${new Date(el.fecha_fin).toLocaleString()}</div>
                         </div>
-                    `;
-                });
+                        <button class="btn-votar" onclick="abrirVotacion(${el.id}, '${el.titulo}')">
+                            ${user.rol === 'estudiante' ? 'Ingresar a Votar' : 'Ver Detalles'}
+                        </button>
+                    </div>
+                `).join('');
             } catch (e) {
-                container.innerHTML = `<div style="color:#ff5e5e; padding:1rem;">Error de conexión. Intente más tarde.</div>`;
+                container.innerHTML = '<div class="loading">Error al conectar con el servidor de votaciones.</div>';
             }
         }
 
-        // Lógica para votar (Simulada para visualización)
-        function votar(eleccionId, titulo) {
+        function abrirVotacion(id, titulo) {
+            if (user.rol !== 'estudiante') {
+                Swal.fire('Modo Administrador', 'Solo los estudiantes pueden emitir votos reales.', 'info');
+                return;
+            }
+
             Swal.fire({
-                title: `Votación: ${titulo}`,
-                html: `
-                    <p style="margin-bottom:1rem; color:#666;">Selecciona a tu candidato:</p>
-                    <select id="candidato" style="width:100%; padding:10px; border-radius:5px; border:1px solid #ccc;">
-                        <option value="1">Frente Renovación (Candidato A)</option>
-                        <option value="2">Unidad Estudiantil (Candidato B)</option>
-                        <option value="3">Voto en Blanco</option>
-                    </select>
-                `,
+                title: titulo,
+                text: 'Selecciona tu opción de preferencia:',
+                input: 'select',
+                inputOptions: {
+                    '1': 'Frente de Renovación Estudiantil',
+                    '2': 'Movimiento Unidad Académica',
+                    '3': 'Voto en Blanco'
+                },
+                inputPlaceholder: 'Selecciona un candidato',
                 showCancelButton: true,
-                confirmButtonText: 'Emitir Voto',
+                confirmButtonText: 'Emitir Voto Anónimo',
                 confirmButtonColor: '#0ea5e9',
                 cancelButtonText: 'Cancelar'
             }).then(async (result) => {
-                if (result.isConfirmed) {
-                    const candidatoId = document.getElementById('candidato').value;
+                if (result.isConfirmed && result.value) {
                     try {
                         const res = await fetch(`${API_BASE}/votaciones/votar`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                            body: JSON.stringify({ eleccion_id: eleccionId, candidato_id: parseInt(candidatoId) })
+                            body: JSON.stringify({ eleccion_id: id, candidato_id: parseInt(result.value) })
                         });
                         const data = await res.json();
                         if (res.ok) {
-                            Swal.fire('¡Voto Registrado!', 'Tu voto ha sido procesado exitosamente y de forma anónima.', 'success');
+                            Swal.fire('¡Voto Registrado!', 'Gracias por participar en el proceso democrático.', 'success');
                         } else {
-                            Swal.fire('Atención', data.detail || 'No se pudo registrar el voto.', 'warning');
+                            Swal.fire('Atención', data.detail || 'Error al procesar el voto.', 'warning');
                         }
                     } catch (e) {
-                        Swal.fire('Error', 'Fallo de conexión al servidor.', 'error');
+                        Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
                     }
                 }
             });
         }
 
-        // Lógica para crear elección
         document.getElementById('formEleccion').addEventListener('submit', async (e) => {
             e.preventDefault();
             const payload = {
@@ -195,9 +225,8 @@
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify(payload)
                 });
-                
                 if (res.ok) {
-                    Swal.fire('¡Elección Creada!', 'La votación ya es pública para los estudiantes.', 'success');
+                    Swal.fire('¡Éxito!', 'Elección publicada correctamente.', 'success');
                     document.getElementById('formEleccion').reset();
                     cargarElecciones();
                 } else {

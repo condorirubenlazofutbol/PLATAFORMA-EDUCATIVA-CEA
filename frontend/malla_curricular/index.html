@@ -6,173 +6,186 @@
     <title>Malla Curricular | EduConnect Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         :root {
-            --primary: #0ea5e9; 
-            --accent: #8b5cf6; /* Violeta para diferenciar la Malla */
+            --primary: #0ea5e9;
+            --violet: #8b5cf6;
             --bg-dark: #0b0f1a;
             --card-bg: rgba(19, 25, 41, 0.7);
-            --border: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.08);
             --text: #f8fafc;
             --muted: #94a3b8;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; }
-        header { padding: 1.5rem; border-bottom: 1px solid var(--border); background: rgba(11, 15, 26, 0.8); backdrop-filter: blur(10px); display: flex; justify-content: space-between; align-items: center; }
-        .back-btn { color: var(--primary); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 5px; }
-        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background: radial-gradient(circle at 10% 90%, rgba(139, 92, 246, 0.05), transparent 25%);
+            z-index: -1; pointer-events: none;
+        }
+
+        header {
+            padding: 1.5rem 2.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border);
+            background: rgba(11, 15, 26, 0.85);
+            backdrop-filter: blur(12px);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .back-link { color: var(--primary); text-decoration: none; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
+
+        .container { max-width: 1200px; margin: 3rem auto; padding: 0 1.5rem; }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 2.5rem; margin-bottom: 2rem; }
+        .card h1 { font-size: 2rem; font-weight: 900; margin-bottom: 1rem; letter-spacing: -0.02em; }
         
-        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
-        h1 { margin-bottom: 1rem; color: var(--accent); }
+        /* Admin Panel */
+        .admin-panel { display: none; border-left: 5px solid var(--violet); }
+        .form-row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.5rem; align-items: flex-end; }
+        .input-group { flex: 1; min-width: 280px; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+        input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; }
+        .btn-add { padding: 12px 30px; background: var(--violet); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.2s; }
+        .btn-add:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3); }
 
-        /* Panel Admin */
-        .admin-panel { display: none; border-left: 4px solid var(--accent); }
-        input, select { width: 100%; padding: 12px; margin-top: 8px; margin-bottom: 16px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; }
-        button { padding: 12px 24px; background: var(--accent); border:none; border-radius: 8px; color:#fff; font-weight:800; cursor:pointer; transition: 0.3s; }
-        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3); }
-
-        /* Malla Visual (Grid por Niveles) */
-        .nivel-section { margin-bottom: 2rem; }
-        .nivel-title { font-size: 1.2rem; color: #fff; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; margin-bottom: 1rem; }
-        .malla-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+        /* Malla Visual */
+        .nivel-section { margin-bottom: 3.5rem; }
+        .nivel-title { 
+            font-size: 1.3rem; font-weight: 900; color: white; 
+            margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px;
+        }
+        .nivel-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+        
+        .malla-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.2rem; }
         
         .materia-card {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1.2rem;
-            text-align: center;
+            border-radius: 16px;
+            padding: 1.8rem;
             transition: all 0.3s;
             position: relative;
             overflow: hidden;
+            border-left: 4px solid var(--violet);
         }
-        .materia-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--accent);
+        .materia-card:hover { transform: translateY(-5px); border-color: var(--violet); background: rgba(139, 92, 246, 0.05); }
+        .materia-title { font-weight: 800; font-size: 1.15rem; margin-bottom: 0.4rem; color: #fff; }
+        .materia-sub { color: var(--muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .loading { text-align: center; color: var(--muted); padding: 4rem; }
+
+        @media (max-width: 768px) {
+            .form-row { flex-direction: column; align-items: stretch; }
+            .malla-grid { grid-template-columns: 1fr; }
         }
-        .materia-card:hover { transform: translateY(-5px); background: rgba(139, 92, 246, 0.1); border-color: var(--accent); }
-        .materia-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem; }
-        .materia-sub { color: var(--muted); font-size: 0.8rem; }
     </style>
 </head>
 <body>
+
     <header>
-        <a href="../portal/index.html" class="back-btn">⬅ Volver al Portal</a>
-        <h2>🗺️ Malla Curricular</h2>
+        <a href="../portal/index.html" class="back-link">← Volver al Portal</a>
+        <h2 style="font-weight: 900; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em;">Malla Curricular 🗺️</h2>
     </header>
 
     <div class="container">
         
-        <!-- Panel Administrador (Jefe Carrera / Director) -->
+        <!-- Panel Admin -->
         <div class="card admin-panel" id="adminPanel">
-            <h2>Gestión de Malla (Añadir Módulo)</h2>
-            <p style="color:var(--muted); margin-bottom: 1rem;">Crea nuevas materias y asígnalas a un semestre/nivel.</p>
-            <form id="formMalla">
-                <div style="display:flex; gap:1rem; flex-wrap: wrap;">
-                    <div style="flex:1; min-width: 250px;">
-                        <label>Nombre de la Materia</label>
-                        <input type="text" id="nombre_materia" required placeholder="Ej: Bases de Datos II">
-                    </div>
-                    <div style="flex:1; min-width: 200px;">
-                        <label>Nivel / Semestre</label>
-                        <select id="nivel" required>
-                            <option value="Primer Semestre">Primer Semestre</option>
-                            <option value="Segundo Semestre">Segundo Semestre</option>
-                            <option value="Tercer Semestre">Tercer Semestre</option>
-                            <option value="Cuarto Semestre">Cuarto Semestre</option>
-                            <option value="Quinto Semestre">Quinto Semestre</option>
-                            <option value="Sexto Semestre">Sexto Semestre</option>
-                        </select>
-                    </div>
+            <h1>Gestión de Programa</h1>
+            <p style="color: var(--muted);">Añade nuevos módulos curriculares al plan de estudios institucional.</p>
+            
+            <form id="formMalla" class="form-row">
+                <div class="input-group">
+                    <label>Nombre de la Materia</label>
+                    <input type="text" id="nombre_materia" required placeholder="Ej: Programación Avanzada">
                 </div>
-                <button type="submit">Agregar a la Malla</button>
+                <div class="input-group">
+                    <label>Semestre / Nivel</label>
+                    <select id="nivel" required>
+                        <option value="Primer Semestre">Primer Semestre</option>
+                        <option value="Segundo Semestre">Segundo Semestre</option>
+                        <option value="Tercer Semestre">Tercer Semestre</option>
+                        <option value="Cuarto Semestre">Cuarto Semestre</option>
+                        <option value="Quinto Semestre">Quinto Semestre</option>
+                        <option value="Sexto Semestre">Sexto Semestre</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-add">Añadir Módulo</button>
             </form>
         </div>
 
-        <!-- Vista General (Todos) -->
+        <!-- Vista Malla -->
         <div class="card">
-            <h1>Programa de Estudios</h1>
-            <p style="color:var(--muted); margin-bottom: 2rem;">Visualiza todas las materias de tu subsistema organizadas por niveles/semestres.</p>
+            <h1>Estructura Curricular</h1>
+            <p style="color: var(--muted); margin-bottom: 2.5rem;">Explora los contenidos organizados por periodos académicos.</p>
             
             <div id="mallaContainer">
-                <div style="text-align:center; color:var(--muted);">Cargando programa...</div>
+                <div class="loading">Cargando mapa curricular...</div>
             </div>
         </div>
 
     </div>
 
-    <!-- Script de lógica -->
     <script src="../js/api.js"></script>
     <script>
-        // API_BASE viene de js/api.js (auto-detecta local vs producci�n)
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
 
         if (!token) window.location.href = '../login.html';
 
-        // Mostrar Admin Panel
         if (['director', 'jefe_carrera', 'administrador'].includes(user.rol)) {
             document.getElementById('adminPanel').style.display = 'block';
         }
 
-        // Simulación: Mantendremos los módulos en memoria para demostración,
-        // ya que la API base tiene /modulos, pero haremos que luzca agrupado por nivel.
-        let materias = [
-            { id: 1, nombre: 'Ofimática Básica', nivel: 'Primer Semestre' },
-            { id: 2, nombre: 'Lógica de Programación', nivel: 'Primer Semestre' },
-            { id: 3, nombre: 'Diseño Gráfico I', nivel: 'Segundo Semestre' },
-            { id: 4, nombre: 'Bases de Datos I', nivel: 'Segundo Semestre' },
-            { id: 5, nombre: 'Programación Web', nivel: 'Tercer Semestre' }
-        ];
-
         async function cargarMalla() {
             const container = document.getElementById('mallaContainer');
-            
-            // Intentar traer de API (mock en caso de fallo/desconexion)
             try {
                 const res = await fetch(`${API_BASE}/modulos`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) {
-                    const data = await res.json();
-                    if(data.length > 0) materias = data;
+                const data = await res.json();
+                const materias = data.modulos || data;
+
+                if (!Array.isArray(materias) || materias.length === 0) {
+                    container.innerHTML = '<div class="loading">No hay materias registradas aún.</div>';
+                    return;
                 }
-            } catch (e) {
-                console.log("Cargando datos locales (Mock)");
-            }
 
-            if (materias.length === 0) {
-                container.innerHTML = '<h3>No hay materias registradas.</h3>';
-                return;
-            }
+                const agrupado = materias.reduce((acc, obj) => {
+                    let key = obj.nivel || 'Módulos Generales';
+                    if (!acc[key]) acc[key] = [];
+                    acc[key].push(obj);
+                    return acc;
+                }, {});
 
-            // Agrupar por nivel
-            const agrupado = materias.reduce((acc, obj) => {
-                let key = obj.nivel;
-                if (!acc[key]) acc[key] = [];
-                acc[key].push(obj);
-                return acc;
-            }, {});
+                container.innerHTML = '';
+                const nivelesOrdenados = [
+                    'Primer Semestre', 'Segundo Semestre', 'Tercer Semestre', 
+                    'Cuarto Semestre', 'Quinto Semestre', 'Sexto Semestre', 'Módulos Generales'
+                ];
 
-            // Renderizar
-            container.innerHTML = '';
-            for (const [nivel, mods] of Object.entries(agrupado)) {
-                let htmlNivel = `<div class="nivel-section">
-                    <div class="nivel-title">${nivel}</div>
-                    <div class="malla-grid">`;
-                
-                mods.forEach(m => {
-                    htmlNivel += `
-                        <div class="materia-card">
-                            <div class="materia-title">${m.nombre}</div>
-                            <div class="materia-sub">Módulo Curricular</div>
-                        </div>
-                    `;
+                nivelesOrdenados.forEach(nivel => {
+                    if (agrupado[nivel]) {
+                        const divNivel = document.createElement('div');
+                        divNivel.className = 'nivel-section';
+                        divNivel.innerHTML = `
+                            <div class="nivel-title">📍 ${nivel}</div>
+                            <div class="malla-grid">
+                                ${agrupado[nivel].map(m => `
+                                    <div class="materia-card">
+                                        <div class="materia-title">${m.nombre}</div>
+                                        <div class="materia-sub">Módulo Institucional</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                        container.appendChild(divNivel);
+                    }
                 });
-
-                htmlNivel += `</div></div>`;
-                container.innerHTML += htmlNivel;
+            } catch (e) {
+                container.innerHTML = '<div class="loading">Error al conectar con la base de datos curricular.</div>';
             }
         }
 
-        // Crear materia
         document.getElementById('formMalla').addEventListener('submit', async (e) => {
             e.preventDefault();
             const nombre = document.getElementById('nombre_materia').value;
@@ -186,20 +199,14 @@
                 });
 
                 if (res.ok) {
-                    Swal.fire('Guardado', 'La materia fue agregada a la malla.', 'success');
+                    Swal.fire('¡Añadido!', 'La materia se integró correctamente.', 'success');
                     document.getElementById('formMalla').reset();
-                    cargarMalla(); // Si la BD funciona, esto recargará.
-                } else {
-                    // Fallback para visualización
-                    materias.push({id: Date.now(), nombre, nivel});
-                    Swal.fire('Guardado', '(Modo Demo) Materia agregada.', 'success');
                     cargarMalla();
+                } else {
+                    Swal.fire('Error', 'No se pudo añadir la materia.', 'error');
                 }
             } catch (e) {
-                // Fallback para visualización sin servidor local corriendo
-                materias.push({id: Date.now(), nombre, nivel});
-                Swal.fire('Guardado', '(Modo Local) Materia agregada a la interfaz.', 'success');
-                cargarMalla();
+                Swal.fire('Error', 'Fallo de conexión.', 'error');
             }
         });
 
