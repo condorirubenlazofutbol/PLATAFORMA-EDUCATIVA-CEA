@@ -65,30 +65,37 @@ def reset_ingenieria():
     try:
         cur = conn.cursor()
         
-        # 1. Limpiar inscripciones (Dualidad)
+        # 1. Limpieza total por tablas (independiente de FKs para asegurar)
         cur.execute("DELETE FROM inscripciones")
-        
-        # 2. Borrar todas las carreras (Esto borrará módulos, temas, evaluaciones por CASCADE)
+        cur.execute("DELETE FROM respuestas_alumno")
+        cur.execute("DELETE FROM evaluaciones")
+        cur.execute("DELETE FROM temas")
+        cur.execute("DELETE FROM contenidos")
+        cur.execute("DELETE FROM certificados")
+        cur.execute("DELETE FROM planificaciones")
+        cur.execute("DELETE FROM modulos")
+        mods_del = cur.rowcount
         cur.execute("DELETE FROM carreras")
-        
-        # 3. Borrar subsistemas residuales (Excepto el 1 que es CEA)
+        cars_del = cur.rowcount
         cur.execute("DELETE FROM subsistemas WHERE id != 1")
         
-        # 4. Reset secuencias para limpieza visual de IDs
+        # 2. Reset secuencias
         try:
             cur.execute("ALTER SEQUENCE carreras_id_seq RESTART WITH 1")
             cur.execute("ALTER SEQUENCE modulos_id_seq RESTART WITH 1")
+            cur.execute("ALTER SEQUENCE contenidos_id_seq RESTART WITH 1")
         except: pass
         
         conn.commit()
         
-        # 5. Re-sembrar malla institucional oficial del CEA
+        # 3. Re-sembrar malla institucional oficial del CEA
         creados = seed_cea_data()
         
         return {
             "status": "success",
-            "msg": f"PURGA TOTAL EXITOSA. Se han eliminado todos los módulos de ingeniería. Se generaron {creados} módulos oficiales del CEA.",
-            "detalle": "La plataforma ahora solo muestra Niveles Básico, Auxiliar, Medio I y II (Técnica) y Ciclos Humanísticos."
+            "msg": f"SISTEMA DEPURADO: Se eliminaron {mods_del} módulos y {cars_del} carreras antiguas.",
+            "seeding": f"Se generaron {creados} módulos institucionales oficiales del CEA.",
+            "detalle": "Módulos de Ingeniería y Educación Superior eliminados permanentemente."
         }
     except Exception as e:
         conn.rollback()
