@@ -350,6 +350,9 @@
                 <div class="card-header">
                     <h3 class="card-title">Inscripción Estudiantil</h3>
                     <div class="flex-center">
+                        <button class="btn-action btn-outline" onclick="downloadExcelTemplate()">
+                            <span>📥</span> Descargar Plantilla
+                        </button>
                         <button class="btn-action btn-outline" onclick="document.getElementById('excel-input').click()">
                             <span>📊</span> Importar Excel
                         </button>
@@ -614,6 +617,19 @@
 
         if (window.innerWidth <= 900) {
             document.getElementById('mobileBar').style.display = 'flex';
+        }
+
+        // ======= Descargar Plantilla Excel =======
+        function downloadExcelTemplate() {
+            const data = [
+                ["Carnet", "Nombres", "Apellidos", "Area", "Nivel"],
+                ["1234567", "Juan", "Perez", "humanistica", "Aplicados (Primer Año)"],
+                ["7654321", "Maria", "Lopez", "tecnica", "Sistemas Informáticos - Nivel Básico"]
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Estudiantes");
+            XLSX.writeFile(wb, "Plantilla_Inscripcion_CEA.xlsx");
         }
 
         function showTab(id, el) {

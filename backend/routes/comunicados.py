@@ -11,7 +11,7 @@ def rows_to_dicts(cursor, rows):
 
 @router.post("/avisos", status_code=201)
 def create_aviso(aviso: AvisoCreate, current_user: dict = Depends(get_current_user)):
-    if current_user["rol"] not in ["director", "secretaria"]:
+    if current_user["rol"] not in ["director", "secretaria", "admin", "administrador"]:
         raise HTTPException(status_code=403, detail="No tienes permiso para publicar avisos")
     
     conn = get_db_connection()
@@ -62,13 +62,14 @@ def get_avisos(current_user: dict = Depends(get_current_user)):
 
 @router.delete("/avisos/{aviso_id}")
 def delete_aviso(aviso_id: int, current_user: dict = Depends(get_current_user)):
-    if current_user["rol"] not in ["director", "secretaria"]:
+    if current_user["rol"] not in ["director", "secretaria", "admin", "administrador"]:
         raise HTTPException(status_code=403, detail="No tienes permiso para eliminar avisos")
         
     conn = get_db_connection()
     try:
         cur = conn.cursor()
-        cur.execute("DELETE FROM avisos_institucionales WHERE id = %s AND subsistema_id = %s", (aviso_id, current_user.get("subsistema_id")))
+        # Usamos IS NOT DISTINCT FROM para manejar correctamente los valores NULL en subsistema_id
+        cur.execute("DELETE FROM avisos_institucionales WHERE id = %s AND subsistema_id IS NOT DISTINCT FROM %s", (aviso_id, current_user.get("subsistema_id")))
         if cur.rowcount == 0:
             raise HTTPException(status_code=404, detail="Aviso no encontrado o no pertenece a tu subsistema")
         conn.commit()
