@@ -41,7 +41,7 @@ def login_con_ci(body: dict):
         cur = conn.cursor()
         cur.execute("""
             SELECT id, nombre, apellido, email, rol, subsistema_id
-            FROM usuarios WHERE carnet=%s AND rol='votante'
+            FROM usuarios WHERE carnet=%s AND rol IN ('votante', 'estudiante')
         """, (ci,))
         row = cur.fetchone()
         if not row:
@@ -228,7 +228,7 @@ def admin_stats(eleccion_id: int = None, current_user: dict = Depends(get_curren
     conn = get_db_connection()
     try:
         cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) FROM usuarios WHERE rol='votante'")
+        cur.execute("SELECT COUNT(*) FROM usuarios WHERE rol IN ('votante', 'estudiante')")
         total_votantes = cur.fetchone()[0]
         cur.execute("SELECT COUNT(*) FROM candidatos")
         total_candidatos = cur.fetchone()[0]
@@ -399,7 +399,7 @@ def reporte_votantes(current_user: dict = Depends(get_current_user)):
             SELECT u.carnet as ci, u.nombre, u.email as correo,
                    0 as mesa, true as habilitado,
                    EXISTS(SELECT 1 FROM votos v WHERE v.estudiante_id=u.id) as ha_votado
-            FROM usuarios u WHERE u.rol='votante' ORDER BY u.nombre
+            FROM usuarios u WHERE u.rol IN ('votante', 'estudiante') ORDER BY u.nombre
         """)
         return rows_to_dicts(cur, cur.fetchall())
     finally:
@@ -498,7 +498,7 @@ def listar_votantes(current_user: dict = Depends(get_current_user)):
             SELECT u.carnet as ci, u.nombre, u.email as correo,
                    true as habilitado,
                    EXISTS(SELECT 1 FROM votos v WHERE v.estudiante_id=u.id) as ha_votado
-            FROM usuarios u WHERE u.rol='votante' ORDER BY u.nombre
+            FROM usuarios u WHERE u.rol IN ('votante', 'estudiante') ORDER BY u.nombre
         """)
         return rows_to_dicts(cur, cur.fetchall())
     finally:
@@ -510,7 +510,7 @@ def buscar_votante(ci: str, current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     try:
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, email as correo, carnet as ci FROM usuarios WHERE carnet=%s AND rol='votante'", (ci,))
+        cur.execute("SELECT id, nombre, email as correo, carnet as ci FROM usuarios WHERE carnet=%s AND rol IN ('votante', 'estudiante')", (ci,))
         row = cur.fetchone()
         if not row:
             raise HTTPException(404, "CI no encontrado")

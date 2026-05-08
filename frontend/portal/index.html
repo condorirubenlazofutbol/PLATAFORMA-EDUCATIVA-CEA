@@ -105,10 +105,14 @@
         .hidden { display: none !important; }
 
         @media (max-width: 768px) {
-            header { padding: 1rem 1.5rem; }
-            .header-right { gap: 1rem; }
+            header { padding: 1rem 1.5rem; flex-direction: column; gap: 1rem; }
+            .header-right { width: 100%; justify-content: space-between; }
             .user-details { display: none; }
+            .welcome-section { text-align: center; margin-top: 1rem; }
             .welcome-section h1 { font-size: 1.8rem; }
+            .stats-strip { grid-template-columns: 1fr; }
+            .apps-grid { grid-template-columns: 1fr; }
+            .container { margin: 1.5rem auto; }
         }
     </style>
 </head>
