@@ -443,15 +443,15 @@
 
   function redirigirPorRol(rol) {
     console.log("Iniciando redirección para rol:", rol);
-    const base = window.location.origin;
     const v = "?v=4.3.5"; // Bypass PWA cache
-    if (rol === 'admin') window.location.href = base + '/pages/dashboard-admin.html' + v;
-    else if (rol === 'secretaria') window.location.href = base + '/pages/dashboard-secretaria.html' + v;
-    else if (rol === 'jefe') window.location.href = base + '/pages/dashboard-jefe.html' + v;
-    else if (rol === 'votante') window.location.href = base + '/pages/dashboard-votante.html' + v;
+    // Usamos rutas relativas porque ahora es un subsistema centralizado
+    if (rol === 'admin' || rol === 'administrador') window.location.href = 'pages/dashboard-admin.html' + v;
+    else if (rol === 'secretaria') window.location.href = 'pages/dashboard-secretaria.html' + v;
+    else if (rol === 'jefe' || rol === 'jefe_carrera') window.location.href = 'pages/dashboard-jefe.html' + v;
+    else if (rol === 'votante' || rol === 'estudiante' || rol === 'profesor' || rol === 'docente') window.location.href = 'pages/dashboard-votante.html' + v;
     else {
         alert("Rol desconocido: " + rol);
-        window.location.href = base + '/index.html';
+        window.location.href = '../index.html';
     }
   }
 

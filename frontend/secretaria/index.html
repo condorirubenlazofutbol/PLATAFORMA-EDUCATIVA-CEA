@@ -530,8 +530,17 @@
         document.getElementById('user-initials').textContent = (user.nombre || 'S')[0];
 
         const levels = {
-            humanistica: ['Primer Año', 'Segundo Año', 'Tercer Año'],
-            tecnica: ['Nivel Básico', 'Nivel Auxiliar', 'Medio I', 'Medio II']
+            humanistica: ['Aplicados Primer Año', 'Complementarios Segundo Año', 'Especializados Tercer Año'],
+            tecnica: [
+                'Sistemas Informáticos', 
+                'Gastronomía', 
+                'Belleza Integral', 
+                'Corte y Confección', 
+                'Secretariado Ejecutivo', 
+                'Contabilidad', 
+                'Mecánica Automotriz', 
+                'Electrónica'
+            ]
         };
 
         function showTab(id, el) {

@@ -1,5 +1,7 @@
-// CEA Elecciones — API Client v5.0 (Local Backend)
-const API_URL = "http://localhost:8000";
+// CEA Elecciones — API Client v5.0
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:8000'
+    : 'https://educonnect-backend-ay2z.onrender.com';
 
 window.getApiUrl = () => API_URL;
 
