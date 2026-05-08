@@ -53,6 +53,20 @@ def init_db():
             )
         ''')
 
+        # 1.5 Nueva Tabla: Carreras / Especialidades / Áreas Humanísticas
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS carreras (
+                id SERIAL PRIMARY KEY,
+                subsistema_id INT,
+                nombre VARCHAR(150) NOT NULL,
+                area VARCHAR(50) NOT NULL, -- 'Técnica' o 'Humanística'
+                descripcion TEXT,
+                jefe_id INT,
+                estado VARCHAR(20) DEFAULT 'activo',
+                FOREIGN KEY (subsistema_id) REFERENCES subsistemas(id) ON DELETE CASCADE
+            )
+        ''')
+
         # 2. Tabla de Usuarios (con subsistema_id)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS usuarios (
@@ -70,13 +84,31 @@ def init_db():
             )
         ''')
 
+        # 2.5 Nueva Tabla: Inscripciones (Dualidad)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS inscripciones (
+                id SERIAL PRIMARY KEY,
+                usuario_id INT NOT NULL,
+                carrera_id INT NOT NULL,
+                nivel VARCHAR(100), -- ej. Técnico Medio, Aprendizajes Aplicados
+                fecha_inscripcion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                estado VARCHAR(20) DEFAULT 'activo',
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE CASCADE,
+                UNIQUE (usuario_id, carrera_id)
+            )
+        ''')
+
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS modulos (
                 id SERIAL PRIMARY KEY,
                 nombre VARCHAR(200) NOT NULL,
                 nivel VARCHAR(100) NOT NULL,
                 subnivel VARCHAR(100),
-                orden INT DEFAULT 0
+                orden INT DEFAULT 0,
+                carrera_id INT,
+                periodo VARCHAR(100), -- '1er Semestre', 'Gestión 2026', etc.
+                FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE SET NULL
             )
         ''')
 
@@ -110,6 +142,12 @@ def init_db():
                 modulo_id INT NOT NULL,
                 estado VARCHAR(50) DEFAULT 'inscrito',
                 nota DECIMAL(5,2),
+                nota_ser DECIMAL(5,2) DEFAULT 0,
+                nota_saber DECIMAL(5,2) DEFAULT 0,
+                nota_hacer DECIMAL(5,2) DEFAULT 0,
+                nota_decidir DECIMAL(5,2) DEFAULT 0,
+                nota_autoevaluacion DECIMAL(5,2) DEFAULT 0,
+                nota_final DECIMAL(5,2) DEFAULT 0,
                 FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
                 FOREIGN KEY (modulo_id) REFERENCES modulos(id) ON DELETE CASCADE,
                 UNIQUE (usuario_id, modulo_id)
@@ -171,6 +209,21 @@ def init_db():
         ''')
 
         cursor.execute('''
+            CREATE TABLE IF NOT EXISTS candidatos (
+                id SERIAL PRIMARY KEY,
+                eleccion_id INT NOT NULL,
+                nombre VARCHAR(150) NOT NULL,
+                sigla VARCHAR(50),
+                cargo VARCHAR(100),
+                frente VARCHAR(150),
+                descripcion TEXT,
+                foto TEXT,
+                imagen_base64 TEXT,
+                FOREIGN KEY (eleccion_id) REFERENCES elecciones(id) ON DELETE CASCADE
+            )
+        ''')
+
+        cursor.execute('''
             CREATE TABLE IF NOT EXISTS votos (
                 id SERIAL PRIMARY KEY,
                 eleccion_id INT NOT NULL,
@@ -179,7 +232,7 @@ def init_db():
                 fecha_voto TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (eleccion_id) REFERENCES elecciones(id) ON DELETE CASCADE,
                 FOREIGN KEY (estudiante_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-                FOREIGN KEY (candidato_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE,
                 UNIQUE (eleccion_id, estudiante_id)
             )
         ''')
@@ -191,8 +244,25 @@ def init_db():
             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS carnet VARCHAR(50)",
             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS estado VARCHAR(20) DEFAULT 'activo'",
             "ALTER TABLE modulos ADD COLUMN IF NOT EXISTS orden INT DEFAULT 0",
+            "ALTER TABLE modulos ADD COLUMN IF NOT EXISTS carrera_id INT",
+            "ALTER TABLE modulos ADD COLUMN IF NOT EXISTS periodo VARCHAR(100)",
             "ALTER TABLE contenidos ADD COLUMN IF NOT EXISTS tema_num INT DEFAULT 1",
             "ALTER TABLE contenidos ALTER COLUMN url SET DEFAULT ''",
+            "ALTER TABLE progreso ADD COLUMN IF NOT EXISTS nota_ser DECIMAL(5,2) DEFAULT 0",
+            "ALTER TABLE progreso ADD COLUMN IF NOT EXISTS nota_saber DECIMAL(5,2) DEFAULT 0",
+            "ALTER TABLE progreso ADD COLUMN IF NOT EXISTS nota_hacer DECIMAL(5,2) DEFAULT 0",
+            "ALTER TABLE progreso ADD COLUMN IF NOT EXISTS nota_decidir DECIMAL(5,2) DEFAULT 0",
+            "ALTER TABLE progreso ADD COLUMN IF NOT EXISTS nota_autoevaluacion DECIMAL(5,2) DEFAULT 0",
+            "ALTER TABLE progreso ADD COLUMN IF NOT EXISTS nota_final DECIMAL(5,2) DEFAULT 0",
+            # Columnas nuevas de candidatos
+            "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS sigla VARCHAR(50)",
+            "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS cargo VARCHAR(100)",
+            "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS frente VARCHAR(150)",
+            "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS descripcion TEXT",
+            "ALTER TABLE candidatos ADD COLUMN IF NOT EXISTS imagen_base64 TEXT",
+            # Modificar la FK de candidato_id en votos para apuntar a candidatos
+            "ALTER TABLE votos DROP CONSTRAINT IF EXISTS votos_candidato_id_fkey",
+            "ALTER TABLE votos ADD CONSTRAINT votos_candidato_id_fkey FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE"
         ]:
             try:
                 cursor.execute(col_sql)

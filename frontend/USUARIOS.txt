@@ -1,0 +1,15 @@
+Para que puedas probar el funcionamiento completo de la plataforma en cada uno de sus roles, he configurado los siguientes usuarios de prueba.
+
+Todos comparten la misma contraseña para que sea fácil recordarla: 1234567
+
+Rol	Correo Electrónico (Email)	Contraseña	¿Qué puedes probar?
+Administrador	ruben.admin@educonnect.com	1234567	Control total, gestión de usuarios y configuraciones.
+Director	ruben.director@educonnect.com	1234567	Dashboard de analítica, estadísticas y supervisión.
+Secretaría	ruben.secretaria@educonnect.com	1234567	Inscripciones, comunicados y gestión de base de datos.
+Docente	ruben.profe@educonnect.com	1234567	Subir materiales, calificar notas y usar Planes IA.
+Estudiante	ruben.estudiante@educonnect.com	1234567	Ver materiales, dar exámenes, votar y ver notas.
+TIP
+
+Importante: Si acabas de conectar tu base de datos por primera vez y ves que no puedes entrar, asegúrate de visitar la ruta /cargar-datos en tu navegador (ej: http://localhost:8000/cargar-datos) para que el sistema cree automáticamente estos usuarios y la malla curricular inicial.
+
+¡Ya puedes iniciar sesión desde el login.html y explorar todo el ecosistema! 🚀🏛️

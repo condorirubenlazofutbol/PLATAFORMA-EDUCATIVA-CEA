@@ -40,6 +40,22 @@ def seed_users():
             ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password, rol = EXCLUDED.rol
         """, ("Ruben", "Estudiante", "ruben.estudiante@educonnect.com", estu_pass, "estudiante"))
 
+        # 4. Secretaria
+        sec_pass = auth.get_password_hash("1234567")
+        cursor.execute("""
+            INSERT INTO usuarios (nombre, apellido, email, password, rol) 
+            VALUES (%s, %s, %s, %s, %s) 
+            ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password, rol = EXCLUDED.rol
+        """, ("Ruben", "Secretaria", "ruben.secretaria@educonnect.com", sec_pass, "secretaria"))
+
+        # 5. Director
+        dir_pass = auth.get_password_hash("1234567")
+        cursor.execute("""
+            INSERT INTO usuarios (nombre, apellido, email, password, rol) 
+            VALUES (%s, %s, %s, %s, %s) 
+            ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password, rol = EXCLUDED.rol
+        """, ("Ruben", "Director", "ruben.director@educonnect.com", dir_pass, "director"))
+
 
 
 

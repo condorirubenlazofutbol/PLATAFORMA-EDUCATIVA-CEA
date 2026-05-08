@@ -117,7 +117,7 @@
     <header>
         <div class="header-left">
             <span style="font-size:1.6rem;">🎓</span>
-            <div class="logo-text">EduConnect Pro</div>
+            <div class="logo-text">CEA Pailón</div>
         </div>
         <div class="header-right">
             <div class="user-chip">
@@ -156,6 +156,7 @@
 
         <div class="apps-grid" id="appsGrid">
 
+            <!-- Notas: todos los roles académicos -->
             <a href="../notas/index.html" class="app-card c-notas" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
                 <div class="app-icon-wrap">📊</div>
                 <div>
@@ -165,6 +166,7 @@
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
+            <!-- Aula Virtual: roles académicos (no secretaria) -->
             <a href="../modulos/index.html" class="app-card c-modulos" data-roles="director,docente,estudiante,jefe_carrera,administrador">
                 <div class="app-icon-wrap">📖</div>
                 <div>
@@ -174,6 +176,7 @@
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
+            <!-- Malla: todos -->
             <a href="../malla_curricular/index.html" class="app-card c-malla" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
                 <div class="app-icon-wrap">🗺️</div>
                 <div>
@@ -183,7 +186,8 @@
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
-            <a href="../votacion/index.html" class="app-card c-votacion" data-roles="director,secretaria,estudiante,administrador">
+            <!-- Votaciones: estudiantes, jefes, docentes y secretaria (no director, tiene su panel) -->
+            <a href="../votacion/index.html" class="app-card c-votacion" data-roles="estudiante,jefe_carrera,docente,administrador">
                 <div class="app-icon-wrap">🗳️</div>
                 <div>
                     <div class="app-title">Votaciones</div>
@@ -192,6 +196,7 @@
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
+            <!-- Planes IA: docentes y jefes -->
             <a href="../planes/index.html" class="app-card c-planes" data-roles="docente,jefe_carrera,director,administrador">
                 <div class="app-icon-wrap">🤖</div>
                 <div>
@@ -201,6 +206,7 @@
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
+            <!-- Comunicados: todos -->
             <a href="../comunicados/index.html" class="app-card c-comunicados" data-roles="director,secretaria,docente,estudiante,jefe_carrera,administrador">
                 <div class="app-icon-wrap">📢</div>
                 <div>
@@ -210,7 +216,8 @@
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
-            <a href="../secretaria/index.html" class="app-card c-secretaria" data-roles="secretaria,director,administrador">
+            <!-- Panel Secretaría: SOLO secretaria y admin -->
+            <a href="../secretaria/index.html" class="app-card c-secretaria" data-roles="secretaria,administrador">
                 <div class="app-icon-wrap">📋</div>
                 <div>
                     <div class="app-title">Panel Secretaría</div>
@@ -219,6 +226,7 @@
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
+            <!-- Panel Director: SOLO director y admin -->
             <a href="../director/index.html" class="app-card c-director" data-roles="director,administrador">
                 <div class="app-icon-wrap">🏛️</div>
                 <div>
@@ -228,6 +236,7 @@
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
+            <!-- Panel Jefatura: SOLO jefe_carrera y admin -->
             <a href="../jefe_carrera/index.html" class="app-card c-jefatura" data-roles="jefe_carrera,administrador">
                 <div class="app-icon-wrap">📐</div>
                 <div>
@@ -237,7 +246,16 @@
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
-        </div>
+            <!-- Elecciones CEA: secretaria gestiona, estudiantes votan (acceso diferenciado por subsistema) -->
+            <a href="../subsistema_elecciones/index.html" class="app-card c-votacion" data-roles="secretaria,administrador,director">
+                <div class="app-icon-wrap">🗳️</div>
+                <div>
+                    <div class="app-title">Sistema Electoral CEA</div>
+                    <div class="app-desc">Administra elecciones, candidatos y padrón de votantes del CEA.</div>
+                </div>
+                <div class="app-arrow">Acceder <span>→</span></div>
+            </a>
+
     </div>
 
     <script src="../js/api.js"></script>

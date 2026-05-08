@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dirección – EduConnect | CEA Pailón</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <!-- ══ MODAL DE CERTIFICADO (PARA IMPRESIÓN) ══ -->
+    <div id="certModal" class="modal" style="display:none; background: rgba(0,0,0,0.85); overflow-y: scroll;">
+       <div class="modal-content" style="max-width: 800px; padding:0; background:white; color:#333; margin: 40px auto; position:relative; box-shadow: 0 0 50px rgba(0,0,0,0.5)">
+           <div style="padding: 10px; display:flex; justify-content: flex-end; background: #eee; border-bottom: 2px solid #ddd;" class="no-print">
+               <button class="btn btn-primary" onclick="downloadCertificatePDF()">📥 Descargar Certificado (PDF)</button>
+               <button class="btn" style="background:#888; color:white; margin-left:10px;" onclick="document.getElementById('certModal').style.display='none'">Cerrar</button>
+           </div>
+           <!-- DISEÑO DEL CERTIFICADO -->
+           <div id="printableCert" style="padding: 60px; border: 20px solid #1a2a40; min-height: 500px; text-align: center; position:relative;">
+               <div style="position:absolute; top:40px; left:40px; opacity: 0.1; width:200px">
+                   <img src="cea_logo.png" style="width:100%">
+               </div>
+               <h1 style="color:#1a2a40; font-size: 32px; letter-spacing: 2px; margin-bottom: 40px;">CERTIFICADO DE INSCRIPCIÓN</h1>
+               <p style="font-size: 18px; margin-bottom: 20px;">Se certifica que el estudiante:</p>
+               <h2 id="certStudentName" style="color:#2a4a70; font-size: 36px; margin-bottom: 10px; text-transform: uppercase;">NOMBRE COMPLETO</h2>
+               <p style="font-size: 16px; color:#555;">Con C.I.: <strong id="certStudentCarnet">0000000</strong></p>
+               <hr style="width: 100px; border: 1px solid #ddd; margin: 40px auto;">
+               <p style="font-size: 18px;">Se encuentra formalmente inscrito en el:</p>
+               <h3 id="certLevel" style="color:#1a2a40; font-size: 24px; margin: 10px 0;">NIVEL O CURSO</h3>
+               <p style="font-size: 18px;">Área: <strong id="certArea">Técnica/Humanística</strong></p>
+               <p style="margin-top: 20px;">Materia/Especialidad: <strong id="certSubject">Nombre Especialidad</strong></p>
+               <div style="margin-top: 80px; display: flex; justify-content: space-around;">
+                   <div style="text-align: center;">
+                       <div style="width:180px; border-top: 1px solid #333; margin-top: 40px; padding-top: 5px;">Firma del Director</div>
+                   </div>
+                   <div style="text-align: center;">
+                       <div style="width:180px; border-top: 1px solid #333; margin-top: 40px; padding-top: 5px;">Sello del CEA</div>
+                   </div>
+               </div>
+           </div>
+       </div>
+    </div>
+
+    <style>
+      @media print {
+        body * { visibility: hidden; }
+        #certModal, #certModal *, #printableCert, #printableCert * { visibility: visible; }
+        #certModal { position: absolute; left: 0; top: 0; width: 100%; display:block !important; background:white !important; }
+        .no-print { display: none !important; }
+        #printableCert { border: none !important; padding: 20px !important; }
+      }
+    </style>
+    
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+  <aside class="sidebar">
+    <!-- PERFIL EN LA ESQUINA IZQUIERDA -->
+    <div class="sidebar-profile">
+      <img src="DIRECTOR.png" id="sidebarAvatar" alt="Avatar CEA" class="sidebar-avatar">
+      <div class="sidebar-profile-info">
+        <strong>EduConnect</strong>
+        <small>PORTAL DIRECCIÓN</small>
+      </div>
+    </div>
+    <nav>
+      <a href="#" class="active" onclick="showTab('inicio',this)">🏠 Inicio</a>
+      <a href="#" onclick="showTab('materias',this)">📚 Materias</a>
+      <a href="#" onclick="showTab('personal',this)">👥 Personal</a>
+      <a href="#" onclick="showTab('inscritos',this)">📝 Inscritos</a>
+      <a href="#" onclick="showTab('anuncios',this)">📢 Anuncios</a>
+      <a href="#" onclick="openProfileModal()">👤 Mi Perfil</a>
+    </nav>
+    <div class="sidebar-contact">
+      <a href="https://wa.me/59174420831" target="_blank">
+        📞 +591 74420831
+      </a>
+    </div>
+    <div class="sidebar-logout">
+      <a href="#" onclick="logout()">🔴 Cerrar Sesión</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <img src="cea_logo.png" class="topbar-logo" alt="CEA Logo">
+      <div class="topbar-title">CEA PAILÓN · DIRECCIÓN</div>
+      <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+    </div>
+    <div class="header">
+      <h1>🏢 Panel de Dirección</h1>
+      <p>Bienvenido, <strong id="welcomeName">Director</strong> &mdash; <span style="color:var(--gold);font-size:0.85rem">CEA Herman Ortiz C. &bull; Pailón</span></p>
+    </div>
+    <!-- ══ TAB: INICIO ══ -->
+    <div class="tab-content active" id="tab-inicio">
+      <!-- STATS SOLO EN INICIO -->
+      <div class="grid-4" style="margin-top: 10px; width: 100%;">
+        <div class="stat-card accent">
+          <div class="stat-val" id="statProfesores">0</div>
+          <div class="stat-lbl">Docentes</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-val" id="statEstudiantes">0</div>
+          <div class="stat-lbl">Estudiantes</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-val" id="statTotal">0</div>
+          <div class="stat-lbl">Total Usuarios</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-val" id="statMaterias">0</div>
+          <div class="stat-lbl">Materias</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>👥 Estudiantes por Materia</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Materia</th>
+                  <th>Docente</th>
+                  <th>Inscritos</th>
+                </tr>
+              </thead>
+              <tbody id="subjectStudentTable">
+                <tr class="empty-row">
+                  <td colspan="3">Cargando datos...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>📊 Rendimiento Académico por Nivel</h3>
+          <p style="color:var(--text-muted); margin-bottom: 15px;">Promedio de notas y balance de aprobados de los últimos registros.</p>
+          <div style="height: 300px; position: relative;">
+            <canvas id="performanceChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <h3>👨‍🏫 Personal Docente</h3>
+          <div id="personnelContainer">
+            <table>
+              <thead>
+                <tr>
+                  <th>Docente</th>
+                  <th>Carnet de Identidad</th>
+                </tr>
+              </thead>
+              <tbody id="personnelTableBody">
+                <tr class="empty-row">
+                  <td colspan="2">Cargando personal...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ══ TAB: MATERIAS ══ -->
+    <div class="tab-content" id="tab-materias">
+      <div class="grid-2">
+        <div class="card">
+          <h3>📘 Crear Nueva Especialidad</h3>
+          <div class="form-group">
+            <label>Área</label>
+            <select id="newSubjectArea">
+              <option value="Técnica">Técnica</option>
+              <option value="Humanística">Humanística</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Nombre de la Especialidad</label>
+            <input type="text" id="newSubjectName" placeholder="Ej: Sistemas Informáticos">
+          </div>
+          <div class="form-group">
+            <label>Asignar Docente</label>
+            <select id="newSubjectTeacher">
+              <option value="">— Sin asignar —</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="crearMateria()">✅ Guardar Materia</button>
+        </div>
+        <div class="card">
+          <h3>📚 Área de Docentes</h3>
+          <div class="table-wrap">
+            <table style="margin-bottom: 20px;">
+              <thead>
+                <tr>
+                  <th colspan="3" style="text-align: center; background: rgba(59, 130, 246, 0.2); color: #fff;">TÉCNICA</th>
+                </tr>
+                <tr>
+                  <th>Especialidad</th>
+                  <th>Docente</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tableTecnica">
+                <tr class="empty-row"><td colspan="3">Cargando...</td></tr>
+              </tbody>
+            </table>
+            
+            <table>
+              <thead>
+                <tr>
+                  <th colspan="3" style="text-align: center; background: rgba(139, 92, 246, 0.2); color: #fff;">HUMANÍSTICA</th>
+                </tr>
+                <tr>
+                  <th>Especialidad</th>
+                  <th>Docente</th>
+                  <th>Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tableHumanistica">
+                <tr class="empty-row"><td colspan="3">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        </div>
+      </div>
+      <div class="card" id="dirAssignPanel" style="display:none; margin-top:20px">
+        <h3>🔄 Reasignar Docente</h3>
+        <p style="font-size:.9rem; margin-bottom:16px">Materia: <strong id="dirAssignName">—</strong></p>
+        <div style="display:flex; gap:12px; align-items:flex-end">
+          <div style="flex:1">
+            <label>Seleccionar Nuevo Docente</label>
+            <select id="dirAssignTeacher">
+              <option value="">— Sin asignar —</option>
+            </select>
+          </div>
+          <button class="btn btn-purple" style="width:auto" onclick="confirmarAsignacion()">✅ Confirmar</button>
+        </div>
+      </div>
+    </div>
+    <!-- ══ TAB: PERSONAL ══ -->
+    <div class="tab-content" id="tab-personal">
+      <div class="card">
+        <h3>👥 Staff Académico Completo</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre Completo</th>
+                <th>Carnet</th>
+                <th>Rol</th>
+                <th>Correo Institucional</th>
+              </tr>
+            </thead>
+            <tbody id="staffTable">
+              <tr class="empty-row">
+                <td colspan="4">Cargando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- ══ TAB: INSCRITOS ══ -->
+    <div class="tab-content" id="tab-inscritos">
+      <div class="card">
+        <h3>📋 Estudiantes Inscritos por Curso</h3>
+        <p style="color:var(--text-muted); margin-bottom: 20px;">Filtre los estudiantes por su nivel o curso para gestionar sus inscripciones.</p>
+        
+        <div class="form-group" style="display:flex; gap:16px; align-items:flex-end; max-width: 500px; margin-bottom: 30px;">
+          <div style="flex:1">
+            <label>Seleccionar Nivel / Curso</label>
+            <select id="filterEnrollmentLevel">
+              <optgroup label="Técnica">
+                <option value="NIVEL BASICO">NIVEL BASICO</option>
+                <option value="NIVEL AUXILIAR">NIVEL AUXILIAR</option>
+                <option value="NIVEL MEDIO I">NIVEL MEDIO I</option>
+                <option value="NIVEL MEDIO II">NIVEL MEDIO II</option>
+              </optgroup>
+              <optgroup label="Humanística">
+                <option value="CILO DE APRENDIZAJES APLICADOS">CILO DE APRENDIZAJES APLICADOS</option>
+                <option value="CICLO DE APRENDIZAJES COMPLEMENTARIOS">CICLO DE APRENDIZAJES COMPLEMENTARIOS</option>
+                <option value="CICLO DE APRENDIZAJES ESPECIALIZADOS">CICLO DE APRENDIZAJES ESPECIALIZADOS</option>
+              </optgroup>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="cargarListaInscritos()">🔍 Cargar Lista</button>
+        </div>
+
+        <div class="table-wrap">
+          <table id="tableInscritosList">
+            <thead>
+              <tr>
+                <th>Estudiante</th>
+                <th>Carnet</th>
+                <th>Área</th>
+                <th>Materia / Curso</th>
+                <th>Docente</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="inscritosTableBody">
+              <tr class="empty-row"><td colspan="6">Seleccione un nivel y haga clic en 'Cargar Lista'</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" id="tab-anuncios">
+      <div class="grid-1-2">
+        <div class="card">
+          <h3>📢 Emitir Comunicado Oficial</h3>
+          <div class="form-group">
+            <textarea id="announcement" placeholder="Escriba el mensaje aquí..." style="height:150px;"></textarea>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px">
+            <div class="form-group">
+              <label>Link Adjunto (Opcional)</label>
+              <input type="url" id="announcementLink" placeholder="https://...">
+            </div>
+            <div class="form-group">
+              <label>Grupo Destino</label>
+              <select id="announcementTarget">
+                <option value="todos">👥 Todos</option>
+                <option value="director">🏢 Solo Directivos</option>
+                <option value="secretaria">💼 Solo Secretaría</option>
+                <option value="profesor">👨‍🏫 Solo Docentes</option>
+                <option value="estudiante">📚 Solo Estudiantes</option>
+              </select>
+            </div>
+          </div>
+          <button id="btnAnuncio" class="btn btn-primary" style="width:100%" onclick="enviarAnuncio()">📤 Enviar
+            Ahora</button>
+        </div>
+        <div class="card">
+          <h3>📨 Bandeja de Mensajería</h3>
+          <div class="tabs">
+            <button id="tabEnviados" class="tab-btn active" onclick="switchMsgTab('enviados')">📤 Enviados</button>
+            <button id="tabRecibidos" class="tab-btn" onclick="switchMsgTab('recibidos')">📥 Recibidos</button>
+          </div>
+          <div id="msgHistoryEnviados" style="max-height:450px; overflow-y:auto"></div>
+          <div id="msgHistoryRecibidos" style="max-height:450px; overflow-y:auto; display:none"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    let allSubjects = [], allTeachers = [], selectedSubjectId = null;
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!token) { window.location.href = 'index.html'; return; }
+      const u = currentUser;
+      // We do NOT override sidebarAvatar src here to keep cea_logo.png
+      loadAll();
+    });
+    async function loadAll() {
+      const res = await api('/api/debug/db');
+      if (res) {
+        document.getElementById('statTotal').textContent = res.users || 0;
+        document.getElementById('statEstudiantes').textContent = res.enrollments || 0;
+        document.getElementById('statMaterias').textContent = res.subjects || 0;
+      }
+      const data = await api('/api/secretaria/users_grouped');
+      if (data) {
+        allTeachers = data.profesores || [];
+        allPersonnel = [...(data.directores || []), ...(data.secretarias || []), ...(data.profesores || [])];
+        document.getElementById('statProfesores').textContent = allTeachers.length;
+        renderPersonnel(allPersonnel);
+        fillTeacherSelects();
+      }
+      const sData = await api('/api/subjects');
+      if (sData) {
+        renderSubjectTable(sData);
+        renderAllSubjectsTable(sData);
+      }
+      loadPerformanceStats();
+    }
+    function renderPersonnel(personnel) {
+      const teachers = personnel.filter(p => p.role === 'profesor');
+      const tec = teachers.filter(t => t.area === 'Técnica');
+      const hum = teachers.filter(t => t.area === 'Humanística');
+      const other = teachers.filter(t => !t.area);
+
+      let html = '';
+      
+      const renderSection = (title, list) => {
+        if (list.length === 0) return '';
+        return `
+          <h4 style="color:var(--primary); margin: 20px 0 10px 0; border-bottom:1px solid var(--border)">${title}</h4>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Docente</th>
+                  <th>Carnet</th>
+                  <th>Especialidad / Curso</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${list.map(p => `
+                  <tr>
+                    <td><strong>${p.first_name} ${p.last_name}</strong></td>
+                    <td><code>${p.carnet}</code></td>
+                    <td><span class="badge badge-accent">${p.especialidad}</span> <small style="color:var(--text-muted)">${p.nivel || ''}</small></td>
+                    <td>
+                      <div style="display:flex; gap:8px">
+                        <button class="btn btn-sm" style="background:#4b5563; color:white" onclick="resetPassword(${p.id},'${p.first_name}')" title="Resetear Contraseña">🔑</button>
+                        <button class="btn btn-sm btn-red" onclick="deleteUser(${p.id}, '${p.first_name} ${p.last_name}')">🗑️</button>
+                      </div>
+                    </td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      };
+
+      html += renderSection('🛠️ ÁREA TÉCNICA', tec);
+      html += renderSection('📖 ÁREA HUMANÍSTICA', hum);
+      html += renderSection('❓ SIN DESIGNACIÓN', other);
+      
+      document.getElementById('personnelContainer').innerHTML = html || '<p>Sin docentes registrados.</p>';
+      
+      document.getElementById('staffTable').innerHTML = personnel.map(p => `
+        <tr>
+          <td><strong>${p.first_name} ${p.last_name}</strong></td>
+          <td><code>${p.carnet}</code></td>
+          <td><span class="badge ${p.role === 'profesor' ? 'badge-green' : 'badge-blue'}">${p.role.toUpperCase()}</span></td>
+          <td>${p.username}</td>
+          <td>
+            <div style="display:flex; gap:8px">
+              <button class="btn btn-sm" style="background:#4b5563; color:white" onclick="resetPassword(${p.id},'${p.first_name}')" title="Resetear Contraseña">🔑</button>
+              <button class="btn btn-sm btn-red" onclick="deleteUser(${p.id}, '${p.first_name} ${p.last_name}')">🗑️</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    }
+    function renderSubjectTable(subjects) {
+      document.getElementById('subjectStudentTable').innerHTML = subjects.length
+        ? subjects.map(s => `<tr><td><strong>${s.name}</strong></td><td>${s.teacher_name || 'Sin asignar'}</td><td><span class="badge badge-purple">${s.enrolled_count || 0} inscritos</span></td></tr>`).join('')
+        : '<tr><td colspan="3">Sin materias.</td></tr>';
+    }
+    function renderAllSubjectsTable(subjects) {
+      const tec = subjects.filter(s => s.area === 'Técnica');
+      const hum = subjects.filter(s => s.area === 'Humanística');
+
+      document.getElementById('tableTecnica').innerHTML = tec.length
+        ? tec.map(s => `<tr><td><strong>${s.name}</strong></td><td>${s.teacher_name || '—'}</td><td>
+            <div style="display:flex; gap:8px">
+              <button class="btn btn-sm btn-purple" onclick="openAssign(${s.id},'${s.name}')">Reasignar</button>
+              <button class="btn btn-sm btn-red" onclick="deleteSubject(${s.id},'${s.name}')">🗑️</button>
+            </div>
+          </td></tr>`).join('')
+        : '<tr><td colspan="3">No hay especialidades técnicas.</td></tr>';
+
+      document.getElementById('tableHumanistica').innerHTML = hum.length
+        ? hum.map(s => `<tr><td><strong>${s.name}</strong></td><td>${s.teacher_name || '—'}</td><td>
+            <div style="display:flex; gap:8px">
+              <button class="btn btn-sm btn-purple" onclick="openAssign(${s.id},'${s.name}')">Reasignar</button>
+              <button class="btn btn-sm btn-red" onclick="deleteSubject(${s.id},'${s.name}')">🗑️</button>
+            </div>
+          </td></tr>`).join('')
+        : '<tr><td colspan="3">No hay especialidades humanísticas.</td></tr>';
+    }
+    function fillTeacherSelects() {
+      const opts = '<option value="">— Seleccionar Docente —</option>' + allTeachers.map(t => `<option value="${t.id}">${t.first_name} ${t.last_name}</option>`).join('');
+      const el1 = document.getElementById('newSubjectTeacher');
+      const el2 = document.getElementById('dirAssignTeacher');
+      if (el1) el1.innerHTML = opts;
+      if (el2) el2.innerHTML = opts;
+    }
+    async function crearMateria() {
+      const name = document.getElementById('newSubjectName').value.trim();
+      const area = document.getElementById('newSubjectArea').value;
+      const teacher_id = document.getElementById('newSubjectTeacher').value;
+      
+      if (!name) { showAlert('Nombre requerido', 'warning'); return; }
+      const res = await api('/api/subjects', { method: 'POST', body: JSON.stringify({ name, area, teacher_id: teacher_id ? parseInt(teacher_id) : null }) });
+      if (res && res.subject) {
+        showBanner('¡Éxito!', 'Especialidad registrada correctamente');
+        document.getElementById('newSubjectName').value = '';
+        loadAll();
+      }
+    }
+    function openAssign(id, name) {
+      selectedSubjectId = id;
+      document.getElementById('dirAssignName').textContent = name;
+      document.getElementById('dirAssignPanel').style.display = 'block';
+      document.getElementById('dirAssignPanel').scrollIntoView({ behavior: 'smooth' });
+    }
+    async function confirmarAsignacion() {
+      const teacher_id = document.getElementById('dirAssignTeacher').value;
+      const res = await api(`/api/subjects/${selectedSubjectId}/assign`, { method: 'PUT', body: JSON.stringify({ teacher_id: teacher_id ? parseInt(teacher_id) : null }) });
+      if (res) {
+        showBanner('Asignación Éxitosa', 'El docente ha sido reasignado.');
+        document.getElementById('dirAssignPanel').style.display = 'none';
+        loadAll();
+      }
+    }
+    async function cargarListaInscritos() {
+      const level = document.getElementById('filterEnrollmentLevel').value;
+      const res = await api(`/api/secretaria/report/enrollments_by_level?level=${encodeURIComponent(level)}`);
+      const tbody = document.getElementById('inscritosTableBody');
+      if (res && res.length > 0) {
+        tbody.innerHTML = res.map(enr => `
+          <tr>
+            <td><strong>${enr.student_name}</strong></td>
+            <td><code>${enr.student_carnet}</code></td>
+            <td><span class="badge ${enr.area === 'Técnica' ? 'badge-blue' : 'badge-purple'}">${enr.area}</span></td>
+            <td>${enr.subject}</td>
+            <td>${enr.teacher}</td>
+            <td style="display:flex; gap:8px">
+              <button class="btn btn-sm btn-purple" onclick="imprimirCertificado(${JSON.stringify(enr).replace(/"/g, '&quot;')})">📜 Certificado</button>
+              <button class="btn btn-sm" style="background:var(--danger); color:white" onclick="eliminarInscripcion(${enr.id})">🗑️ Borrar</button>
+            </td>
+          </tr>
+        `).join('');
+    } else {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No hay estudiantes inscritos en este nivel.</td></tr>';
+      }
+    }
+    async function resetPassword(userId, name) {
+      if (!confirm(`¿Desea restablecer la contraseña de ${name} a su número de Carnet?`)) return;
+      const res = await api('/api/admin/reset_password', { method: 'POST', body: JSON.stringify({ user_id: userId }) });
+      if (res) showBanner('¡Éxito!', res.message);
+    }
+    function imprimirCertificado(data) {
+      document.getElementById('certStudentName').textContent = data.student_name;
+      document.getElementById('certStudentCarnet').textContent = data.student_carnet;
+      document.getElementById('certLevel').textContent = data.level;
+      document.getElementById('certArea').textContent = data.area;
+      document.getElementById('certSubject').textContent = data.subject;
+      document.getElementById('certModal').style.display = 'block';
+    }
+    async function eliminarInscripcion(enrId) {
+      if (!confirm('¿Está seguro de eliminar esta inscripción? Esta acción no se puede deshacer.')) return;
+      const res = await api(`/api/secretaria/enroll/${enrId}`, { method: 'DELETE' });
+      if (res) {
+        showBanner('¡Eliminado!', 'Inscripción eliminada correctamente');
+        cargarListaInscritos();
+      }
+    }
+    async function loadPerformanceStats() {
+      const data = await api('/api/director/stats/performance');
+      if (!data) return;
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      const labels = Object.keys(data);
+      const values = labels.map(l => data[l].avg);
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels.map(l => l.length > 20 ? l.substring(0,20)+'...' : l),
+          datasets: [{
+            label: 'Promedio de Notas (%)',
+            data: values,
+            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true, max: 100 } },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    async function deleteSubject(id, name) {
+      if (!confirm(`¿Desea ELIMINAR permanentemente la materia "${name}"? Esta acción no se puede deshacer.`)) return;
+      const res = await api(`/api/subjects/${id}`, { method: 'DELETE' });
+      if (res) {
+        showBanner('Eliminado', 'Materia eliminada correctamente');
+        loadAll();
+      }
+    }
+
+    async function deleteUser(uid, name) {
+      if (!confirm(`¿Está seguro de ELIMINAR permanentemente al usuario "${name}"? Esta acción no se puede deshacer.`)) return;
+      const res = await api(`/api/admin/users/${uid}`, { method: 'DELETE' });
+      if (res && res.message) {
+        showBanner('¡Eliminado!', res.message);
+        loadAll();
+      } else {
+        showAlert(res?.message || 'Error al eliminar usuario', 'error');
+      }
+    }
+
+    function downloadCertificatePDF() {
+      const element = document.getElementById('printableCert');
+      const name = document.getElementById('certStudentName').textContent || 'Certificado';
+      const opt = {
+        margin: 5,
+        filename: `Certificado_${name.replace(/ /g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
+
+    // toggleSidebar se maneja desde app.js para todos los portales
+
+  </script>
+</body>
+
+</html>

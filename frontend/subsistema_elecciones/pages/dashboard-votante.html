@@ -1,0 +1,853 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Papeleta Digital — Votación CEA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --azul: #003580; --azul-claro: #0056b3;
+      --dorado: #f5a623; --verde: #16a34a; --rojo: #dc2626;
+      --bg: #f0f4ff; --card: #ffffff; --text: #1a1a2e; --muted: #6b7280;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+    header {
+      background: linear-gradient(135deg, var(--azul), #001f5b);
+      padding: 14px 24px; display:flex; align-items:center; justify-content:space-between;
+      box-shadow: 0 4px 20px rgba(0,53,128,0.4); position:sticky; top:0; z-index:100;
+    }
+    .header-left { display:flex; align-items:center; gap:12px; }
+    .header-logo { width:44px; height:44px; border-radius:50%; border:2px solid var(--dorado); object-fit:cover; }
+    header h1 { color:white; font-size:1rem; font-weight:700; }
+    header p { color:rgba(255,255,255,0.7); font-size:0.75rem; }
+    .btn-salir {
+      background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25);
+      color:white; padding:8px 16px; border-radius:8px; cursor:pointer;
+      font-size:0.82rem; font-weight:600; transition:all 0.2s;
+    }
+    .btn-salir:hover { background:rgba(255,255,255,0.2); }
+
+    main { max-width: 900px; margin: 0 auto; padding: 30px 20px 60px; }
+
+    /* ESTADO DEL VOTANTE */
+    .votante-info-card {
+      background: linear-gradient(135deg, var(--azul), #1a3a8c);
+      border-radius: 16px; padding: 20px 24px; margin-bottom: 30px;
+      display: flex; align-items: center; gap: 16px; color: white;
+    }
+    .votante-avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: rgba(255,255,255,0.2); display:flex; align-items:center;
+      justify-content:center; font-size:1.5rem; flex-shrink:0;
+    }
+    .votante-info h3 { font-size:1.05rem; font-weight:700; }
+    .votante-info p { font-size:0.82rem; color:rgba(255,255,255,0.75); margin-top:3px; }
+    .votante-badge {
+      margin-left:auto; padding:6px 14px; border-radius:20px;
+      font-size:0.78rem; font-weight:700; flex-shrink:0;
+    }
+    .badge-habilitado { background:rgba(22,163,74,0.25); border:1px solid rgba(22,163,74,0.5); color:#86efac; }
+    .badge-no-habilitado { background:rgba(220,38,38,0.25); border:1px solid rgba(220,38,38,0.4); color:#fca5a5; }
+
+    /* INSTRUCCIONES */
+    .instrucciones {
+      background: #fffbeb; border: 1px solid #fbbf24; border-radius: 12px;
+      padding: 14px 18px; margin-bottom: 28px; display:flex; gap:12px; align-items:flex-start;
+    }
+    .instrucciones .ico { font-size:1.3rem; flex-shrink:0; margin-top:1px; }
+    .instrucciones p { font-size:0.85rem; color:#92400e; line-height:1.5; }
+    .instrucciones strong { color:#78350f; }
+
+    /* CANDIDATOS GRID */
+    .seccion-titulo { margin-bottom:20px; }
+    .seccion-titulo h2 { font-size:1.2rem; font-weight:700; color:var(--azul); }
+    .seccion-titulo p { color:var(--muted); font-size:0.85rem; margin-top:3px; }
+
+    .candidatos-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 20px; margin-bottom: 30px;
+    }
+    .candidato-card {
+      background: var(--card); border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,53,128,0.08);
+      border: 2px solid transparent; cursor:pointer;
+      transition: all 0.25s; overflow:hidden; position:relative;
+    }
+    .candidato-card:hover { transform:translateY(-4px); border-color: var(--azul-claro); box-shadow: 0 12px 32px rgba(0,53,128,0.18); }
+    .candidato-card.selected { border-color: var(--verde); box-shadow:0 8px 24px rgba(22,163,74,0.25); }
+    .candidato-card.selected::after {
+      content:'✓ SELECCIONADO'; position:absolute; top:10px; right:10px;
+      background:var(--verde); color:white; font-size:0.65rem; font-weight:700;
+      padding:4px 8px; border-radius:12px; letter-spacing:0.5px;
+    }
+    .card-banner { height:6px; background:linear-gradient(90deg,var(--azul),var(--dorado)); }
+    .card-body { padding:20px; text-align:center; }
+    .candidato-foto {
+      width:90px; height:90px; border-radius:50%; object-fit:cover;
+      border:3px solid var(--dorado); margin-bottom:14px;
+      background:linear-gradient(135deg,#e2e8ff,#c7d2fe);
+    }
+    .candidato-foto-placeholder {
+      width:90px; height:90px; border-radius:50%;
+      border:3px solid var(--dorado); margin:0 auto 14px;
+      background:linear-gradient(135deg,var(--azul),var(--azul-claro));
+      display:flex; align-items:center; justify-content:center;
+      font-size:2.2rem;
+    }
+    .cand-sigla {
+      display:inline-block; background:linear-gradient(135deg,var(--azul),var(--azul-claro));
+      color:white; font-size:0.72rem; font-weight:700; padding:3px 10px;
+      border-radius:20px; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;
+    }
+    .cand-nombre { font-size:1rem; font-weight:700; color:var(--text); margin-bottom:4px; }
+    .cand-frente { font-size:0.8rem; color:var(--muted); font-style:italic; margin-bottom:8px; }
+    .cand-cargo {
+      display:inline-block; background:#f0f4ff; color:var(--azul);
+      font-size:0.73rem; font-weight:600; padding:3px 10px; border-radius:12px;
+    }
+
+    /* BOTÓN VOTAR */
+    .votar-section { text-align:center; margin-top:10px; }
+    .btn-votar {
+      background: linear-gradient(135deg, var(--verde), #15803d);
+      color:white; padding:16px 48px; font-size:1.05rem; font-weight:700;
+      border:none; border-radius:12px; cursor:pointer; font-family:'Inter',sans-serif;
+      transition:all 0.3s; display:none; box-shadow:0 4px 16px rgba(22,163,74,0.35);
+    }
+    .btn-votar:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(22,163,74,0.45); }
+    .btn-votar:active { transform:translateY(0); }
+
+    /* CONFIRMACIÓN MODAL */
+    .overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,0.6);
+      backdrop-filter:blur(4px); z-index:200;
+      display:none; align-items:center; justify-content:center;
+    }
+    .overlay.show { display:flex; }
+    .modal {
+      background:white; border-radius:20px; padding:36px;
+      max-width:380px; width:90%; text-align:center;
+      box-shadow:0 20px 60px rgba(0,0,0,0.3); animation:slideIn 0.3s ease;
+    }
+    @keyframes slideIn { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
+    .modal h3 { font-size:1.2rem; font-weight:700; color:var(--text); margin-bottom:8px; }
+    .modal p { color:var(--muted); font-size:0.88rem; margin-bottom:24px; line-height:1.5; }
+    .modal-foto {
+      width:80px; height:80px; border-radius:50%; margin:0 auto 12px;
+      border:3px solid var(--dorado); object-fit:cover;
+      background:linear-gradient(135deg,#e2e8ff,#c7d2fe);
+      display:flex; align-items:center; justify-content:center; font-size:2rem;
+    }
+    .modal-nombre { font-size:1.1rem; font-weight:700; color:var(--azul); margin-bottom:4px; }
+    .modal-sigla {
+      display:inline-block; background:linear-gradient(135deg,var(--azul),var(--azul-claro));
+      color:white; font-size:0.72rem; font-weight:700; padding:3px 10px;
+      border-radius:20px; margin-bottom:20px;
+    }
+    .modal-btns { display:flex; gap:12px; }
+    .btn-cancelar {
+      flex:1; padding:12px; background:#f3f4f6; color:var(--text);
+      border:none; border-radius:10px; cursor:pointer; font-weight:600; font-size:0.9rem;
+    }
+    .btn-confirmar {
+      flex:1; padding:12px; background:linear-gradient(135deg,var(--verde),#15803d);
+      color:white; border:none; border-radius:10px; cursor:pointer;
+      font-weight:700; font-size:0.9rem; font-family:'Inter',sans-serif;
+    }
+
+    /* MENSAJE ESTADO */
+    .msg-estado {
+      padding:20px; border-radius:12px; text-align:center; font-size:0.9rem; font-weight:500;
+    }
+    .msg-estado.success { background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; }
+    .msg-estado.error { background:#fef2f2; color:var(--rojo); border:1px solid #fecaca; }
+    .msg-estado.info { background:#eff6ff; color:var(--azul-claro); border:1px solid #bfdbfe; }
+
+    /* VOTO EMITIDO */
+    .voto-confirmado {
+      text-align:center; padding:40px 20px; display:none;
+    }
+    .voto-confirmado .icono-grande { font-size:5rem; margin-bottom:16px; display:block; }
+    .voto-confirmado h2 { font-size:1.6rem; font-weight:800; color:var(--verde); margin-bottom:8px; }
+    .voto-confirmado p { color:var(--muted); font-size:0.9rem; line-height:1.6; }
+
+    /* RESULTADOS */
+    .resultados-section { margin-top:40px; }
+    .resultado-item {
+      background:white; border-radius:12px; padding:16px 20px; margin-bottom:12px;
+      display:flex; align-items:center; gap:16px; box-shadow:0 2px 8px rgba(0,53,128,0.08);
+    }
+    .resultado-pos { font-size:1.4rem; width:36px; text-align:center; flex-shrink:0; }
+    .resultado-info { flex:1; }
+    .resultado-nombre { font-weight:700; font-size:0.95rem; color:var(--text); }
+    .resultado-sigla { font-size:0.75rem; color:var(--azul); font-weight:600; }
+    .resultado-barra-wrap { flex:2; }
+    .resultado-barra {
+      height:8px; background:#e5e7eb; border-radius:4px; overflow:hidden; margin-bottom:4px;
+    }
+    .resultado-barra-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--azul),var(--dorado)); transition:width 0.8s ease; }
+    .resultado-votos { font-size:0.8rem; color:var(--muted); text-align:right; }
+
+    /* DESCARGAR CARNET */
+    .btn-descargar-carnet {
+      background: linear-gradient(135deg, #f5a623, #e08800);
+      color: #1a1a2e; padding: 14px 36px; font-size: 1rem; font-weight: 800;
+      border: none; border-radius: 12px; cursor: pointer; font-family:'Inter',sans-serif;
+      transition: all 0.3s; box-shadow: 0 6px 20px rgba(245,166,35,0.45);
+      letter-spacing: 0.3px; margin-top: 8px;
+    }
+    .btn-descargar-carnet:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(245,166,35,0.55); }
+    .btn-descargar-carnet:active { transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="../imagenes/logo.jpg" alt="Logo CEA" class="header-logo" onerror="this.src='https://placehold.co/44x44/003580/f5a623?text=CEA'">
+    <div>
+      <h1 style="font-size:1.1rem; line-height:1;">Papeleta Digital</h1>
+      <p id="nombre-votante-header">Cargando información...</p>
+    </div>
+  </div>
+  <div style="text-align:right; display:flex; align-items:center; gap:20px;">
+    <button class="btn-salir" onclick="cerrarSesion()">Salir 🚪</button>
+  </div>
+</header>
+
+<main>
+  <!-- PANEL VOTANTE INFO -->
+  <div class="votante-info-card" id="votante-info-card">
+    <div class="votante-avatar">🎓</div>
+    <div class="votante-info">
+      <h3 id="votante-nombre">Cargando...</h3>
+      <p id="votante-ci">CI: —</p>
+      <span id="votante-mesa" style="display:none;background:rgba(245,166,35,0.2);border:1px solid rgba(245,166,35,0.4);color:var(--dorado);font-size:0.75rem;font-weight:600;padding:3px 10px;border-radius:12px;margin-top:6px;"></span>
+    </div>
+    <div class="votante-badge" id="votante-badge">...</div>
+  </div>
+
+  <!-- INSTRUCCIONES -->
+  <div class="instrucciones" id="box-instrucciones">
+    <span class="ico">ℹ️</span>
+    <p><strong>Instrucciones:</strong> Selecciona el frente de tu preferencia haciendo clic en la tarjeta. Luego presiona el botón EMITIR MI VOTO. Recuerda que <strong>solo puedes votar una vez</strong>.</p>
+  </div>
+
+  <!-- BANNER DE ESTADO DE VOTACIÓN -->
+  <div id="banner-votacion" style="display:none;margin-bottom:20px;padding:18px 24px;border-radius:16px;display:none;align-items:center;gap:14px;" >
+    <span id="banner-icono" style="font-size:2rem;"></span>
+    <div>
+      <div id="banner-titulo" style="font-weight:800;font-size:1rem;"></div>
+      <div id="banner-subtitulo" style="font-size:0.82rem;opacity:.8;margin-top:3px;"></div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN DE VOTACIÓN -->
+  <div id="seccion-votacion">
+    <div class="seccion-titulo">
+      <h2>🗳️ Elige tu candidato</h2>
+      <p>Haz clic en el frente de tu elección para seleccionarlo</p>
+    </div>
+    <div class="candidatos-grid" id="lista-candidatos"></div>
+    <div class="votar-section">
+      <button class="btn-votar" id="btn-emitir" onclick="confirmarVoto()">🗳️ EMITIR MI VOTO</button>
+    </div>
+    <div id="msg-votar" style="margin-top:20px;"></div>
+  </div>
+
+  <!-- VOTO YA EMITIDO -->
+  <div class="voto-confirmado" id="seccion-voto-emitido">
+    <span class="icono-grande">🎉</span>
+    <h2>¡Gracias por votar!</h2>
+    <p>Tu voto ha sido registrado de forma anónima y segura.<br>Puedes descargar tu comprobante a continuación.</p>
+    
+    <!-- CARNET PREVIEW -->
+    <div style="margin:28px auto;max-width:420px;">
+      <canvas id="canvas-carnet" width="1012" height="638"
+        style="width:100%;border-radius:16px;box-shadow:0 12px 40px rgba(0,53,128,0.3);display:block;"></canvas>
+    </div>
+
+    <button class="btn-descargar-carnet" id="btn-descargar-carnet" onclick="descargarCarnet()">
+      ⬇️ Descargar Carnet de Sufragio
+    </button>
+    <p style="font-size:0.78rem;color:var(--muted);margin-top:8px;">Formato PNG • Tamaño carnet (85.6×54mm)</p>
+  </div>
+
+  <!-- RESULTADOS EN TIEMPO REAL -->
+  <div class="resultados-section" id="seccion-resultados" style="display:none;">
+    <div class="seccion-titulo">
+      <h2>📊 Resultados en Tiempo Real</h2>
+      <p>Actualización automática cada 5 segundos</p>
+    </div>
+    <div id="resultados-box"></div>
+  </div>
+  <div style="margin-top:40px; border-top:1px solid rgba(0,0,0,0.05); padding-top:20px; text-align:center;">
+    <p style="font-size:0.75rem; color:var(--muted);">Sistema de Gestión Electoral — CEA Prof. Herman Ortiz Camargo</p>
+  </div>
+</main>
+
+<!-- MODAL CONFIRMACIÓN -->
+<div class="overlay" id="overlay-confirmar">
+  <div class="modal">
+    <h3>⚠️ Confirmar Voto</h3>
+    <p>Estás a punto de emitir tu voto por:</p>
+    <div id="modal-foto" class="modal-foto">🎓</div>
+    <div class="modal-nombre" id="modal-nombre">—</div>
+    <div class="modal-sigla" id="modal-sigla" style="display:none;"></div>
+    <p style="margin-top:12px;"><strong>Este voto es irrevocable.</strong> Una vez confirmado, no podrás cambiarlo.</p>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-confirmar" onclick="enviarVoto()">Confirmar Voto ✓</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js?v=4.3.5"></script>
+<script>
+
+  // Protección de ruta "Nivel Pro"
+  (function() {
+    const rol = localStorage.getItem('user_rol');
+    if (rol !== 'votante' && rol !== 'jefe' && rol !== 'admin') {
+      console.warn("Acceso denegado. Rol:", rol);
+      window.location.href = window.location.origin + '/index.html';
+    }
+  })();
+
+  let candidatoSeleccionado = null;
+  let eleccionIdGlobal = null;
+  let candidatosData = [];
+  let infoVotante = null;
+
+  // ─── CARGAR INFO DEL VOTANTE ───
+  async function cargarInfoVotante() {
+    const res = await apiFetch('/votante/mi-info', { method:'GET' });
+    if (res && res.ok) {
+      infoVotante = await res.json();
+      document.getElementById('votante-nombre').textContent = infoVotante.nombre;
+      document.getElementById('votante-ci').textContent = 'CI: ' + infoVotante.ci;
+      document.getElementById('nombre-votante-header').textContent = infoVotante.nombre;
+
+      // Mostrar mesa asignada
+      const mesaEl = document.getElementById('votante-mesa');
+      if (infoVotante.mesa_numero) {
+        mesaEl.textContent = '🪑 Su mesa: Nº ' + infoVotante.mesa_numero;
+        mesaEl.style.display = 'inline-block';
+      } else {
+        mesaEl.textContent = '⏳ Mesa pendiente de asignación';
+        mesaEl.style.display = 'inline-block';
+      }
+
+      const badge = document.getElementById('votante-badge');
+      if (infoVotante.ha_votado) {
+        badge.className = 'votante-badge badge-habilitado';
+        badge.textContent = '✓ Voto emitido';
+        mostrarVotoYaEmitido();
+      } else if (infoVotante.habilitado) {
+        badge.className = 'votante-badge badge-habilitado';
+        badge.textContent = '✅ Habilitado para votar';
+      } else {
+        badge.className = 'votante-badge badge-no-habilitado';
+        badge.textContent = '⏳ Pendiente de validación';
+        // Mostrar instruccion de mesa
+        const mesa = infoVotante.mesa_numero;
+        const mesaEl = document.getElementById('votante-mesa');
+        if (mesa) {
+          mesaEl.textContent = `🪑 Diríjase a la Mesa Nº ${mesa} para ser habilitado`;
+          mesaEl.style.background = 'rgba(234,88,12,0.15)';
+          mesaEl.style.borderColor = 'rgba(234,88,12,0.4)';
+          mesaEl.style.color = '#fb923c';
+        }
+      }
+    }
+  }
+
+  // ─── VERIFICAR ESTADO ELECCIÓN Y CARGAR CANDIDATOS ───
+  async function cargarCandidatos() {
+    const banner = document.getElementById('banner-votacion');
+    
+    // Verificar estado de la elección — usa apiFetch con token para evitar errores CORS
+    let estado = null;
+    const estadoRes = await apiFetch('/votante/estado-eleccion');
+    if (estadoRes && estadoRes.ok) {
+      estado = await estadoRes.json();
+      eleccionIdGlobal = estado.id;
+    }
+
+    // Si no pudimos obtener el estado, igual intentar cargar candidatos (fallback seguro)
+    const eleccionActiva = estado ? estado.activa : true; // Si no hay respuesta, asumir activa
+
+    if (estado && !estado.activa && !estado.resultados_publicados) {
+        // Determinar mensaje según estado del votante
+        let icono = '🕑';
+        let colorTitulo = '#f5a623';
+        let titulo = 'La votación aún no ha comenzado';
+        let subtitulo = estado.nombre
+          ? `"${estado.nombre}" — Espera que el Administrador habilite el proceso.`
+          : 'El administrador no ha abierto el proceso electoral aún.';
+        let bgBanner = 'linear-gradient(135deg,#1e3a5f,#2d5282)';
+        let borderBanner = '1px solid rgba(245,166,35,0.3)';
+
+        if (estado.id && infoVotante) {
+          if (infoVotante.habilitado && !infoVotante.ha_votado) {
+            icono = '⚠️';
+            colorTitulo = '#fbbf24';
+            bgBanner = 'linear-gradient(135deg,#451a03,#78350f)';
+            borderBanner = '1px solid #f59e0b';
+            titulo = 'La votación ha finalizado';
+            subtitulo = 'Estabas habilitado pero no emitiste tu voto.';
+          } else if (!infoVotante.habilitado) {
+            icono = '❌';
+            colorTitulo = '#fca5a5';
+            bgBanner = 'linear-gradient(135deg,#450a0a,#7f1d1d)';
+            borderBanner = '1px solid #dc2626';
+            titulo = 'No participaste en la elección';
+            subtitulo = 'No fuiste habilitado por el Jefe de Mesa.';
+          }
+        }
+
+        banner.style.cssText = `display:flex;margin-bottom:20px;padding:18px 24px;border-radius:16px;align-items:center;gap:14px;background:${bgBanner};border:${borderBanner};flex-wrap:wrap;`;
+        document.getElementById('banner-icono').textContent = icono;
+        document.getElementById('banner-titulo').style.color = colorTitulo;
+        document.getElementById('banner-titulo').textContent = titulo;
+        document.getElementById('banner-subtitulo').style.color = 'rgba(255,255,255,0.7)';
+        document.getElementById('banner-subtitulo').textContent = subtitulo;
+        document.getElementById('seccion-votacion').style.display = 'none';
+        document.getElementById('box-instrucciones').style.display = 'none';
+        return;
+    } else if (estado && estado.resultados_publicados) {
+        banner.style.cssText = 'display:flex;margin-bottom:20px;padding:18px 24px;border-radius:16px;align-items:center;gap:14px;background:linear-gradient(135deg,#001f5b,#003580);border:2px solid #f5a623;';
+        document.getElementById('banner-icono').textContent = '🏆';
+        document.getElementById('banner-titulo').style.color = '#f5a623';
+        document.getElementById('banner-titulo').textContent = '¡Resultados Oficiales Publicados!';
+        document.getElementById('banner-subtitulo').style.color = 'rgba(255,255,255,0.7)';
+        document.getElementById('banner-subtitulo').textContent = `${estado.nombre} — El proceso ha finalizado. Consulta los ganadores abajo.`;
+        document.getElementById('seccion-votacion').style.display = 'none';
+        document.getElementById('seccion-resultados').style.display = 'block';
+        cargarResultados();
+        return;
+    } else {
+        // Votación abierta — mostrar banner verde
+        if (estado) {
+          banner.style.cssText = 'display:flex;margin-bottom:20px;padding:18px 24px;border-radius:16px;align-items:center;gap:14px;background:linear-gradient(135deg,#14532d,#166534);border:1px solid #16a34a;flex-wrap:wrap;';
+          document.getElementById('banner-icono').textContent = '🟢';
+          document.getElementById('banner-titulo').style.color = '#4ade80';
+          document.getElementById('banner-titulo').textContent = '¡Votación en Curso!';
+          document.getElementById('banner-subtitulo').style.color = 'rgba(255,255,255,0.75)';
+          document.getElementById('banner-subtitulo').textContent = `${estado.nombre || ''} — Selecciona tu candidato y emite tu voto.`;
+        }
+    }
+
+    // ─── CARGAR CANDIDATOS ───
+    const res = await apiFetch('/votante/candidatos', { method:'GET' });
+    if (res && res.ok) {
+      candidatosData = await res.json();
+      const container = document.getElementById('lista-candidatos');
+      container.innerHTML = '';
+
+      if (!candidatosData.length) {
+        container.innerHTML = '<div class="msg-estado info">📋 No hay candidatos registrados aún para esta elección.</div>';
+        return;
+      }
+
+      candidatosData.forEach((c, index) => {
+        if (!eleccionIdGlobal) eleccionIdGlobal = c.eleccion_id;
+        const fallbackSrc = `../candidatos/${index + 1}.png`;
+        const imgSrc = c.imagen_base64 || fallbackSrc;
+        const foto = `<img src="${imgSrc}" alt="${c.nombre}" class="candidato-foto" onerror="this.outerHTML='<div class=\\'candidato-foto-placeholder\\'>🎓</div>'">`;
+
+        const card = document.createElement('div');
+        card.className = 'candidato-card';
+        card.id = `card-${c.id}`;
+        card.onclick = () => seleccionar(card, c.id);
+        card.innerHTML = `
+          <div class="card-banner"></div>
+          <div class="card-body">
+            ${foto}
+            ${c.sigla ? `<div class="cand-sigla">${c.sigla}</div>` : ''}
+            <div class="cand-nombre">${c.nombre}</div>
+            ${c.frente ? `<div class="cand-frente">${c.frente}</div>` : ''}
+            <div class="cand-cargo">${c.cargo}</div>
+          </div>`;
+        container.appendChild(card);
+      });
+    }
+  }
+
+  function seleccionar(cardEl, id) {
+    document.querySelectorAll('.candidato-card').forEach(el => el.classList.remove('selected'));
+    cardEl.classList.add('selected');
+    candidatoSeleccionado = id;
+    document.getElementById('btn-emitir').style.display = 'inline-block';
+  }
+
+  function confirmarVoto() {
+    if (!candidatoSeleccionado) return;
+    const c = candidatosData.find(x => x.id === candidatoSeleccionado);
+    if (!c) return;
+
+    // Rellenar modal
+    const mFoto = document.getElementById('modal-foto');
+    const candIndex = candidatosData.findIndex(x => x.id === c.id);
+    const fallbackSrc = `../candidatos/${candIndex + 1}.png`;
+    const imgSrc = c.imagen_base64 || fallbackSrc;
+    mFoto.innerHTML = `<img src="${imgSrc}" alt="${c.nombre}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.parentElement.innerHTML='🎓'">`;
+
+    document.getElementById('modal-nombre').textContent = c.nombre;
+    const mSigla = document.getElementById('modal-sigla');
+    if (c.sigla) { mSigla.textContent = c.sigla; mSigla.style.display = 'inline-block'; }
+    else { mSigla.style.display = 'none'; }
+
+    document.getElementById('overlay-confirmar').classList.add('show');
+  }
+
+  function cerrarModal() {
+    document.getElementById('overlay-confirmar').classList.remove('show');
+  }
+
+  async function enviarVoto() {
+    cerrarModal();
+    const msg = document.getElementById('msg-votar');
+    msg.innerHTML = '<div class="msg-estado info">⏳ Registrando tu voto...</div>';
+
+    const res = await apiFetch('/votante/votar', {
+      method:'POST',
+      body: JSON.stringify({ candidato_id: candidatoSeleccionado, eleccion_id: eleccionIdGlobal })
+    });
+
+    if (res) {
+      if (res.ok) {
+        mostrarVotoYaEmitido();
+      } else {
+        const err = await res.json();
+        msg.innerHTML = `<div class="msg-estado error">❌ ${err.detail}</div>`;
+      }
+    }
+  }
+
+  function mostrarVotoYaEmitido() {
+    document.getElementById('seccion-votacion').style.display = 'none';
+    document.getElementById('box-instrucciones').style.display = 'none';
+    document.getElementById('seccion-voto-emitido').style.display = 'block';
+    // Pasar jefe de mesa al carnet
+    const jefe = infoVotante ? (infoVotante.nombre_jefe || '') : '';
+    setTimeout(() => dibujarCarnet(jefe), 400);
+    iniciarResultadosEnVivo();
+  }
+
+  async function cargarResultados() {
+    const res = await apiFetch('/admin/resultados', { method:'GET' });
+    if (res && res.ok) {
+      const data = await res.json();
+      const box = document.getElementById('resultados-box');
+      const maxVotos = data.length ? Math.max(...data.map(r => r.votos)) : 1;
+      const emojis = ['🥇','🥈','🥉'];
+      box.innerHTML = data.map((r, i) => `
+        <div class="resultado-item" style="${i < 3 ? 'border-left: 4px solid var(--dorado); background: #fffcf0;' : ''}">
+          <div class="resultado-pos">${emojis[i] || (i+1)+'º'}</div>
+          <div class="resultado-info">
+            <div class="resultado-nombre" style="${i === 0 ? 'font-size: 1rem; color: var(--azul);' : ''}">${r.candidato}</div>
+            ${r.sigla ? `<div class="resultado-sigla">${r.sigla}</div>` : ''}
+          </div>
+          <div class="resultado-barra-wrap">
+            <div class="resultado-barra">
+              <div class="resultado-barra-fill" style="width:${maxVotos ? (r.votos/maxVotos*100) : 0}%; background: ${i === 0 ? 'linear-gradient(90deg, #f5a623, #ff8c00)' : 'linear-gradient(90deg, var(--azul), var(--azul-c))'}"></div>
+            </div>
+            <div class="resultado-votos"><strong>${r.votos}</strong> voto(s)</div>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  function iniciarResultadosEnVivo() {
+    document.getElementById('seccion-resultados').style.display = 'block';
+    cargarResultados();
+    setInterval(cargarResultados, 5000);
+  }
+
+  // INIT
+  cargarInfoVotante().then(() => {
+    if (!infoVotante || !infoVotante.ha_votado) cargarCandidatos();
+    else {
+      // Si ya votó al abrir la página, mostrar carnet igual
+      mostrarVotoYaEmitido();
+    }
+  });
+
+  // ─── GENERACIÓN DEL CARNET DE SUFRAGIO ───
+  function dibujarCarnet(nombreJefe) {
+    const canvas = document.getElementById('canvas-carnet');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const nombre = (infoVotante && infoVotante.nombre) ? infoVotante.nombre.toUpperCase() : 'VOTANTE';
+    const ci     = (infoVotante && infoVotante.ci)     ? infoVotante.ci : '—';
+    const mesa   = (infoVotante && infoVotante.mesa_numero) ? 'Mesa Nº ' + infoVotante.mesa_numero : 'Mesa: Pendiente';
+    const jefeNombre = nombreJefe || 'Jefe de Mesa';
+    const ahora  = new Date();
+    const fecha  = ahora.toLocaleDateString('es-BO', { day:'2-digit', month:'long', year:'numeric' });
+    const hora   = ahora.toLocaleTimeString('es-BO', { hour:'2-digit', minute:'2-digit' });
+    const folio  = 'CEA-' + ci + '-' + ahora.getFullYear();
+
+    // ─ FONDO PRINCIPAL ─
+    const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+    bgGrad.addColorStop(0,   '#001f5b');
+    bgGrad.addColorStop(0.5, '#003580');
+    bgGrad.addColorStop(1,   '#0d2f6b');
+    ctx.fillStyle = bgGrad;
+    ctx.roundRect(0, 0, W, H, 28);
+    ctx.fill();
+
+    // ─ FRANJA DORADA IZQUIERDA ─
+    const franjaGrad = ctx.createLinearGradient(0, 0, 0, H);
+    franjaGrad.addColorStop(0, '#f5c518');
+    franjaGrad.addColorStop(1, '#e08800');
+    ctx.fillStyle = franjaGrad;
+    ctx.beginPath();
+    ctx.roundRect(0, 0, 14, H, [28, 0, 0, 28]);
+    ctx.fill();
+
+    // ─ FRANJA DORADA DERECHA ─
+    ctx.fillStyle = franjaGrad;
+    ctx.beginPath();
+    ctx.roundRect(W - 14, 0, 14, H, [0, 28, 28, 0]);
+    ctx.fill();
+
+    // ─ PANEL IZQUIERDO (foto / logo area) ─
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath();
+    ctx.roundRect(30, 30, 230, H - 60, 18);
+    ctx.fill();
+
+    // ─ LOGO CEA (si disponible) ─
+    function dibujarResto(logoImg) {
+      // Logo dentro del panel izquierdo
+      const logoSize = 120;
+      const logoX = 30 + (230 / 2) - logoSize / 2;
+      const logoY = 50;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2, 0, Math.PI*2);
+      ctx.closePath();
+      ctx.strokeStyle = '#f5c518';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.clip();
+      if (logoImg) {
+        ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+      } else {
+        ctx.fillStyle = '#0056b3';
+        ctx.fill();
+        ctx.fillStyle = '#f5c518';
+        ctx.font = 'bold 36px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('CEA', logoX + logoSize/2, logoY + logoSize/2 + 12);
+      }
+      ctx.restore();
+
+      // Texto debajo del logo
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#f5c518';
+      ctx.font = 'bold 15px Inter, Arial, sans-serif';
+      ctx.fillText('CEA PAILÓN', 30 + 115, logoY + logoSize + 28);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      ctx.font = '11px Inter, Arial, sans-serif';
+      ctx.fillText('Prof. Herman Ortiz Camargo', 30 + 115, logoY + logoSize + 48);
+
+      // SELLO CIRCULAR (estilo oficial)
+      const selX = 30 + 115;
+      const selY = H - 95;
+      const selR = 50;
+
+      // Anillo exterior
+      ctx.beginPath();
+      ctx.arc(selX, selY, selR, 0, Math.PI * 2);
+      ctx.strokeStyle = '#f5c518';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Anillo interior
+      ctx.beginPath();
+      ctx.arc(selX, selY, selR - 10, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(245,197,24,0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Estrella central
+      ctx.fillStyle = '#f5c518';
+      ctx.font = '22px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('★', selX, selY + 8);
+
+      // Texto circular del sello
+      ctx.font = 'bold 9px Inter, Arial, sans-serif';
+      ctx.fillStyle = '#f5c518';
+      const textoSello = 'PROCESO ELECTORAL • ELECCIONES CEA • ';
+      ctx.save();
+      ctx.translate(selX, selY);
+      textoSello.split('').forEach((char, i) => {
+        const angulo = (i / textoSello.length) * Math.PI * 2 - Math.PI / 2;
+        ctx.save();
+        ctx.rotate(angulo);
+        ctx.translate(0, -(selR - 6));
+        ctx.rotate(Math.PI / 2);
+        ctx.fillText(char, 0, 0);
+        ctx.restore();
+      });
+      ctx.restore();
+
+      // ─ PANEL DERECHO (datos) ─
+      const dx = 280;
+      let dy = 55;
+
+      // TÍTULO PRINCIPAL
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#f5c518';
+      ctx.font = 'bold 13px Inter, Arial, sans-serif';
+      ctx.fillText('COMPROBANTE OFICIAL DE SUFRAGIO', dx, dy);
+
+      dy += 26;
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '11px Inter, Arial, sans-serif';
+      ctx.fillText('CENTRO DE EDUCACIÓN ALTERNATIVA • ELECCIONES ESTUDIANTILES', dx, dy);
+
+      // LÍNEA SEPARADORA
+      dy += 18;
+      ctx.beginPath();
+      ctx.moveTo(dx, dy); ctx.lineTo(W - 30, dy);
+      const lineGrad = ctx.createLinearGradient(dx, 0, W - 30, 0);
+      lineGrad.addColorStop(0, '#f5c518');
+      lineGrad.addColorStop(1, 'transparent');
+      ctx.strokeStyle = lineGrad;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      dy += 30;
+
+      // FUNCIÓN AUXILIAR: dibujar campo
+      function campo(label, valor, yPos, grande = false) {
+        ctx.textAlign = 'left';
+        ctx.fillStyle = 'rgba(245,197,24,0.7)';
+        ctx.font = '10px Inter, Arial, sans-serif';
+        ctx.fillText(label.toUpperCase(), dx, yPos);
+
+        ctx.fillStyle = 'white';
+        ctx.font = grande ? 'bold 20px Inter, Arial, sans-serif' : 'bold 14px Inter, Arial, sans-serif';
+        ctx.fillText(valor, dx, yPos + (grande ? 24 : 19));
+        return yPos + (grande ? 52 : 40);
+      }
+
+      dy = campo('Nombre del Votante', nombre, dy, true);
+      dy = campo('Número de C.I.', ci, dy);
+      dy = campo('Mesa de Votación', mesa, dy);
+      dy = campo('Fecha de Emisión', fecha, dy);
+      dy = campo('Hora de Votación', hora, dy);
+      dy = campo('Número de Folio', folio, dy);
+
+      // LÍNEA SEPARADORA BAJA
+      dy += 4;
+      ctx.beginPath();
+      ctx.moveTo(dx, dy); ctx.lineTo(W - 30, dy);
+      ctx.strokeStyle = lineGrad;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // FIRMA JEFE DE MESA
+      dy += 20;
+      const firmaDx = dx + 10;
+
+      // Línea de firma
+      ctx.beginPath();
+      ctx.moveTo(firmaDx, dy + 24); ctx.lineTo(firmaDx + 200, dy + 24);
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Nombre del jefe encima de la línea
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 11px Inter, Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(jefeNombre.toUpperCase(), firmaDx + 100, dy + 18);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '9px Inter, Arial, sans-serif';
+      ctx.fillText('Jefe de Mesa', firmaDx + 100, dy + 36);
+
+      // ESTADO OFICIAL
+      const estadoX = W - 165;
+      const estadoY = dy + 5;
+      ctx.fillStyle = 'rgba(22,163,74,0.15)';
+      ctx.strokeStyle = '#16a34a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(estadoX, estadoY, 140, 36, 8);
+      ctx.fill(); ctx.stroke();
+
+      ctx.fillStyle = '#4ade80';
+      ctx.font = 'bold 13px Inter, Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('✅ VOTO REGISTRADO', estadoX + 70, estadoY + 23);
+
+      // MARCA DE AGUA flotante
+      ctx.save();
+      ctx.globalAlpha = 0.04;
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 160px Arial';
+      ctx.textAlign = 'center';
+      ctx.translate(W/2 + 60, H/2 + 40);
+      ctx.rotate(-0.25);
+      ctx.fillText('CEA', 0, 0);
+      ctx.restore();
+    }
+
+    // Cargar logo e invocar render
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => dibujarResto(img);
+    img.onerror = () => dibujarResto(null);
+    img.src = '../imagenes/logo.jpg';
+  }
+
+  function descargarCarnet() {
+    const canvas = document.getElementById('canvas-carnet');
+    const ci = (infoVotante && infoVotante.ci) ? infoVotante.ci : 'votante';
+    const nombre = (infoVotante && infoVotante.nombre) ? infoVotante.nombre.replace(/\s+/g,'-') : 'votante';
+    const filename = `Carnet-Sufragio-${nombre}-CI${ci}.png`;
+
+    // Método compatible con móviles (Android/iOS) — usa Blob en lugar de DataURL
+    canvas.toBlob(function(blob) {
+      if (!blob) {
+        // Fallback para navegadores muy antiguos
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      // Limpiar después de un momento
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 1500);
+    }, 'image/png', 1.0);
+  }
+</script>
+</body>
+</html>
+

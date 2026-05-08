@@ -15,6 +15,7 @@ class RegistroUsuario(BaseModel):
     rol: str
     subsistema_id: int
     nivel_asignado: Optional[str] = None
+    carrera_id: Optional[int] = None
 
 class TokenData(BaseModel):
     username: str | None = None
@@ -75,6 +76,12 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return {"id": row[0], "nombre": row[1], "apellido": row[2], "email": row[3], "rol": row[4], "nivel_asignado": row[5], "subsistema_id": row[6]}
 
+def generate_cea_email(nombre: str, apellido: str):
+    clean_n = nombre.strip().replace(" ", "").lower()
+    clean_a = apellido.strip().replace(" ", "").lower()
+    # Limitar longitud para evitar correos gigantes
+    return f"{clean_n}{clean_a}"[:30] + "@ceapilon.com"
+
 @router.post("/register-usuario", dependencies=[Depends(get_current_user)])
 def register_usuario(data: RegistroUsuario):
     conn = get_db_connection()
@@ -82,33 +89,85 @@ def register_usuario(data: RegistroUsuario):
         raise HTTPException(status_code=500, detail="Error de base de datos")
     try:
         cur = conn.cursor()
-        clean_n = data.nombre.strip().split(' ')[0].lower()
-        clean_a = data.apellido.strip().split(' ')[0].lower()
-        email = f"{clean_n}.{clean_a}@educonnect.com"
+        email = generate_cea_email(data.nombre, data.apellido)
         hashed = auth.get_password_hash(str(data.carnet).strip())
-        try:
-            cur.execute(
-                "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
-                (data.subsistema_id, data.nombre.strip(), data.apellido.strip(), email, hashed, data.rol, data.nivel_asignado, str(data.carnet).strip())
-            )
-        except Exception:
-            conn.rollback()
-            # fallback sin carnet
-            cur.execute(
-                "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id",
-                (data.subsistema_id, data.nombre.strip(), data.apellido.strip(), email, hashed, data.rol, data.nivel_asignado)
-            )
+        
+        # Verificar si ya existe el carnet
+        cur.execute("SELECT id FROM usuarios WHERE carnet=%s", (str(data.carnet).strip(),))
+        if cur.fetchone():
+            raise HTTPException(status_code=400, detail="El carnet ya está registrado.")
+
+        cur.execute(
+            "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
+            (data.subsistema_id or 1, data.nombre.strip(), data.apellido.strip(), email, hashed, data.rol, data.nivel_asignado, str(data.carnet).strip())
+        )
         new_id = cur.fetchone()[0]
+        
+        if data.carrera_id:
+            cur.execute(
+                "INSERT INTO inscripciones (usuario_id, carrera_id, nivel) VALUES (%s, %s, %s)",
+                (new_id, data.carrera_id, data.nivel_asignado)
+            )
+            
         conn.commit()
-        return {"id": new_id, "email": email, "mensaje": f"Usuario {data.nombre} ({data.rol}) creado"}
+        return {"id": new_id, "email": email, "mensaje": f"Usuario {data.nombre} ({data.rol}) creado exitosamente"}
     except psycopg2.errors.UniqueViolation:
         conn.rollback()
-        raise HTTPException(status_code=400, detail="El email ya está registrado. Verifica el carnet.")
+        raise HTTPException(status_code=400, detail="El email generado ya existe. Contacte a soporte.")
+    except HTTPException: raise
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cur.close(); conn.close()
+
+@router.post("/importar-estudiantes-excel")
+async def importar_estudiantes_excel(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+    if current_user["rol"] not in ["admin", "director", "secretaria"]:
+        raise HTTPException(403, "No autorizado")
+    
+    try:
+        contents = await file.read()
+        wb = openpyxl.load_workbook(io.BytesIO(contents))
+        ws = wb.active
+        
+        registrados = 0
+        errores = []
+        
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Esperamos columnas: Carnet, Nombres, Apellidos, Area (humanistica/tecnica), Nivel
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if not row[0]: continue
+            
+            carnet = str(row[0]).strip()
+            nombres = str(row[1] or "").strip()
+            apellidos = str(row[2] or "").strip()
+            area = str(row[3] or "humanistica").lower().strip()
+            nivel = str(row[4] or "Primer Semestre").strip()
+            
+            email = generate_cea_email(nombres, apellidos)
+            password = auth.get_password_hash(carnet)
+            
+            try:
+                cur.execute(
+                    "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (1,%s,%s,%s,%s,'estudiante',%s,%s)",
+                    (nombres, apellidos, email, password, nivel, carnet)
+                )
+                registrados += 1
+            except Exception as e:
+                conn.rollback()
+                errores.append(f"Error en CI {carnet}: {str(e)}")
+                continue
+            
+        conn.commit()
+        cur.close(); conn.close()
+        
+        return {"registrados": registrados, "errores": errores}
+    except Exception as e:
+        raise HTTPException(500, f"Error procesando Excel: {str(e)}")
+
 
 @router.get("/estudiantes", dependencies=[Depends(get_current_user)])
 def get_estudiantes():

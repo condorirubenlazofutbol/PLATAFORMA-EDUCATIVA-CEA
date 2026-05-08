@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<!-- CEA Electoral System v4.3.5 - Deployed OK -->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Elecciones Estudiantiles CEA - Pailón</title>
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Elecciones Estudiantiles CEA">
+  <meta property="og:description" content="Plataforma oficial de elecciones estudiantiles del CEA Prof. Herman Ortiz Camargo.">
+  <meta property="og:image" content="https://eleccione-cea.onrender.com/imagenes/compartir.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://eleccione-cea.onrender.com/">
+  <meta property="og:type" content="website">
+
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --azul: #003580;
+      --azul-claro: #0056b3;
+      --dorado: #f5a623;
+      --dorado-claro: #fbbf24;
+      --bg: #f0f4ff;
+      --card: #ffffff;
+      --text: #1a1a2e;
+      --muted: #6b7280;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(135deg, var(--azul) 0%, #001f5b 100%);
+      padding: 16px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(0,53,128,0.4);
+      position: sticky; top:0; z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-logo { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--dorado); object-fit: cover; }
+    .header-title { color: white; }
+    .header-title h1 { font-size: 1.1rem; font-weight: 700; line-height: 1.2; }
+    .header-title p { font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-top: 2px; }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, var(--azul) 0%, #1a3a8c 50%, #001f5b 100%);
+      padding: 60px 20px 80px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '🗳️'; font-size: 200px; position: absolute;
+      opacity: 0.04; right: -20px; top: -20px; line-height: 1;
+    }
+    .hero h2 { color: var(--dorado); font-size: 0.85rem; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 12px; }
+    .hero h1 { color: white; font-size: clamp(1.6rem, 4vw, 2.5rem); font-weight: 800; line-height: 1.2; margin-bottom: 10px; }
+    .hero p { color: rgba(255,255,255,0.75); font-size: 1rem; margin-bottom: 30px; }
+    .hero-badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .badge { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; backdrop-filter: blur(8px); }
+
+    /* SECCIÓN CANDIDATOS PÚBLICOS */
+    .seccion-candidatos {
+      max-width: 1100px; margin: -32px auto 0; padding: 0 20px 40px;
+      position: relative; z-index: 10;
+    }
+    .seccion-titulo {
+      text-align: center; margin-bottom: 28px; margin-top: 20px;
+    }
+    .seccion-titulo h2 { font-size: 1.4rem; font-weight: 700; color: var(--azul); }
+    .seccion-titulo p { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+
+    .candidatos-publicos-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;
+    }
+    .candidato-publico-card {
+      background: var(--card); border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,53,128,0.1);
+      overflow: hidden; transition: transform 0.3s, box-shadow 0.3s;
+      border: 1px solid rgba(0,53,128,0.08);
+    }
+    .candidato-publico-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,53,128,0.2); }
+    .candidato-card-banner {
+      height: 8px;
+      background: linear-gradient(90deg, var(--azul), var(--dorado));
+    }
+    .candidato-card-body { padding: 24px; text-align: center; }
+    .candidato-foto-pub {
+      width: 100px; height: 100px; border-radius: 50%;
+      border: 3px solid var(--dorado); object-fit: cover; margin-bottom: 14px;
+      background: linear-gradient(135deg, #e2e8ff, #c7d2fe);
+    }
+    .candidato-sigla {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--azul), var(--azul-claro));
+      color: white; font-weight: 700; font-size: 0.75rem;
+      padding: 4px 12px; border-radius: 20px; letter-spacing: 1px;
+      margin-bottom: 10px; text-transform: uppercase;
+    }
+    .candidato-nombre-pub { font-size: 1.05rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .candidato-frente-pub { font-size: 0.82rem; color: var(--muted); font-style: italic; margin-bottom: 8px; }
+    .candidato-cargo-pub {
+      display: inline-block; background: #f0f4ff; color: var(--azul);
+      font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 12px;
+    }
+    .cargando-candidatos { text-align: center; color: var(--muted); padding: 40px; font-size: 0.9rem; }
+
+    /* HEADER BUTTON */
+    .header-btn {
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+      color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 0.9rem; font-weight: 600; font-family: 'Inter', sans-serif;
+      transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+    }
+    .header-btn:hover { background: white; color: var(--azul); }
+
+    /* MODAL DE LOGIN */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 31, 91, 0.8); backdrop-filter: blur(5px);
+      z-index: 1000; display: none; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; animation: fadeInModal 0.2s ease; }
+    @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
+    
+    .login-card {
+      background: var(--card); border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,53,128,0.25);
+      width: 100%; max-width: 440px;
+      overflow: hidden; border: 1px solid rgba(0,53,128,0.08);
+      position: relative;
+    }
+    .btn-cerrar-modal {
+      position: absolute; top: 20px; right: 20px;
+      background: rgba(255,255,255,0.2); border: none; font-size: 1.2rem;
+      color: white; width: 32px; height: 32px; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-cerrar-modal:hover { background: rgba(255,255,255,0.4); }
+
+    .login-card-header {
+      background: linear-gradient(135deg, var(--azul), #1a3a8c);
+      padding: 24px 30px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .login-card-header .icono { font-size: 2rem; }
+    .login-card-header h2 { color: white; font-size: 1.1rem; font-weight: 700; }
+    .login-card-header p { color: rgba(255,255,255,0.7); font-size: 0.8rem; margin-top: 2px; }
+    .login-card-body { padding: 30px; }
+
+    /* TABS */
+    .tabs { display: flex; background: #f0f4ff; border-radius: 10px; margin-bottom: 24px; padding: 4px; gap: 4px; }
+    .tab-btn {
+      flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer;
+      font-size: 0.82rem; font-weight: 600; transition: all 0.2s;
+      background: transparent; color: var(--muted);
+    }
+    .tab-btn.active {
+      background: var(--azul); color: white;
+      box-shadow: 0 2px 8px rgba(0,53,128,0.3);
+    }
+    .tab-content { display: none; }
+    .tab-content.activo { display: block; animation: fadeInUp 0.3s ease; }
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--azul); margin-bottom: 6px; }
+    .form-group input {
+      width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px;
+      font-size: 1rem; transition: border-color 0.2s; font-family: 'Inter', sans-serif;
+      background: #fafafe;
+    }
+    .form-group input:focus { outline: none; border-color: var(--azul); background: white; }
+    .form-group .hint { font-size: 0.74rem; color: var(--muted); margin-top: 4px; }
+
+    .btn-login {
+      width: 100%; padding: 14px; background: linear-gradient(135deg, var(--azul), var(--azul-claro));
+      color: white; border: none; border-radius: 10px; font-size: 1rem;
+      font-weight: 700; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif;
+      letter-spacing: 0.5px;
+    }
+    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,53,128,0.35); }
+    .btn-login:active { transform: translateY(0); }
+
+    #mensaje-login {
+      margin-top: 14px; padding: 10px 14px; border-radius: 8px;
+      font-size: 0.85rem; font-weight: 500; text-align: center; display: none;
+    }
+    #mensaje-login.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; display: block; }
+    #mensaje-login.loading { background: #eff6ff; color: var(--azul); border: 1px solid #bfdbfe; display: block; }
+
+    .magic-fix-btn {
+      display: block; width: 100%; margin-top: 20px; background: none; border: 1px dashed var(--muted);
+      color: var(--muted); font-size: 0.7rem; padding: 10px; border-radius: 8px; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .magic-fix-btn:hover { background: #fff; color: var(--azul); border-style: solid; border-color: var(--azul); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="imagenes/logo.jpg" alt="Logo CEA" class="header-logo" onerror="this.src='https://placehold.co/52x52/003580/f5a623?text=CEA'">
+    <div class="header-title">
+      <h1>Elecciones Estudiantiles</h1>
+      <p>CEA Prof. Herman Ortiz Camargo</p>
+    </div>
+  </div>
+  <div>
+    <button class="header-btn" onclick="abrirModalAuth()">👤 Iniciar Sesión</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <h2>Proceso Electoral</h2>
+  <h1>¡Tu voto es tu voz!</h1>
+  <p>Elige a tus representantes estudiantiles de forma democrática y segura.</p>
+  <div class="hero-badges">
+    <span class="badge">🔒 Voto Secreto</span>
+    <span class="badge">✅ Un voto por persona</span>
+    <span class="badge">📊 Resultados en tiempo real</span>
+  </div>
+</section>
+
+<!-- CANDIDATOS PÚBLICOS -->
+<section class="seccion-candidatos">
+  <div class="seccion-titulo">
+    <h2>🏆 Candidatos Registrados</h2>
+    <p>Conoce a los frentes que participan en esta elección antes de votar</p>
+  </div>
+  <div class="candidatos-publicos-grid" id="grid-candidatos-publicos">
+    <div class="cargando-candidatos">⏳ Cargando candidatos...</div>
+  </div>
+</section>
+
+<!-- MODAL LOGIN -->
+<div class="modal-overlay" id="modal-login">
+  <div class="login-card">
+    <button class="btn-cerrar-modal" onclick="cerrarModalAuth()">✕</button>
+    <div class="login-card-header">
+      <span class="icono">🗳️</span>
+      <div>
+        <h2>Acceso al Sistema</h2>
+        <p>Estudiantes usan CI · Personal usa correo</p>
+      </div>
+    </div>
+    <div class="login-card-body">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="cambiarTab('votante')">🎓 Soy Estudiante</button>
+        <button class="tab-btn" onclick="cambiarTab('admin')">👤 Personal CEA</button>
+      </div>
+
+      <!-- TAB VOTANTE (solo CI) -->
+      <div class="tab-content activo" id="tab-votante">
+        <div class="form-group">
+          <label>🪪 Número de Carnet de Identidad</label>
+          <input type="text" id="ci-input" placeholder="Ej: 1234567" autocomplete="off" onkeydown="if(event.key==='Enter') loginConCI()">
+          <div class="hint">Ingresa solo tu número de CI (sin complemento ni letras)</div>
+        </div>
+        <button class="btn-login" id="btn-ci" onclick="loginConCI()">Ingresar al Sistema →</button>
+      </div>
+
+      <!-- TAB ADMIN/STAFF -->
+      <div class="tab-content" id="tab-admin">
+        <form id="form-login" onsubmit="loginStaff(event)">
+          <div class="form-group">
+            <label>📧 Correo Electrónico</label>
+            <input type="email" id="usuario" placeholder="admin@cea.com" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label>🔑 Contraseña</label>
+            <input type="password" id="contrasena" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn-login">Ingresar →</button>
+        </form>
+      </div>
+
+      <div id="mensaje-login"></div>
+      
+      <button class="magic-fix-btn" onclick="limpiarYReparar()">
+        🛠️ ¿El sistema no responde? <b>Reparar y Reiniciar Conexión</b>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js?v=4.3.6"></script>
+<script>
+  // MODAL FUNCIONES
+  function abrirModalAuth() {
+    document.getElementById('modal-login').classList.add('active');
+    setTimeout(() => { document.getElementById('ci-input').focus(); }, 100);
+  }
+  function cerrarModalAuth() {
+    document.getElementById('modal-login').classList.remove('active');
+    document.getElementById('mensaje-login').className = '';
+    document.getElementById('ci-input').value = '';
+    document.getElementById('contrasena').value = '';
+  }
+  
+  // Cerrar overlay al hacer click afueea
+  window.onclick = function(event) {
+    const overlay = document.getElementById('modal-login');
+    if (event.target === overlay) {
+      cerrarModalAuth();
+    }
+  }
+
+  // ─── TABS ───
+  function cambiarTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('activo'));
+    event.target.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('activo');
+    document.getElementById('mensaje-login').className = '';
+    document.getElementById('mensaje-login').textContent = '';
+  }
+
+  function mostrarMensaje(texto, tipo) {
+    const el = document.getElementById('mensaje-login');
+    el.textContent = texto;
+    el.className = tipo;
+  }
+
+  // ─── LOGIN CON CI (votantes) ───
+  async function loginConCI() {
+    const ci = document.getElementById('ci-input').value.trim();
+    if (!ci) { mostrarMensaje('Por favor ingresa tu número de CI.', 'error'); return; }
+
+    const btn = document.getElementById('btn-ci');
+    btn.disabled = true; btn.textContent = 'Verificando...';
+    mostrarMensaje('Buscando en el padrón...', 'loading');
+
+    try {
+      const res = await apiFetch('/login-ci', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ci })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('jwt_token', data.access_token);
+        // Usar rol devuelto por la API (también está en el payload JWT)
+        const rol = data.rol || 'votante';
+        localStorage.setItem('user_rol', rol);
+        redirigirPorRol(rol);
+      } else {
+        mostrarMensaje('❌ ' + (data.detail || 'CI no encontrado en el padrón.'), 'error');
+      }
+    } catch(e) {
+      mostrarMensaje('❌ Error de conexión. Intenta nuevamente.', 'error');
+    }
+    btn.disabled = false; btn.textContent = 'Ingresar al Sistema →';
+  }
+
+  // ─── LOGIN STAFF (admin/secretaria/jefe) ───
+  async function loginStaff(e) {
+    e.preventDefault();
+    const correo = document.getElementById('usuario').value.trim();
+    const clave = document.getElementById('contrasena').value;
+    if (!correo || !clave) { mostrarMensaje('Completa todos los campos.', 'error'); return; }
+
+    mostrarMensaje('Verificando credenciales...', 'loading');
+
+    // CRÍTICO: El endpoint /login de OAuth2 necesita form-urlencoded, NO json.
+    // Usamos fetch directo para controlar la cabecera Content-Type.
+    const body = new URLSearchParams();
+    body.append('username', correo);
+    body.append('password', clave);
+
+    try {
+      const apiUrl = window.getApiUrl();
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+      const res = await fetch(`${apiUrl}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem('jwt_token', data.access_token);
+        const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+        const rol = payload.rol;
+        localStorage.setItem('user_rol', rol);
+        redirigirPorRol(rol);
+      } else {
+        // Manejar tanto string como array de errores (FastAPI 422)
+        let msg = 'Credenciales incorrectas.';
+        if (typeof data.detail === 'string') msg = data.detail;
+        else if (Array.isArray(data.detail)) msg = data.detail.map(e => e.msg || e).join(', ');
+        mostrarMensaje('❌ ' + msg, 'error');
+      }
+    } catch(e) {
+      mostrarMensaje('❌ Error de conexión. El servidor puede estar despertando. Espera 30s e intenta de nuevo.', 'error');
+    }
+  }
+
+  // ─── CANDIDATOS PÚBLICOS ───
+  async function cargarCandidatosPublicos() {
+    try {
+      const res = await apiFetch('/candidatos/publicos', { method: 'GET' });
+      const grid = document.getElementById('grid-candidatos-publicos');
+      if (!res || !res.ok) { grid.innerHTML = '<div class="cargando-candidatos">No hay candidatos registrados aún.</div>'; return; }
+      const data = await res.json();
+      if (!data.length) { grid.innerHTML = '<div class="cargando-candidatos">📋 Aún no se han registrado candidatos para esta elección.</div>'; return; }
+
+      grid.innerHTML = '';
+      data.forEach(c => {
+        const foto = c.imagen_base64
+          ? `<img src="${c.imagen_base64}" alt="${c.nombre}" class="candidato-foto-pub">`
+          : `<div class="candidato-foto-pub" style="display:flex;align-items:center;justify-content:center;font-size:2.5rem;">🎓</div>`;
+        grid.innerHTML += `
+          <div class="candidato-publico-card">
+            <div class="candidato-card-banner"></div>
+            <div class="candidato-card-body">
+              ${foto}
+              ${c.sigla ? `<div class="candidato-sigla">${c.sigla}</div>` : ''}
+              <div class="candidato-nombre-pub">${c.nombre}</div>
+              ${c.frente ? `<div class="candidato-frente-pub">${c.frente}</div>` : ''}
+              <div class="candidato-cargo-pub">${c.cargo}</div>
+            </div>
+          </div>`;
+      });
+    } catch(e) {
+      document.getElementById('grid-candidatos-publicos').innerHTML = '<div class="cargando-candidatos">No se pudo conectar al servidor.</div>';
+    }
+  }
+
+  function redirigirPorRol(rol) {
+    console.log("Iniciando redirección para rol:", rol);
+    const base = window.location.origin;
+    const v = "?v=4.3.5"; // Bypass PWA cache
+    if (rol === 'admin') window.location.href = base + '/pages/dashboard-admin.html' + v;
+    else if (rol === 'secretaria') window.location.href = base + '/pages/dashboard-secretaria.html' + v;
+    else if (rol === 'jefe') window.location.href = base + '/pages/dashboard-jefe.html' + v;
+    else if (rol === 'votante') window.location.href = base + '/pages/dashboard-votante.html' + v;
+    else {
+        alert("Rol desconocido: " + rol);
+        window.location.href = base + '/index.html';
+    }
+  }
+
+  function limpiarYReparar() {
+    localStorage.clear();
+    alert("🚀 Sistema limpiado. Reiniciando descubrimiento de servidor...");
+    location.reload(true);
+  }
+
+  // INIT
+  cargarCandidatosPublicos();
+</script>
+
+</body>
+</html>
+

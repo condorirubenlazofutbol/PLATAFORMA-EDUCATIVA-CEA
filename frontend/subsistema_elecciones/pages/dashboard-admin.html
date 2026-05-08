@@ -1,0 +1,1222 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administrador — Elecciones CEA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --azul:#003580; --azul-c:#0056b3; --dorado:#f5a623;
+      --verde:#16a34a; --rojo:#dc2626; --naranja:#ea580c;
+      --bg:#f0f4ff; --card:#ffffff; --text:#1a1a2e; --muted:#6b7280;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+    header {
+      background:linear-gradient(135deg,var(--azul),#001f5b);
+      padding:14px 24px; display:flex; align-items:center; justify-content:space-between;
+      box-shadow:0 4px 20px rgba(0,53,128,0.4); position:sticky; top:0; z-index:100;
+    }
+    .header-left { display:flex; align-items:center; gap:12px; }
+    .header-logo { width:42px; height:42px; border-radius:50%; border:2px solid var(--dorado); object-fit:cover; }
+    header h1 { color:white; font-size:1rem; font-weight:700; }
+    header p { color:rgba(255,255,255,0.7); font-size:0.73rem; }
+    .btn-salir { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:white; padding:8px 16px; border-radius:8px; cursor:pointer; font-size:0.82rem; font-weight:600; font-family:'Inter',sans-serif; }
+
+    main { max-width:1200px; margin:0 auto; padding:28px 20px 60px; }
+
+    /* VOTING STATUS BANNER */
+    .voting-banner {
+      border-radius:18px; padding:28px 32px; margin-bottom:30px;
+      display:flex; align-items:center; justify-content:space-between; gap:20px;
+      flex-wrap:wrap;
+    }
+    .voting-banner.abierta {
+      background:linear-gradient(135deg,#14532d,#166534);
+      border:2px solid #16a34a; box-shadow:0 8px 32px rgba(22,163,74,0.25);
+    }
+    .voting-banner.cerrada {
+      background:linear-gradient(135deg,#1e3a5f,#002f6b);
+      border:2px solid var(--dorado); box-shadow:0 8px 32px rgba(0,53,128,0.2);
+    }
+    .banner-info { display:flex; align-items:center; gap:18px; }
+    .banner-icon { font-size:3rem; }
+    .banner-titulo { color:white; font-size:1.15rem; font-weight:800; }
+    .banner-sub { color:rgba(255,255,255,0.7); font-size:0.82rem; margin-top:4px; }
+    .banner-id { font-size:0.72rem; color:rgba(255,255,255,0.5); margin-top:3px; }
+    .btn-toggle-votar {
+      padding:14px 30px; border:none; border-radius:12px; font-size:1rem; font-weight:800;
+      cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.3s; white-space:nowrap;
+    }
+    .btn-toggle-votar.abrir { background:linear-gradient(135deg,#16a34a,#15803d); color:white; box-shadow:0 4px 18px rgba(22,163,74,0.4); }
+    .btn-toggle-votar.cerrar { background:linear-gradient(135deg,#dc2626,#991b1b); color:white; box-shadow:0 4px 18px rgba(220,38,38,0.4); }
+    .btn-toggle-votar:hover { transform:translateY(-2px) scale(1.02); }
+
+    /* STATS */
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:30px; }
+    .stat-card {
+      background:var(--card); border-radius:14px; padding:16px 18px;
+      box-shadow:0 2px 12px rgba(0,53,128,0.07); border:1px solid rgba(0,53,128,0.06);
+      display:flex; align-items:center; gap:12px;
+    }
+    .stat-icono { font-size:1.8rem; }
+    .stat-valor { font-size:1.5rem; font-weight:800; color:var(--azul); line-height:1; }
+    .stat-label { font-size:0.7rem; color:var(--muted); margin-top:3px; font-weight:500; }
+
+    /* STEPPER */
+    .stepper { display:flex; gap:0; margin-bottom:28px; overflow-x:auto; padding-bottom:4px; }
+    .step {
+      flex:1; min-width:100px; padding:12px 16px; background:var(--card);
+      border:1px solid #e5e7eb; cursor:pointer; transition:all 0.2s;
+      text-align:center; position:relative;
+    }
+    .step:first-child { border-radius:12px 0 0 12px; }
+    .step:last-child { border-radius:0 12px 12px 0; }
+    .step.active { background:linear-gradient(135deg,var(--azul),var(--azul-c)); border-color:var(--azul); z-index:1; transform:scaleY(1.04); }
+    .step.done { background:#f0fdf4; border-color:#bbf7d0; }
+    .step-num { font-size:1.1rem; font-weight:800; color:var(--muted); }
+    .step.active .step-num { color:var(--dorado); }
+    .step.done .step-num { color:var(--verde); }
+    .step-label { font-size:0.68rem; font-weight:600; color:var(--muted); margin-top:2px; }
+    .step.active .step-label { color:rgba(255,255,255,0.9); }
+    .step.done .step-label { color:var(--verde); }
+
+    /* TABS content */
+    .tab-content { display:none; animation:fadeIn 0.3s ease; }
+    .tab-content.activo { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+    .panel-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:22px; }
+    .panel-card {
+      background:var(--card); border-radius:16px;
+      box-shadow:0 4px 20px rgba(0,53,128,0.07); border:1px solid rgba(0,53,128,0.06); overflow:hidden;
+    }
+    .panel-card-header { padding:16px 20px; display:flex; align-items:center; gap:12px; }
+    .panel-card-header.azul  { background:linear-gradient(135deg,var(--azul),#1a3a8c); }
+    .panel-card-header.verde { background:linear-gradient(135deg,var(--verde),#15803d); }
+    .panel-card-header.rojo  { background:linear-gradient(135deg,var(--rojo),#991b1b); }
+    .panel-card-header.naranja { background:linear-gradient(135deg,var(--naranja),#c2410c); }
+    .panel-card-header .hicono { font-size:1.4rem; }
+    .panel-card-header h3 { color:white; font-size:0.92rem; font-weight:700; }
+    .panel-card-header p { color:rgba(255,255,255,0.7); font-size:0.72rem; margin-top:2px; }
+    .panel-card-body { padding:20px; }
+
+    .form-group { margin-bottom:14px; }
+    .form-group label { display:block; font-size:0.76rem; font-weight:600; color:var(--azul); margin-bottom:5px; text-transform:uppercase; }
+    .form-group input, .form-group select {
+      width:100%; padding:11px 14px; border:2px solid #e5e7eb; border-radius:10px;
+      font-size:0.9rem; transition:border-color 0.2s; font-family:'Inter',sans-serif; background:#fafafe;
+    }
+    .form-group input:focus, .form-group select:focus { outline:none; border-color:var(--azul); background:white; }
+
+    .btn-action {
+      width:100%; padding:12px; border:none; border-radius:10px;
+      font-size:0.88rem; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.3s; margin-bottom:8px;
+    }
+    .btn-azul   { background:linear-gradient(135deg,var(--azul),var(--azul-c)); color:white; }
+    .btn-verde  { background:linear-gradient(135deg,var(--verde),#15803d); color:white; }
+    .btn-rojo   { background:linear-gradient(135deg,var(--rojo),#991b1b); color:white; }
+    .btn-naranja{ background:linear-gradient(135deg,var(--naranja),#c2410c); color:white; }
+    .btn-dorado { background:linear-gradient(135deg,var(--dorado),#e08800); color:#1a1a2e; }
+    .btn-action:hover { transform:translateY(-1px); filter:brightness(1.07); box-shadow:0 4px 14px rgba(0,0,0,0.2); }
+
+    .msg-box { margin-top:10px; padding:10px 14px; border-radius:8px; font-size:0.82rem; font-weight:500; display:none; }
+    .msg-box.show { display:block; }
+    .msg-box.ok    { background:#f0fdf4; color:var(--verde); border:1px solid #bbf7d0; }
+    .msg-box.error { background:#fef2f2; color:var(--rojo); border:1px solid #fecaca; }
+    .msg-box.info  { background:#eff6ff; color:var(--azul-c); border:1px solid #bfdbfe; }
+
+    /* ELECCION ITEMS */
+    .eleccion-item {
+      background:#f8faff; border:1px solid rgba(0,53,128,0.1); border-radius:10px;
+      padding:12px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px;
+    }
+    .eleccion-nombre { font-weight:700; font-size:0.88rem; flex:1; }
+    .eleccion-id-txt { font-size:0.72rem; color:var(--muted); }
+    .badge-estado { padding:4px 10px; border-radius:20px; font-size:0.7rem; font-weight:700; }
+    .badge-abierta { background:#dcfce7; color:#15803d; }
+    .badge-cerrada { background:#fef2f2; color:var(--rojo); }
+    .btn-toggle-mini {
+      padding:6px 12px; border:none; border-radius:7px; cursor:pointer; font-size:0.75rem;
+      font-weight:700; transition:all 0.2s; font-family:'Inter',sans-serif;
+    }
+    .btn-toggle-mini.cerrar { background:#fef2f2; color:var(--rojo); border:1px solid #fecaca; }
+    .btn-toggle-mini.abrir  { background:#f0fdf4; color:var(--verde); border:1px solid #bbf7d0; }
+
+    /* GLOBAL ELECTION INDICATOR */
+    .election-context-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 99px;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+    }
+    .election-context-badge b { color: var(--dorado); font-weight: 800; font-size: 0.85rem; }
+
+    /* MESA ITEMS */
+    .mesa-item {
+      background:#f8faff; border:1px solid rgba(0,53,128,0.1); border-radius:10px;
+      padding:12px 16px; margin-bottom:8px; display:flex; align-items:center; gap:12px;
+    }
+    .mesa-num { font-weight:800; font-size:1.1rem; color:var(--azul); min-width:32px; }
+    .mesa-info { flex:1; }
+    .mesa-info strong { display:block; font-size:0.85rem; }
+    .mesa-info span  { font-size:0.72rem; color:var(--muted); }
+
+    /* RESULTADOS */
+    .resultado-item {
+      background:white; border-radius:12px; padding:14px 16px; margin-bottom:10px;
+      display:flex; align-items:center; gap:12px; box-shadow:0 2px 8px rgba(0,53,128,0.06);
+    }
+    .resultado-pos { font-size:1.3rem; width:30px; text-align:center; }
+    .resultado-info { flex:1; }
+    .resultado-nombre { font-weight:700; font-size:0.88rem; }
+    .resultado-sigla  { font-size:0.7rem; font-weight:600; color:var(--azul); }
+    .resultado-barra-wrap { flex:2; }
+    .resultado-barra { height:9px; background:#e5e7eb; border-radius:5px; overflow:hidden; margin-bottom:3px; }
+    .resultado-barra-fill { height:100%; background:linear-gradient(90deg,var(--azul),var(--dorado)); transition:width 0.8s ease; border-radius:5px; }
+    .resultado-votos { font-size:0.75rem; color:var(--muted); text-align:right; }
+
+    /* INFO BOX SECRETARIA */
+    .info-box { background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:16px 20px; margin-bottom:16px; }
+    .info-box h4 { color:var(--azul); font-size:0.88rem; margin-bottom:8px; }
+    .info-box ul { list-style:none; }
+    .info-box ul li { font-size:0.8rem; color:#374151; padding:3px 0; }
+    .info-box ul li::before { content:'✅ '; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <img src="../imagenes/logo.jpg" alt="Logo CEA" class="header-logo" onerror="this.src='https://placehold.co/52x52/003580/f5a623?text=CEA'">
+    <div class="header-title">
+      <h1 style="font-size:1.2rem;line-height:1;">Panel de Administrador</h1>
+      <p>Elecciones Estudiantiles — CEA Pailón</p>
+    </div>
+  </div>
+  <div style="text-align:right; display:flex; align-items:center; gap:20px;">
+    <button class="btn-salir" onclick="cerrarSesion()">Salir 🚪</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ═══ BANNER DE VOTACIÓN ═══ -->
+  <div class="voting-banner cerrada" id="voting-banner">
+    <div class="banner-info">
+      <div class="banner-icon" id="banner-icon">⏳</div>
+      <div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div class="banner-titulo" id="banner-titulo">Sin elección activa</div>
+            <div id="active-election-badge-ui" class="election-context-badge" style="display:none;">
+                <span>Gestión de Elección:</span> <b id="active-election-id-val">#—</b>
+            </div>
+        </div>
+        <div class="banner-sub" id="banner-sub">Crea una elección en el Paso 1 para comenzar</div>
+        <div class="banner-id" id="banner-id"></div>
+      </div>
+    </div>
+    <button class="btn-toggle-votar abrir" id="btn-toggle-votar" onclick="toggleVotacion()" style="display:none;">
+      🟢 Abrir Votación
+    </button>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid">
+    <div class="stat-card"><span class="stat-icono">👥</span><div><div class="stat-valor" id="st-votantes">—</div><div class="stat-label">Votantes Inscritos</div></div></div>
+    <div class="stat-card"><span class="stat-icono">✅</span><div><div class="stat-valor" id="st-habilitados">—</div><div class="stat-label">Habilitados</div></div></div>
+    <div class="stat-card"><span class="stat-icono">🗳️</span><div><div class="stat-valor" id="st-votos">—</div><div class="stat-label">Votos Emitidos</div></div></div>
+    <div class="stat-card"><span class="stat-icono">📊</span><div><div class="stat-valor" id="st-participacion">—</div><div class="stat-label">Participación</div></div></div>
+    <div class="stat-card"><span class="stat-icono">🪑</span><div><div class="stat-valor" id="st-mesas">—</div><div class="stat-label">Mesas</div></div></div>
+    <div class="stat-card"><span class="stat-icono">🏆</span><div><div class="stat-valor" id="st-candidatos">—</div><div class="stat-label">Candidatos</div></div></div>
+  </div>
+
+  <!-- ═══ STEPPER ═══ -->
+  <div class="stepper">
+    <div class="step active" id="step-1" onclick="activarTab(1)"><div class="step-num">1️⃣</div><div class="step-label">Crear Elección</div></div>
+    <div class="step"        id="step-2" onclick="activarTab(2)"><div class="step-num">2️⃣</div><div class="step-label">Mesas y Jefes</div></div>
+    <div class="step"        id="step-3" onclick="activarTab(3)"><div class="step-num">3️⃣</div><div class="step-label">Sorteo de Mesas</div></div>
+    <div class="step"        id="step-4" onclick="activarTab(4)"><div class="step-num">4️⃣</div><div class="step-label">Resultados</div></div>
+    <div class="step"        id="step-5" onclick="activarTab(5)"><div class="step-num">🛡️</div><div class="step-label">Auditoría</div></div>
+    <div class="step"        id="step-6" onclick="activarTab(6)"><div class="step-num">📊</div><div class="step-label">Reportes</div></div>
+  </div>
+
+  <!-- ═══ TAB 1: ELECCIONES ═══ -->
+  <div class="tab-content activo" id="tab-1">
+    <div class="panel-grid">
+
+      <div class="panel-card">
+        <div class="panel-card-header azul">
+          <span class="hicono">➕</span>
+          <div><h3>Paso 1 — Crear Elección</h3><p>Inicia el proceso electoral con un nombre</p></div>
+        </div>
+        <div class="panel-card-body">
+          <div class="info-box">
+            <h4>📋 Flujo del proceso</h4>
+            <ul>
+              <li>Admin crea la elección (aquí)</li>
+              <li>Secretaria inscribe votantes y candidatos</li>
+              <li>Admin crea mesas y designa jefes</li>
+              <li>Admin ejecuta el sorteo de mesas</li>
+              <li>Admin abre la votación (banner arriba)</li>
+              <li>Jefes habilitan a sus votantes</li>
+              <li>Votantes emiten su voto</li>
+              <li>Admin cierra y publica resultados</li>
+            </ul>
+          </div>
+          <div class="form-group">
+            <label>Nombre de la Elección</label>
+            <input type="text" id="nueva-eleccion-nombre" placeholder="Ej: Elecciones CEA 2025">
+          </div>
+          <button class="btn-action btn-azul" onclick="crearEleccion()">🗳️ Crear Elección</button>
+          <div class="msg-box" id="msg-eleccion"></div>
+        </div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-card-header azul">
+          <span class="hicono">📋</span>
+          <div><h3>Elecciones Registradas</h3><p>Control de estado por elección</p></div>
+        </div>
+        <div class="panel-card-body">
+          <div id="lista-elecciones" style="min-height:60px;">
+            <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px;">Cargando...</div>
+          </div>
+          <button class="btn-action btn-azul" onclick="cargarElecciones()" style="margin-top:8px;">🔄 Actualizar lista</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ TAB 2: MESAS ═══ -->
+  <div class="tab-content" id="tab-2">
+    <div class="panel-grid">
+
+      <!-- CREAR MESA -->
+      <div class="panel-card">
+        <div class="panel-card-header naranja">
+          <span class="hicono">🪑</span>
+          <div><h3>Paso 2a — Crear Mesas</h3><p>Define las mesas de votación</p></div>
+        </div>
+        <div class="panel-card-body">
+          <div class="form-group">
+            <label>ID de Elección</label>
+            <input type="number" id="mesa-eleccion-id" class="sync-id" placeholder="Ej: 1" oninput="actualizarIDGlobal(this.value); cargarMesas()">
+          </div>
+          <div class="form-group">
+            <label>Cantidad de Mesas a crear</label>
+            <input type="number" id="mesa-cantidad" placeholder="Ej: 5">
+          </div>
+          <button class="btn-action btn-naranja" onclick="crearMesa()">➕ Generar Mesas</button>
+          <div class="msg-box" id="msg-mesa"></div>
+
+          <div style="margin-top:18px;">
+            <div style="font-size:0.8rem;font-weight:700;color:var(--azul);margin-bottom:8px;">🪑 Mesas creadas:</div>
+            <div id="lista-mesas"><div style="color:var(--muted);font-size:0.8rem;">Ingresa el ID de elección</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESIGNAR JEFE -->
+      <div class="panel-card">
+        <div class="panel-card-header naranja">
+          <span class="hicono">👤</span>
+          <div><h3>Paso 2b — Designar Jefe de Mesa</h3><p>Busca al jefe por CI del padrón</p></div>
+        </div>
+        <div class="panel-card-body">
+          <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;margin-bottom:14px;font-size:0.8rem;color:var(--azul-c);">
+            <strong>ℹ️ ¿Cómo?</strong> Busca un CI ya inscrito. El sistema lo convierte en Jefe y lo asigna a la mesa seleccionada.
+          </div>
+          <div class="form-group">
+            <label>🪪 CI del Jefe (inscrito en el padrón)</label>
+            <div style="position:relative;">
+              <input type="text" id="jefe-ci" placeholder="Ej: 12345678" onkeydown="if(event.key==='Enter') buscarJefePorCI()">
+              <button onclick="buscarJefePorCI()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:var(--azul);color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:0.76rem;font-weight:600;">🔍</button>
+            </div>
+          </div>
+          <div id="jefe-encontrado" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;margin-bottom:12px;">
+            <div style="font-size:0.8rem;font-weight:700;color:#16a34a;">✅ Encontrado:</div>
+            <div style="font-size:0.88rem;font-weight:700;margin-top:2px;" id="jefe-nombre-preview">—</div>
+            <div style="font-size:0.72rem;color:var(--muted);" id="jefe-ci-preview">—</div>
+          </div>
+          <button class="btn-action btn-naranja" onclick="asignarJefeCI()">🤖 Asignar automáticamente a Mesa Libre</button>
+          <div class="msg-box" id="msg-jefe"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ TAB 3: SORTEO ═══ -->
+  <div class="tab-content" id="tab-3">
+    <div class="panel-grid">
+
+      <div class="panel-card" style="max-width:560px;">
+        <div class="panel-card-header verde">
+          <span class="hicono">🎲</span>
+          <div><h3>Paso 3 — Sorteo de Mesas</h3><p>Distribución aleatoria y equitativa</p></div>
+        </div>
+        <div class="panel-card-body">
+          <div style="background:#fffbeb;border:1px solid #fbbf24;border-radius:12px;padding:16px;margin-bottom:18px;">
+            <div style="font-weight:700;color:#92400e;font-size:0.88rem;margin-bottom:6px;">🎲 ¿Cómo funciona el Sorteo?</div>
+            <div style="font-size:0.8rem;color:#b45309;line-height:1.6;">
+              El sistema mezcla aleatoriamente todos los votantes inscritos y los distribuye en partes iguales entre las mesas habilitadas.<br><br>
+              <strong>Cada votante recibe su número de mesa</strong> y podrá verlo en su panel al ingresar con su CI.
+            </div>
+          </div>
+          <div class="form-group">
+            <label>ID de Elección</label>
+            <input type="number" id="sorteo-eleccion-id" class="sync-id" placeholder="Ej: 1" oninput="actualizarIDGlobal(this.value)">
+          </div>
+          <button class="btn-action btn-dorado" onclick="ejecutarSorteo()" style="font-size:1rem;padding:16px;">
+            🎲 EJECUTAR SORTEO DE MESAS
+          </button>
+          <div class="msg-box" id="msg-sorteo"></div>
+
+          <div id="sorteo-resultado" style="display:none;margin-top:18px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #16a34a;border-radius:12px;padding:18px;text-align:center;">
+            <div style="font-size:2rem;">🎉</div>
+            <div style="font-weight:800;color:#15803d;font-size:1rem;margin-top:8px;" id="sorteo-msg-titulo"></div>
+            <div style="font-size:0.82rem;color:#166534;margin-top:6px;" id="sorteo-msg-resumen"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-card" style="max-width:560px;">
+        <div class="panel-card-header verde">
+          <span class="hicono">🟢</span>
+          <div><h3>Control de Votación</h3><p>Abrir o cerrar el proceso en cualquier momento</p></div>
+        </div>
+        <div class="panel-card-body">
+          <div style="background:#f8faff;border:1px solid rgba(0,53,128,0.1);border-radius:12px;padding:16px;margin-bottom:18px;">
+            <div id="estado-votacion-info" style="text-align:center;">
+              <div style="font-size:2.5rem;" id="estado-icono">⏳</div>
+              <div style="font-weight:800;font-size:1rem;margin-top:8px;" id="estado-titulo">Cargando...</div>
+              <div style="font-size:0.8rem;color:var(--muted);margin-top:4px;" id="estado-nombre-eleccion">—</div>
+            </div>
+            <!-- TOP 3 BARS INJECTED HERE -->
+            <div id="estado-votacion-top3" style="margin-top:16px; text-align:left; border-top:1px dashed #cbd5e1; padding-top:12px;"></div>
+          </div>
+          <div class="form-group" style="display:none;">
+            <!-- Hidden to avoid clutter since it syncs automatically -->
+            <label>ID de Elección a controlar</label>
+            <input type="number" id="toggle-eleccion-id" class="sync-id" placeholder="Ej: 1" oninput="actualizarIDGlobal(this.value)">
+          </div>
+          <button class="btn-action" style="background:#94a3b8; color:white;" id="btn-toggle-principal" disabled>⏳ Cargando...</button>
+          <div class="msg-box" id="msg-control-voto"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ TAB 4: RESULTADOS ═══ -->
+  <div class="tab-content" id="tab-4">
+    <div class="panel-card" style="max-width:700px;">
+      <div class="panel-card-header verde">
+        <span class="hicono">📊</span>
+        <div><h3>Resultados Electorales</h3><p>Se actualizan automáticamente cada 5s</p></div>
+      </div>
+      <div class="panel-card-body">
+        <div id="resultados-box" style="margin-bottom:20px;">
+          <div style="text-align:center;color:var(--muted);padding:20px;">Cargando resultados...</div>
+        </div>
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;margin-bottom:14px;">
+          <div style="font-weight:700;color:var(--rojo);font-size:0.88rem;margin-bottom:8px;">⚠️ Publicación Oficial</div>
+          <div style="font-size:0.8rem;color:#991b1b;margin-bottom:12px;">Esta acción cierra la votación de forma definitiva y publica los resultados para todos.</div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label>ID de Elección</label>
+            <input type="number" id="pub-eleccion-id" class="sync-id" placeholder="1" oninput="actualizarIDGlobal(this.value)">
+          </div>
+          <button class="btn-action btn-rojo" onclick="publicarResultados()">🔒 Cerrar y Publicar Resultados Oficiales</button>
+        </div>
+        <div class="msg-box" id="msg-pub"></div>
+      </div>
+    </div>
+  </div>
+    <!-- ═══ TAB 5: AUDITORÍA ═══ -->
+  <div class="tab-content" id="tab-5">
+    <div class="panel-card" style="max-width:1000px;">
+      <div class="panel-card-header azul">
+        <span class="hicono">🛡️</span>
+        <div><h3>Registro de Actividad y Seguridad (AuditLog)</h3><p>Seguimiento detallado de todas las acciones críticas del sistema</p></div>
+      </div>
+      <div class="panel-card-body">
+        <div style="background:#f8faff;border:1px solid rgba(0,53,128,0.1);border-radius:12px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+          <div style="font-size:0.8rem;color:var(--muted);">Muestra las últimas 200 acciones realizadas por Admin, Secretaría y Jefes.</div>
+          <button class="btn-action btn-azul" onclick="cargarAuditoria()" style="width:auto;padding:8px 16px;margin:0;">🔄 Actualizar Logs</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="lista-table" style="font-size:0.75rem;">
+            <thead>
+              <tr style="background:var(--azul);color:white;">
+                <th style="padding:10px;">Fecha/Hora</th>
+                <th style="padding:10px;">Usuario ID</th>
+                <th style="padding:10px;">Acción</th>
+                <th style="padding:10px;">Detalle</th>
+                <th style="padding:10px;">IP de origen</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-auditoria">
+              <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">Presiona "Actualizar Logs"</td></tr>
+            </tbody>
+          </table>
+        </div>
+      <!-- ZONA DE PELIGRO: REINICIO TOTAL -->
+      <div class="panel-card" style="max-width:1000px; margin-top:24px; border:2px solid #fee2e2;">
+        <div class="panel-card-header rojo">
+          <span class="hicono">💣</span>
+          <div><h3>Zona de Peligro: Reinicio de Sistema</h3><p>Borra absolutamente todos los datos electorales</p></div>
+        </div>
+        <div class="panel-card-body">
+          <div style="background:#fff1f2; border:1px solid #fecaca; border-radius:12px; padding:16px; margin-bottom:16px; color:#991b1b;">
+            <h4 style="font-size:0.9rem; margin-bottom:6px;">⚠️ Cero Datos (Nivel Pro)</h4>
+            <p style="font-size:0.75rem;">Esta acción eliminará permanentemente:</p>
+            <ul style="font-size:0.75rem; margin:8px 0 8px 20px;">
+              <li>Todas las Elecciones y sus resultados.</li>
+              <li>Todas las Mesas y Jefes de Mesa asignados.</li>
+              <li>Todos los Candidatos, Votos y Logs de Auditoría.</li>
+              <li><b>Todos los Votantes inscritos</b>.</li>
+            </ul>
+            <p style="font-size:0.75rem;"><b>Solo se conservarán los 4 usuarios base de prueba.</b></p>
+          </div>
+          <button class="btn-action btn-rojo" onclick="resetearSistemaPro()" style="width:auto; padding:12px 24px;">💣 Ejecutar REINICIO TOTAL (Cero Datos)</button>
+          <div style="margin-top:20px; border-top:1px solid #fecaca; padding-top:20px;">
+            <p style="font-size:0.75rem; color:var(--muted); margin-bottom:8px;">¿Errores de conexión o listas que no cargan? Usa esta herramienta para forzar la creación de columnas faltantes.</p>
+            <button class="btn-action btn-azul" onclick="repararBaseDatos()" style="width:auto; padding:10px 20px; background:var(--azul); border:none;">🔧 Reparar Base de Datos (Esquema)</button>
+          </div>
+
+          <!-- CONFIGURACIÓN DE URL DE BACKEND -->
+          <div style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:20px;">
+            <h4 style="font-size:0.85rem; margin-bottom:8px; color:var(--azul);">🔌 Configuración de Conexión (Ajuste de URL)</h4>
+            <p style="font-size:0.75rem; color:var(--muted); margin-bottom:12px;">Si ves "Problema de Conexión", pega aquí la URL que te da Render para tu servicio de Backend.</p>
+            <div class="form-group" style="display:flex; gap:8px; align-items:center;">
+              <input type="text" id="custom-api-url" style="font-size:0.8rem; flex:1;" placeholder="https://tu-backend.onrender.com">
+              <button class="btn-action btn-azul" onclick="guardarConfigAPI()" style="width:auto; padding:8px 16px; margin:0; background:#334155;">💾 Guardar y Conectar</button>
+            </div>
+            <p id="msg-config-api" style="font-size:0.7rem; margin-top:6px;"></p>
+          </div>
+
+          <div class="msg-box" id="msg-reset"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB 6: REPORTES ═══ -->
+  <div class="tab-content" id="tab-6">
+    <div style="max-width:1000px;">
+      <div class="panel-card">
+        <div class="panel-card-header azul">
+          <span class="hicono">📊</span>
+          <div><h3>Base de Datos y Exportación</h3><p>Consulta y descarga los registros del sistema en formato Excel/CSV</p></div>
+        </div>
+        <div class="panel-card-body">
+
+          <!-- BOTONES ACCIÓN -->
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:12px; margin-bottom:12px;">
+            <button class="btn-action btn-azul" onclick="reporteVer('votantes')" style="padding:14px;">👥 Ver Padrón Estudiantil</button>
+            <button class="btn-action btn-naranja" onclick="reporteVer('candidatos')" style="padding:14px;">🏆 Ver Frentes/Candidatos</button>
+            <button class="btn-action" onclick="reporteVer('jurados')" style="padding:14px; background:linear-gradient(135deg,#6d28d9,#5b21b6); color:white;">⚖️ Ver Jurados Designados</button>
+            <button class="btn-action" onclick="reporteVer('resultados')" style="padding:14px; background:linear-gradient(135deg,#047857,#065f46); color:white;">🏅 Ver Votos y Ganador</button>
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap:12px; margin-bottom:24px;">
+            <button class="btn-action btn-verde" onclick="descargarCSV('votantes')" style="padding:12px;">📥 Bajar Padrón (Excel)</button>
+            <button class="btn-action btn-dorado" onclick="descargarCSV('candidatos')" style="padding:12px;">📥 Bajar Candidatos (Excel)</button>
+            <button class="btn-action" onclick="descargarCSV('jurados')" style="padding:12px; background:linear-gradient(135deg,#6d28d9,#5b21b6); color:white;">📥 Bajar Jurados (Excel)</button>
+            <button class="btn-action" onclick="descargarCSV('resultados')" style="padding:12px; background:linear-gradient(135deg,#047857,#065f46); color:white;">📥 Bajar Votos/Ganador (Excel)</button>
+          </div>
+
+          <!-- TABLA DINÁMICA -->
+          <div id="reporte-box" style="display:none;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+              <h4 id="reporte-titulo" style="font-size:0.95rem; color:var(--azul); font-weight:700;">—</h4>
+              <span id="reporte-count" style="font-size:0.75rem; background:#e0e7ff; color:#3730a3; padding:3px 10px; border-radius:20px; font-weight:600;"></span>
+            </div>
+            <div style="overflow-x:auto; border-radius:10px; border:1px solid #e5e7eb;">
+              <table id="reporte-table" style="width:100%; border-collapse:collapse; font-size:0.82rem;">
+                <thead id="reporte-thead" style="background:var(--azul); color:white;"></thead>
+                <tbody id="reporte-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+  <div style="margin-top:40px; border-top:1px solid #e2e8f0; padding-top:20px; text-align:center;">
+    <p style="font-size:0.75rem; color:var(--muted);">Sistema de Gestión Electoral — CEA Prof. Herman Ortiz Camargo</p>
+  </div>
+
+<script src="../js/api.js?v=4.3.6"></script>
+<script>
+  // Funciones de Configuración de API
+  document.addEventListener('DOMContentLoaded', () => {
+      const savedUrl = localStorage.getItem('custom_api_url');
+      if (savedUrl) document.getElementById('custom-api-url').value = savedUrl;
+      else document.getElementById('custom-api-url').value = "https://eleccione-cea-backend.onrender.com";
+  });
+
+  function guardarConfigAPI() {
+      const url = document.getElementById('custom-api-url').value.trim();
+      if (!url) {
+          localStorage.removeItem('custom_api_url');
+          alert("✓ Se usará la URL por defecto del sistema.");
+      } else {
+          localStorage.setItem('custom_api_url', url);
+          alert("✅ Nueva URL guardada: " + url + "\nLa página se recargará para aplicar los cambios.");
+      }
+      location.reload();
+  }
+
+  // Funciones de Emergencia
+  async function repararBaseDatos() {
+    mostrarMsg('msg-reset','⏳ Intentando reparar esquema...','info');
+    const r = await apiFetch('/admin/forzar-migracion', { method:'GET' });
+    if (r && r.ok) {
+        const d = await r.json();
+        alert("✅ " + d.msg);
+        location.reload();
+    } else {
+        mostrarMsg('msg-reset','❌ Error al reparar. Prueba a esperar que Render termine el despliegue.','error');
+    }
+  }
+
+  // Protección de ruta "Nivel Pro"
+  (function() {
+    const rol = localStorage.getItem('user_rol');
+    if (rol !== 'admin') {
+        console.warn("Acceso denegado. Rol:", rol);
+        window.location.href = window.location.origin + '/index.html';
+    }
+  })();
+
+  let activeEleccionId = localStorage.getItem('active_eleccion_id') || null;
+
+  function mostrarMsg(id, texto, tipo) {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = texto; el.className = 'msg-box show ' + tipo;
+  }
+
+  function actualizarIDGlobal(val) {
+    activeEleccionId = val;
+    localStorage.setItem('active_eleccion_id', val);
+    
+    const badge = document.getElementById('active-election-badge-ui');
+    const valSpan = document.getElementById('active-election-id-val');
+    
+    if(val) {
+        badge.style.display = 'inline-flex';
+        valSpan.textContent = '#' + val;
+    } else {
+        badge.style.display = 'none';
+    }
+
+    document.querySelectorAll('.sync-id').forEach(i => {
+      if(i.value !== val) i.value = val;
+    });
+    // Si estamos en Paso 2, recargar mesas automáticamente
+    if (val && document.getElementById('tab-2').classList.contains('activo')) {
+        cargarMesas();
+    }
+  }
+
+  // Al cargar la página, restaurar el ID si existe
+  window.addEventListener('scroll', () => {}); // placeholder
+  document.addEventListener('DOMContentLoaded', () => {
+    if(activeEleccionId) {
+        actualizarIDGlobal(activeEleccionId);
+    }
+    cargarElecciones();
+    cargarStats();
+    cargarEstadoBanner();
+  });
+
+  function activarTab(num) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('activo'));
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById('tab-' + num).classList.add('activo');
+    document.getElementById('step-' + num).classList.add('active');
+    if (num === 4) { cargarResultados(); setInterval(cargarResultados, 5000); }
+    if (num === 3) { cargarEstadoVotacion(); }
+    if (num === 5) { cargarAuditoria(); }
+  }
+
+  async function cargarAuditoria() {
+    const tbody = document.getElementById('tbody-auditoria');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:10px;">⏳ Consultando servidor...</td></tr>';
+    const r = await apiFetch('/admin/auditoria', { method:'GET' });
+    if (r && r.ok) {
+        const data = await r.json();
+        if(!data.length) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No hay registros aún.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.map(log => {
+            const fecha = new Date(log.timestamp).toLocaleString('es-BO');
+            let badgeClass = 'info';
+            if(log.accion.includes('LOGIN')) badgeClass = 'ok';
+            if(log.accion.includes('ELIMINAR')) badgeClass = 'error';
+            
+            return `
+            <tr>
+                <td style="color:var(--muted);white-space:nowrap;">${fecha}</td>
+                <td style="font-weight:700;text-align:center;">#${log.usuario_id || '—'}</td>
+                <td><span class="badge-hab" style="background:#e0e7ff;color:#3730a3;font-size:0.65rem;padding:2px 6px;">${log.accion}</span></td>
+                <td style="font-weight:500;">${log.detalle}</td>
+                <td style="font-family:monospace;font-size:0.7rem;color:var(--muted);">${log.ip_address || 'Interna'}</td>
+            </tr>`;
+        }).join('');
+    } else {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--rojo);padding:10px;">❌ Error al cargar logs. Asegúrate de que el backend soporte AuditLogs.</td></tr>';
+    }
+  }
+
+  // ─── STATS ───
+  async function cargarStats() {
+    const url = activeEleccionId ? `/admin/stats?eleccion_id=${activeEleccionId}` : '/admin/stats';
+    const r = await apiFetch(url, { method:'GET' });
+    if (r && r.ok) {
+      const d = await r.json();
+      document.getElementById('st-votantes').textContent = d.total_votantes;
+      document.getElementById('st-habilitados').textContent = d.total_habilitados;
+      document.getElementById('st-votos').textContent = d.total_votos;
+      document.getElementById('st-participacion').textContent = d.participacion + '%';
+      document.getElementById('st-mesas').textContent = d.total_mesas;
+      document.getElementById('st-candidatos').textContent = d.total_candidatos;
+    }
+  }
+
+  // ─── ESTADO ELECCIÓN (BANNER) ───
+  async function cargarEstadoBanner() {
+    const r = await fetch(`${API_URL}/votante/estado-eleccion`);
+    if (!r || !r.ok) return;
+    const d = await r.json();
+    const banner = document.getElementById('voting-banner');
+    const btn = document.getElementById('btn-toggle-votar');
+    btn.style.display = 'inline-block';
+    document.getElementById('banner-id').textContent = d.id ? `ID de Elección: ${d.id}` : '';
+    // No sobreescribir activeEleccionId si ya seleccionamos uno manualmente
+    if(!activeEleccionId && d.id) actualizarIDGlobal(d.id);
+
+    if (d.resultados_publicados) {
+      banner.className = 'voting-banner cerrada';
+      banner.style.border = '3px solid #f5a623';
+      banner.style.background = 'linear-gradient(135deg, #001f5b, #003580)';
+      document.getElementById('banner-icon').textContent = '🏆';
+      document.getElementById('banner-titulo').textContent = '¡Resultados Oficiales Publicados!';
+      document.getElementById('banner-titulo').style.color = '#f5a623';
+      document.getElementById('banner-sub').innerHTML = `<b>${d.nombre}</b> — El proceso electoral ha concluido definitivamente.`;
+      btn.style.display = 'none';
+    } else if (d.activa) {
+      banner.className = 'voting-banner abierta';
+      document.getElementById('banner-icon').textContent = '🟢';
+      document.getElementById('banner-titulo').textContent = '¡Votación en Curso!';
+      document.getElementById('banner-titulo').style.color = '#4ade80';
+      document.getElementById('banner-sub').textContent = d.nombre + ' — Los votantes pueden emitir su voto ahora.';
+      btn.textContent = '🔴 Cerrar Votación';
+      btn.className = 'btn-toggle-votar cerrar';
+    } else {
+      banner.className = 'voting-banner cerrada';
+      document.getElementById('banner-icon').textContent = '⏳';
+      document.getElementById('banner-titulo').textContent = d.nombre ? `"${d.nombre}" — Votación Cerrada` : 'Sin elección activa';
+      document.getElementById('banner-titulo').style.color = '#f5a623';
+      document.getElementById('banner-sub').textContent = 'Usa el Paso 3 para abrir o cerrar la votación.';
+      btn.textContent = '🟢 Abrir Votación';
+      btn.className = 'btn-toggle-votar abrir';
+    }
+  }
+
+  async function toggleVotacion() {
+    if (!activeEleccionId) { alert('No hay elección activa seleccionada.'); return; }
+    const r = await apiFetch(`/admin/elecciones/${activeEleccionId}/toggle`, { method:'POST' });
+    if (r && r.ok) {
+      cargarEstadoBanner();
+      cargarStats();
+    }
+  }
+
+  // ─── ELECCIONES ───
+  async function crearEleccion() {
+    const nombre = document.getElementById('nueva-eleccion-nombre').value.trim();
+    if (!nombre) { mostrarMsg('msg-eleccion','❌ Ingresa un nombre.','error'); return; }
+
+    mostrarMsg('msg-eleccion','⏳ Procesando en el servidor...','info');
+    const r = await apiFetch('/admin/elecciones', { method:'POST', body:JSON.stringify({ nombre }) });
+    
+    if (r && r.ok) {
+      const d = await r.json();
+      mostrarMsg('msg-eleccion', `✅ Elección "${d.nombre}" creada (ID: ${d.id})`, 'ok');
+      document.getElementById('nueva-eleccion-nombre').value = '';
+      actualizarIDGlobal(d.id); 
+      cargarElecciones();
+      cargarEstadoBanner();
+      cargarStats();
+      setTimeout(() => activarTab(2), 1200);
+    } else if (r) {
+      const err = await r.json();
+      const det = Array.isArray(err.detail) ? err.detail.map(e => e.msg).join(", ") : err.detail;
+      mostrarMsg('msg-eleccion', `❌ Error: ${det || 'Fallo desconocido'}`, 'error');
+    } else {
+      mostrarMsg('msg-eleccion', '❌ No hay conexión con el servidor.', 'error');
+    }
+  }
+
+  async function cargarElecciones() {
+    const r = await apiFetch('/admin/elecciones', { method:'GET' });
+    const cont = document.getElementById('lista-elecciones');
+    if (r && r.ok) {
+        const data = await r.json();
+        const cont = document.getElementById('lista-elecciones');
+        if (!data.length) { cont.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;text-align:center;padding:16px;">📂 No hay elecciones aún.</div>'; return; }
+        cont.innerHTML = data.map(e => `
+          <div class="eleccion-item">
+            <div>
+              <div class="eleccion-nombre">${e.nombre}</div>
+              <div class="eleccion-id-txt">ID: ${e.id} | Estado: ${e.activa ? 'Activa':'Cerrada'}</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-toggle-mini" style="background:var(--azul);color:white;" onclick="gestionarEleccionLocal(${e.id})">📂 Gestionar</button>
+              <button class="btn-toggle-mini ${e.activa ? 'cerrar':'abrir'}" onclick="toggleEleccion(${e.id})">${e.activa ? 'Cerrar':'Abrir'}</button>
+            </div>
+          </div>`).join('');
+    } else {
+        const cont = document.getElementById('lista-elecciones');
+        cont.innerHTML = `<div style="color:var(--rojo);font-size:0.82rem;text-align:center;padding:16px;">
+            ❌ Problema de Conexión<br>
+            <small>El servidor no responde o está en reposo.<br>Espera 30 segundos y pulsa Actualizar.</small>
+        </div>`;
+    }
+}
+
+  async function toggleEleccion(id) {
+    await apiFetch(`/admin/elecciones/${id}/toggle`, { method:'POST' });
+    actualizarIDGlobal(id); // Al abrir/cerrar, probablemente queremos gestionarla
+    cargarElecciones();
+    cargarEstadoBanner();
+    document.querySelector('.step.done')?.classList.remove('done');
+    document.getElementById('step-1').classList.add('done');
+  }
+
+  function gestionarEleccionLocal(id) {
+    actualizarIDGlobal(id);
+    cargarEstadoBanner();
+    cargarStats();
+    activarTab(2); // Saltamos a mesas/jefes para continuar el flujo
+    mostrarMsg('msg-eleccion', `📂 Cambiaste a gestionar Elección ID #${id}`, 'info');
+  }
+
+  async function eliminarEleccion(id) {
+    if(!confirm('🚨 ¡ATENCIÓN! 🚨\n\nSi borras esta elección, se ELIMINARÁ ABSOLUTAMENTE TODO:\n- Mesas y Jefes.\n- Candidatos y Votos.\n- Historial de participación.\n\n(El padrón de estudiantes se conservará, pero su estado de voto se reiniciará a cero para futuras elecciones).\n\n¿Estás seguro de que quieres DESTRUIR esta elección?')) return;
+    
+    // Doble confirmación por seguridad
+    const check = prompt("Escribe 'BORRAR' para confirmar la destrucción de la elección:");
+    if (check !== 'BORRAR') {
+        alert("Operación cancelada.");
+        return;
+    }
+
+    const r = await apiFetch(`/admin/elecciones/${id}`, { method:'DELETE' });
+    if (r && r.ok) {
+      alert("✅ Elección eliminada con éxito. El sistema ha sido reiniciado.");
+      cargarElecciones();
+      cargarEstadoBanner();
+      cargarStats();
+      
+      // Limpiar UI
+      document.getElementById('lista-mesas').innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">No hay mesas creadas.</div>';
+    } else {
+      alert("❌ Ocurrió un error al intentar eliminar la elección.");
+    }
+  }
+
+  // ─── MESAS ───
+  async function crearMesa() {
+    const eleccion_id = parseInt(document.getElementById('mesa-eleccion-id').value);
+    const cantidad = parseInt(document.getElementById('mesa-cantidad').value);
+    if (!eleccion_id || !cantidad) { mostrarMsg('msg-mesa','❌ Completa los campos.','error'); return; }
+    const r = await apiFetch('/admin/mesas', { method:'POST', body:JSON.stringify({ eleccion_id, cantidad }) });
+    if (r && r.ok) {
+      const d = await r.json();
+      mostrarMsg('msg-mesa', `✅ ${d.msg}`, 'ok');
+      document.getElementById('mesa-cantidad').value = '';
+      cargarMesas();
+      cargarStats();
+    } else mostrarMsg('msg-mesa','❌ Error al generar mesas.','error');
+  }
+
+  async function cargarMesas() {
+    const eleccion_id = activeEleccionId ? Number(activeEleccionId) : null;
+    if (!eleccion_id) return;
+    const r = await apiFetch(`/admin/mesas/${eleccion_id}`, { method:'GET' });
+    const cont = document.getElementById('lista-mesas');
+    if (r && r.ok) {
+      const data = await r.json();
+      if (!data.length) {
+        cont.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;">No hay mesas creadas.</div>';
+        return;
+      }
+      cont.innerHTML = data.map(m => `
+        <div class="mesa-item">
+          <div class="mesa-num">${m.numero}</div>
+          <div class="mesa-info">
+            <strong>Mesa N° ${m.numero}</strong>
+            <span>${m.jefe ? '👤 ' + m.jefe : '<span style="color:var(--naranja);">Sin jefe</span>'} · ${m.total_votantes} votante(s)</span>
+          </div>
+          <button onclick="eliminarMesa(${m.id})" style="background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" title="Eliminar Mesa y Jefe">🗑️</button>
+        </div>`).join('');
+
+      // Marcar paso 2 como done si hay mesas
+      document.getElementById('step-2').classList.add('done');
+    }
+  }
+
+  async function eliminarMesa(mesa_id) {
+    if(!confirm('¿Estás seguro de eliminar esta mesa? Los votantes asignados a ella quedarán sin mesa y el jefe perderá su puesto.')) return;
+    const r = await apiFetch(`/admin/mesas/${mesa_id}`, { method:'DELETE' });
+    if (r && r.ok) {
+      cargarMesas();
+      cargarStats();
+    } else alert('Error al eliminar mesa.');
+  }
+
+  async function buscarJefePorCI() {
+    const ci = document.getElementById('jefe-ci').value.trim();
+    if (!ci) return;
+    const r = await apiFetch(`/secretaria/votantes/buscar/${ci}`, { method:'GET' });
+    const box = document.getElementById('jefe-encontrado');
+    if (r && r.ok) {
+      const d = await r.json();
+      document.getElementById('jefe-nombre-preview').textContent = d.nombre;
+      document.getElementById('jefe-ci-preview').textContent = `CI: ${d.ci}  •  ${d.correo}`;
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+      mostrarMsg('msg-jefe','❌ CI no encontrado en el padrón.','error');
+    }
+  }
+
+  async function asignarJefeCI() {
+    const ci = document.getElementById('jefe-ci').value.trim();
+    const eleccion_id = activeEleccionId ? Number(activeEleccionId) : null;
+    if (!ci || !eleccion_id) { mostrarMsg('msg-jefe','❌ Primero debes buscar o escribir un CI y un ID de Elección válido.','error'); return; }
+    const r = await apiFetch('/admin/asignar-jefe-ci', { method:'POST', body:JSON.stringify({ ci, eleccion_id }) });
+    if (r && r.ok) {
+      const d = await r.json();
+      const infoMsg = d.msg + "\n\n🔔 RECUERDA: El nuevo Jefe debe CERRAR SESIÓN e INGRESAR NUEVAMENTE para activar sus permisos de Jurado.";
+      mostrarMsg('msg-jefe', infoMsg, 'ok');
+      document.getElementById('jefe-ci').value = '';
+      document.getElementById('jefe-encontrado').style.display = 'none';
+      cargarMesas();
+    } else if (r) {
+      const err = await r.json();
+      const det = Array.isArray(err.detail) ? 'Asegúrate de actualizar el backend (git pull y reiniciar Uvicorn).' : err.detail;
+      mostrarMsg('msg-jefe','❌ ' + det,'error');
+    }
+  }
+
+  // ─── SORTEO ───
+  async function ejecutarSorteo() {
+    const eleccion_id = activeEleccionId ? Number(activeEleccionId) : null;
+    if (!eleccion_id) { mostrarMsg('msg-sorteo','❌ No hay elección seleccionada.','error'); return; }
+    mostrarMsg('msg-sorteo','🎲 Ejecutando sorteo aleatorio...','info');
+    const r = await apiFetch(`/admin/distribuir-mesas/${eleccion_id}`, { method:'POST' });
+    if (r && r.ok) {
+      const d = await r.json();
+      document.getElementById('msg-sorteo').style.display = 'none';
+      const res = document.getElementById('sorteo-resultado');
+      res.style.display = 'block';
+      document.getElementById('sorteo-msg-titulo').textContent = d.msg;
+      document.getElementById('sorteo-msg-resumen').textContent = d.resumen || '';
+      document.getElementById('step-3').classList.add('done');
+      cargarStats();
+    } else if (r) {
+      const err = await r.json();
+      mostrarMsg('msg-sorteo','❌ ' + err.detail,'error');
+    }
+  }
+
+  // ─── CONTROL DE VOTACIÓN (en paso 3) ───
+  async function cargarEstadoVotacion() {
+    let urlBase = window.getApiUrl();
+    if(urlBase.endsWith('/')) urlBase = urlBase.slice(0, -1);
+    
+    try {
+        const r = await fetch(`${urlBase}/votante/estado-eleccion`);
+        if (!r || !r.ok) return;
+        const d = await r.json();
+        
+        const iconEl = document.getElementById('estado-icono');
+        const titEl = document.getElementById('estado-titulo');
+        const nomEl = document.getElementById('estado-nombre-eleccion');
+        const btnToggle = document.getElementById('btn-toggle-principal');
+        const top3Container = document.getElementById('estado-votacion-top3');
+        
+        nomEl.textContent = d.nombre || 'Sin elección';
+        btnToggle.disabled = false;
+        
+        if (d.activa) {
+          iconEl.textContent = '🟢';
+          titEl.style.color = '#16a34a';
+          titEl.textContent = 'Votación ABIERTA';
+          
+          btnToggle.className = 'btn-action btn-rojo';
+          btnToggle.innerHTML = '⏸️ PAUSAR VOTACIÓN';
+          btnToggle.onclick = cerrarVotacion;
+        } else {
+          iconEl.textContent = '🔴';
+          titEl.style.color = '#dc2626';
+          titEl.textContent = 'Votación CERRADA';
+
+          btnToggle.className = 'btn-action btn-verde';
+          btnToggle.innerHTML = '▶️ INICIAR VOTACIÓN';
+          btnToggle.onclick = abrirVotacion;
+        }
+        if (d.id) document.getElementById('toggle-eleccion-id').value = d.id;
+
+        // Render TOP 3
+        if (d.id) {
+            const rRes = await apiFetch(`/admin/reportes/resultados`, { method:'GET' });
+            if (rRes && rRes.ok) {
+                const resultados = await rRes.json();
+                const top3 = resultados.slice(0, 3);
+                if (top3.length === 0) {
+                    top3Container.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:0.8rem;">Aún no hay votos registrados.</div>';
+                } else {
+                    const maxV = top3[0].votos > 0 ? top3[0].votos : 1;
+                    top3Container.innerHTML = top3.map((c, i) => `
+                        <div style="margin-bottom:10px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.78rem; font-weight:700;">
+                                <span style="color:var(--text);">${i+1}° ${c.candidato}</span>
+                                <span style="color:var(--azul);">${c.votos} votos</span>
+                            </div>
+                            <div style="height:6px; background:#e2e8f0; border-radius:3px; margin-top:3px; overflow:hidden;">
+                                <div style="height:100%; width:${Math.min((c.votos / maxV) * 100, 100)}%; background:linear-gradient(90deg,var(--azul),var(--naranja)); border-radius:3px; transition:width 0.8s ease;"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+    } catch(e) {
+        console.error("Error cargando estado:", e);
+    }
+  }
+
+  async function abrirVotacion() {
+    const id = activeEleccionId;
+    if (!id) { mostrarMsg('msg-control-voto','❌ Primero selecciona una elección.','error'); return; }
+    
+    // UI Update immediate
+    const btn = document.getElementById('btn-toggle-principal');
+    btn.disabled = true; btn.innerHTML = '⏳ Abriendo...';
+
+    const r = await apiFetch(`/admin/elecciones/${id}/toggle`, { method:'POST' });
+    if (r && r.ok) {
+      const d = await r.json();
+      if (d.activa) {
+        mostrarMsg('msg-control-voto','🟢 ¡Votación ABIERTA! Los votantes ya pueden votar.','ok');
+      }
+      cargarEstadoVotacion(); cargarEstadoBanner();
+    } else {
+      btn.disabled = false; btn.innerHTML = '▶️ INICIAR VOTACIÓN';
+    }
+  }
+
+  async function cerrarVotacion() {
+    const id = activeEleccionId;
+    if (!id) { mostrarMsg('msg-control-voto','❌ Primero selecciona una elección.','error'); return; }
+    if (!confirm('¿Pausar/Cerrar la votación? Los votantes ya no podrán emitir votos hasta que la inicies de nuevo.')) return;
+    
+    // UI Update immediate
+    const btn = document.getElementById('btn-toggle-principal');
+    btn.disabled = true; btn.innerHTML = '⏳ Pausando...';
+
+    const r = await apiFetch(`/admin/elecciones/${id}/toggle`, { method:'POST' });
+    if (r && r.ok) {
+      mostrarMsg('msg-control-voto','🔴 Votación PAUSADA/CERRADA.','info');
+      cargarEstadoVotacion(); cargarEstadoBanner();
+    } else {
+      btn.disabled = false; btn.innerHTML = '⏸️ PAUSAR VOTACIÓN';
+    }
+  }
+
+  async function resetearSistemaPro() {
+    if(!confirm("🚨 ADVERTENCIA CRÍTICA 🚨\n\n¿Estás SEGURO de que quieres borrar ABSOLUTAMENTE TODO el sistema?\n\nEsta acción NO se puede deshacer.")) return;
+    if(!confirm("⚠️ ÚLTIMA CONFIRMACIÓN:\nTodo será borrado (Votantes, Jefes, Elecciones, Votos).\n\n¿Proceder con el REINICIO TOTAL?")) return;
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = '⏳ Reiniciando...';
+
+    const r = await apiFetch('/admin/reset-sistema', { method:'POST' });
+    if (r && r.ok) {
+        alert("✅ Sistema reiniciado correctamente.\nTodos los datos han sido borrados.");
+        location.reload();
+    } else {
+        mostrarMsg('msg-reset','❌ Error al reiniciar el sistema.','error');
+        btn.disabled = false;
+        btn.textContent = '💣 Ejecutar REINICIO TOTAL (Cero Datos)';
+    }
+  }
+
+  // ─── RESULTADOS ───
+  async function cargarResultados() {
+    if(!activeEleccionId) return;
+    const r = await apiFetch(`/admin/resultados?eleccion_id=${activeEleccionId}`, { method:'GET' });
+    if (r && r.ok) {
+      const data = await r.json();
+      const box = document.getElementById('resultados-box');
+      const maxV = data.length ? Math.max(...data.map(d => d.votos)) : 1;
+      const emojis = ['🥇','🥈','🥉'];
+      if (!data.length) { box.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;">No hay votos registrados aún.</div>'; return; }
+      
+      const resEstado = await fetch(`${API_URL}/votante/estado-eleccion`);
+      const estInfo = await resEstado.json();
+      const esOficial = estInfo.resultados_publicados;
+
+      box.innerHTML = (esOficial ? '<div style="background:#fff7ed;border:1px solid #ffedd5;padding:10px;border-radius:10px;margin-bottom:15px;text-align:center;font-weight:800;color:#c2410c;font-size:0.85rem;">🏆 RESULTADOS OFICIALES Y DEFINITIVOS 🏆</div>' : '') + 
+        data.map((r, i) => `
+        <div class="resultado-item" style="${i < 3 ? 'border-left: 4px solid var(--dorado); background: #fffcf0;' : ''}">
+          <div class="resultado-pos">${emojis[i] || (i+1)+'°'}</div>
+          <div class="resultado-info">
+            <div class="resultado-nombre" style="${i === 0 ? 'font-size: 1.1rem; color: var(--azul);' : ''}">${r.candidato}</div>
+            ${r.sigla ? `<div class="resultado-sigla">${r.sigla}</div>` : ''}
+          </div>
+          <div class="resultado-barra-wrap">
+            <div class="resultado-barra"><div class="resultado-barra-fill" style="width:${maxV?(r.votos/maxV*100):0}%; background: ${i === 0 ? 'linear-gradient(90deg, #f5a623, #ff8c00)' : 'linear-gradient(90deg, var(--azul), var(--azul-c))'}"></div></div>
+            <div class="resultado-votos"><strong>${r.votos}</strong> voto(s)</div>
+          </div>
+        </div>`).join('');
+    }
+  }
+
+  async function publicarResultados() {
+    const id = activeEleccionId;
+    if (!id) { mostrarMsg('msg-pub','❌ Primero selecciona una elección.','error'); return; }
+    if (!confirm('¿Publicar resultados oficiales? Esto cierra la elección definitivamente.')) return;
+    const r = await apiFetch(`/admin/publicar-resultados?eleccion_id=${id}`, { method:'POST' });
+    if (r && r.ok) {
+      mostrarMsg('msg-pub','🔒 Resultados publicados oficialmente.','ok');
+      cargarElecciones(); cargarEstadoBanner();
+    } else mostrarMsg('msg-pub','❌ Error al publicar.','error');
+  }
+
+  // INIT
+  cargarStats();
+  cargarElecciones();
+  cargarEstadoBanner();
+  
+  setInterval(cargarStats, 8000);
+  setInterval(cargarEstadoBanner, 10000);
+
+  // ─── REPORTES ───
+  const REPORTE_CONFIG = {
+    votantes: {
+      titulo: '👥 Padrón Electoral — Estudiantes Inscritos',
+      endpoint: '/admin/reportes/votantes',
+      headers: ['C.I.', 'Nombre Completo', 'Mesa Nº', 'Habilitado', 'Votó?'],
+      row: v => `<td style="font-weight:700;">${v.ci}</td><td>${v.nombre}</td><td style="text-align:center;"><b>${v.mesa}</b></td><td style="text-align:center;">${v.habilitado ? '✅' : '❌'}</td><td style="text-align:center;">${v.ha_votado ? '🗳️ Sí' : '—'}</td>`
+    },
+    candidatos: {
+      titulo: '🏆 Candidatos Inscritos',
+      endpoint: null, // usa endpoint público
+      headers: ['ID', 'Nombre', 'Sigla', 'Cargo', 'Frente'],
+      row: c => `<td style="text-align:center;color:var(--muted);">#${c.id}</td><td style="font-weight:700;">${c.nombre}</td><td>${c.sigla || '—'}</td><td>${c.cargo || '—'}</td><td>${c.frente || '—'}</td>`
+    },
+    jurados: {
+      titulo: '⚖️ Jurados de Mesa Designados',
+      endpoint: '/admin/reportes/jurados',
+      headers: ['Nombre del Jurado', 'Usuario/Correo', 'Mesa Asignada'],
+      row: (j, i) => `<td style="font-weight:700;">${j.nombre}</td><td style="font-size:0.75rem;color:var(--muted);">${j.correo}</td><td style="text-align:center;"><span style="background:var(--azul);color:white;padding:3px 10px;border-radius:20px;font-weight:700;font-size:0.8rem;">Mesa ${j.mesa}</span></td>`
+    },
+    resultados: {
+      titulo: '🏅 Resultados Oficiales (Votos por Candidato)',
+      endpoint: '/admin/reportes/resultados',
+      headers: ['Orden', 'Candidato / Frente', 'Votos Netos', 'Porcentaje', 'Estado Final'],
+      row: (r, i) => `<td style="text-align:center;font-weight:800;color:var(--muted);font-size:1.1rem;">#${i+1}</td><td><b style="font-size:0.95rem;">${r.candidato}</b><br><span style="font-size:0.75rem;color:white;background:var(--dorado);padding:1px 6px;border-radius:10px;">${r.sigla}</span></td><td style="text-align:center;font-size:1.3rem;font-weight:800;color:var(--azul);">${r.votos}</td><td style="text-align:center;font-weight:600;">${r.porcentaje}%</td><td style="text-align:center;font-weight:800;color:#16a34a;font-size:0.9rem;">${r.estado}</td>`
+    }
+  };
+
+  async function reporteVer(tipo) {
+    const cfg = REPORTE_CONFIG[tipo];
+    const box = document.getElementById('reporte-box');
+    const thead = document.getElementById('reporte-thead');
+    const tbody = document.getElementById('reporte-tbody');
+    document.getElementById('reporte-titulo').textContent = cfg.titulo;
+    document.getElementById('reporte-count').textContent = '';
+    box.style.display = 'block';
+    tbody.innerHTML = `<tr><td colspan="${cfg.headers.length}" style="text-align:center;padding:20px;">⏳ Consultando servidor...</td></tr>`;
+    thead.innerHTML = `<tr>${cfg.headers.map(h => `<th style="padding:10px 14px;text-align:left;font-size:0.78rem;letter-spacing:0.5px;">${h}</th>`).join('')}</tr>`;
+
+    let endpoint = cfg.endpoint;
+    // Candidatos: usar endpoint público o de votante
+    if (tipo === 'candidatos') endpoint = '/candidatos/publicos';
+    
+    const r = await apiFetch(endpoint, { method: 'GET' });
+    if (r && r.ok) {
+      const data = await r.json();
+      document.getElementById('reporte-count').textContent = `${data.length} registros`;
+      if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="${cfg.headers.length}" style="text-align:center;padding:20px;color:var(--muted);">Sin datos para mostrar.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = data.map((item, i) => 
+        `<tr style="background:${i%2===0?'#fff':'#f8faff'};border-bottom:1px solid #f1f5f9;">${cfg.row(item, i)}</tr>`
+      ).join('');
+    } else {
+      tbody.innerHTML = `<tr><td colspan="${cfg.headers.length}" style="text-align:center;padding:20px;color:var(--rojo);">❌ Error al cargar datos.</td></tr>`;
+    }
+  }
+
+  async function descargarCSV(entity) {
+    const token = localStorage.getItem('jwt_token');
+    if (!token) { alert('❌ Sesión expirada.'); return; }
+    
+    // Obtener la URL base desde api.js
+    let apiUrl = window.getApiUrl();
+    if (apiUrl.endsWith('/')) apiUrl = apiUrl.slice(0, -1);
+    
+    // El endpoint de candidatos está fuera de /admin/
+    let url = `${apiUrl}/admin/export/${entity}`;
+    
+    try {
+      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!res.ok) { 
+          const errText = await res.text();
+          console.error("Error CSV:", errText);
+          alert('❌ Error al descargar. Verifica tu sesión o revisa la consola.'); 
+          return; 
+      }
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `reporte_${entity}_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      a.remove();
+    } catch(e) {
+      console.error(e);
+      alert('❌ Error de conexión al descargar CSV.');
+    }
+  }
+</script>
+</body>
+</html>
+

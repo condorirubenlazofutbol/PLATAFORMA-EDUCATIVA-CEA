@@ -13,7 +13,11 @@ def rows_to_dicts(cursor, rows):
 class NotaUpdate(BaseModel):
     usuario_id: int
     modulo_id: int
-    nota: float
+    nota_ser: float = 0
+    nota_saber: float = 0
+    nota_hacer: float = 0
+    nota_decidir: float = 0
+    nota_autoevaluacion: float = 0
     estado: Optional[str] = None  # 'aprobado', 'reprobado', 'cursando'
 
 class InscribirEstudiante(BaseModel):
@@ -29,7 +33,8 @@ def mis_notas(current_user: dict = Depends(get_current_user)):
     try:
         cur = conn.cursor()
         cur.execute("""
-            SELECT p.id, m.nombre AS modulo, m.nivel, p.estado, p.nota
+            SELECT p.id, m.nombre AS modulo, m.nivel, p.estado, 
+                   p.nota_ser, p.nota_saber, p.nota_hacer, p.nota_decidir, p.nota_autoevaluacion, p.nota_final as nota
             FROM progreso p
             JOIN modulos m ON p.modulo_id = m.id
             WHERE p.usuario_id = %s
@@ -54,7 +59,9 @@ def notas_por_modulo(modulo_id: int, current_user: dict = Depends(get_current_us
     try:
         cur = conn.cursor()
         cur.execute("""
-            SELECT p.id, u.nombre, u.apellido, u.carnet, p.estado, p.nota, p.modulo_id
+            SELECT p.id, u.nombre, u.apellido, u.carnet, p.estado, 
+                   p.nota_ser, p.nota_saber, p.nota_hacer, p.nota_decidir, p.nota_autoevaluacion, p.nota_final as nota,
+                   p.modulo_id
             FROM progreso p
             JOIN usuarios u ON p.usuario_id = u.id
             WHERE p.modulo_id = %s
@@ -75,23 +82,55 @@ def actualizar_nota(data: NotaUpdate, current_user: dict = Depends(get_current_u
     if current_user["rol"] not in ["docente", "profesor", "director", "administrador"]:
         raise HTTPException(status_code=403, detail="Sin permisos para calificar")
 
-    # Calcular estado automáticamente si no viene
-    estado = data.estado
-    if estado is None:
-        estado = "aprobado" if data.nota >= 60 else "reprobado"
-
     conn = get_db_connection()
     try:
         cur = conn.cursor()
+        
+        # Validar área para límites de notas
+        cur.execute("""
+            SELECT c.area 
+            FROM modulos m 
+            LEFT JOIN carreras c ON m.carrera_id = c.id 
+            WHERE m.id = %s
+        """, (data.modulo_id,))
+        row = cur.fetchone()
+        area = row[0] if row and row[0] else "Humanística" # Por defecto
+
+        if area == "Técnica":
+            if data.nota_saber > 30 or data.nota_hacer > 40:
+                raise HTTPException(status_code=400, detail="En Área Técnica: Saber (max 30) y Hacer (max 40).")
+        else:
+            if data.nota_saber > 40 or data.nota_hacer > 30:
+                raise HTTPException(status_code=400, detail="En Área Humanística: Saber (max 40) y Hacer (max 30).")
+        
+        if data.nota_ser > 10 or data.nota_decidir > 10 or data.nota_autoevaluacion > 10:
+             raise HTTPException(status_code=400, detail="Ser, Decidir y Autoevaluación tienen un máximo de 10 puntos cada uno.")
+
+        nota_final = data.nota_ser + data.nota_saber + data.nota_hacer + data.nota_decidir + data.nota_autoevaluacion
+
+        # Calcular estado automáticamente si no viene
+        estado = data.estado
+        if estado is None:
+            estado = "aprobado" if nota_final >= 60 else "reprobado"
+
         # Upsert: actualizar si existe, insertar si no
         cur.execute("""
-            INSERT INTO progreso (usuario_id, modulo_id, nota, estado)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO progreso (usuario_id, modulo_id, nota_ser, nota_saber, nota_hacer, nota_decidir, nota_autoevaluacion, nota_final, estado)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (usuario_id, modulo_id)
-            DO UPDATE SET nota = EXCLUDED.nota, estado = EXCLUDED.estado
-        """, (data.usuario_id, data.modulo_id, data.nota, estado))
+            DO UPDATE SET 
+                nota_ser = EXCLUDED.nota_ser,
+                nota_saber = EXCLUDED.nota_saber,
+                nota_hacer = EXCLUDED.nota_hacer,
+                nota_decidir = EXCLUDED.nota_decidir,
+                nota_autoevaluacion = EXCLUDED.nota_autoevaluacion,
+                nota_final = EXCLUDED.nota_final,
+                estado = EXCLUDED.estado
+        """, (data.usuario_id, data.modulo_id, data.nota_ser, data.nota_saber, data.nota_hacer, data.nota_decidir, data.nota_autoevaluacion, nota_final, estado))
         conn.commit()
-        return {"mensaje": "Nota actualizada", "estado": estado}
+        return {"mensaje": "Nota actualizada", "estado": estado, "nota_final": nota_final}
+    except HTTPException as he:
+        raise he
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))

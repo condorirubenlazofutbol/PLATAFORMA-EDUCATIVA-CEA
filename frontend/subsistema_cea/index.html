@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso | CEA Pailón</title>
+    <title>Acceso | EduConnect Pro - Subsistema CEA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
         :root {
             --primary: #0ea5e9;
             --violet: #8b5cf6;
@@ -37,6 +37,7 @@
         }
 
         .logo-box { font-size: 2.5rem; margin-bottom: 1.5rem; }
+        .logo-box img { width: 80px; border-radius: 50%; border: 2px solid var(--primary); }
         h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
         p { color: var(--muted); font-size: 0.95rem; margin-bottom: 2.5rem; }
 
@@ -67,7 +68,7 @@
         }
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
         #toast.error { border-color: #f43f5e; color: #f43f5e; }
-        #toast.success { border-color: var(--secondary); color: var(--secondary); }
+        #toast.success { border-color: #22c55e; color: #22c55e; }
 
         footer { position: absolute; bottom: 2rem; color: var(--muted); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; }
     </style>
@@ -75,9 +76,9 @@
 <body>
 
     <div class="login-card">
-        <div class="logo-box">🏛️</div>
+        <div class="logo-box"><img src="cea_logo.png" alt="Logo"></div>
         <h1>Bienvenido</h1>
-        <p>Ingresa a la plataforma del CEA Pailón</p>
+        <p>EduConnect Pro · Subsistema CEA Pailón</p>
 
         <form id="loginForm">
             <div class="form-group">
@@ -104,13 +105,13 @@
 
     <div id="toast"></div>
 
-    <script src="js/api.js"></script>
+    <script src="app.js"></script>
     <script>
         const form = document.getElementById('loginForm');
         const btn = document.getElementById('btnSubmit');
         const toast = document.getElementById('toast');
 
-        function showToast(msg, type = 'error') {
+        function showToastMsg(msg, type = 'error') {
             toast.textContent = msg;
             toast.className = `show ${type}`;
             setTimeout(() => { toast.className = ''; }, 3000);
@@ -126,7 +127,8 @@
 
             try {
                 const body = new URLSearchParams({ username: email, password });
-                const res = await fetch(`${API_URL}/auth/login`, {
+                // We use the API variable defined in app.js
+                const res = await fetch(`${API}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body
@@ -135,21 +137,34 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    showToast('¡Acceso concedido!', 'success');
+                    showToastMsg('¡Acceso concedido!', 'success');
                     localStorage.setItem('token', data.access_token);
                     localStorage.setItem('user', JSON.stringify({
-                        nombre: data.nombre,
-                        rol: data.rol,
-                        nivel_asignado: data.nivel_asignado
+                        id: data.id,
+                        first_name: data.nombre,
+                        last_name: data.apellido || '',
+                        role: data.rol,
+                        nivel_asignado: data.nivel_asignado,
+                        subsistema_id: data.subsistema_id
                     }));
-                    setTimeout(() => { window.location.href = 'portal/index.html'; }, 1000);
+                    setTimeout(() => { 
+                        const pages = {
+                            director: 'director.html',
+                            secretaria: 'secretaria.html',
+                            docente: 'profesor.html',
+                            profesor: 'profesor.html',
+                            estudiante: 'estudiante.html'
+                        };
+                        window.location.href = pages[data.rol] || 'index.html'; 
+                    }, 1000);
                 } else {
-                    showToast(data.detail || 'Credenciales incorrectas');
+                    showToastMsg(data.detail || 'Credenciales incorrectas');
                     btn.disabled = false;
                     btn.textContent = 'Ingresar al Sistema';
                 }
             } catch (err) {
-                showToast('Error de conexión con el servidor.');
+                console.error(err);
+                showToastMsg('Error de conexión con el servidor.');
                 btn.disabled = false;
                 btn.textContent = 'Ingresar al Sistema';
             }

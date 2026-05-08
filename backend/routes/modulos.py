@@ -22,7 +22,13 @@ def get_modulos():
     if not conn: raise HTTPException(status_code=500, detail="Error DB")
     try:
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, nivel, subnivel, orden FROM modulos ORDER BY orden, id")
+        cur.execute("""
+            SELECT m.id, m.nombre, m.nivel, m.subnivel, m.orden, 
+                   m.carrera_id, m.periodo, c.nombre as carrera_nombre 
+            FROM modulos m
+            LEFT JOIN carreras c ON m.carrera_id = c.id
+            ORDER BY m.orden, m.id
+        """)
         return {"modulos": rows_to_dicts(cur, cur.fetchall())}
     finally: conn.close()
 

@@ -1,0 +1,388 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesa de Votación — CEA Pailón</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul: #003580;
+            --azul-claro: #0056b3;
+            --dorado: #f5a623;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding-bottom: 40px; }
+
+        .header {
+            background: linear-gradient(135deg, var(--azul) 0%, #001f5b 100%);
+            padding: 16px 24px;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .header-logo { width: 42px; height: 42px; border-radius: 50%; border: 2px solid var(--dorado); object-fit: cover; }
+        .header h1 { font-size: 1.1rem; font-weight: 700; }
+        .header p { font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-top: 2px; }
+        .btn-salir {
+            background: rgba(255,255,255,0.1);
+            color: white; border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 0.85rem; font-weight: 600; transition: all 0.2s; font-family: 'Inter', sans-serif;
+        }
+        .btn-salir:hover { background: var(--error); border-color: var(--error); }
+
+        /* BADGE DE MESA EN HEADER */
+        .mesa-badge-header {
+            background: linear-gradient(135deg, var(--dorado), #e08800);
+            color: #1a1a2e;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 8px rgba(245,166,35,0.4);
+        }
+
+        .container { max-width: 600px; margin: 30px auto; padding: 0 20px; }
+
+        /* BANNER JURADO */
+        .banner-jurado {
+            background: linear-gradient(135deg, var(--azul), #00255c);
+            border: 2px solid var(--dorado);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 8px 24px rgba(0,53,128,0.2);
+        }
+        .banner-jurado-left { display: flex; align-items: center; gap: 16px; }
+        .banner-jurado h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; }
+        .banner-jurado p { font-size: 0.75rem; color: rgba(255,255,255,0.7); margin-top: 4px; }
+        .mesa-num-grande {
+            background: var(--dorado);
+            color: var(--azul);
+            border-radius: 12px;
+            padding: 10px 20px;
+            text-align: center;
+            border: 3px solid white;
+            min-width: 90px;
+        }
+        .mesa-num-grande .label { font-size: 0.6rem; text-transform: uppercase; font-weight: 700; }
+        .mesa-num-grande .num { font-size: 2rem; font-weight: 800; line-height: 1; }
+
+        /* CARD */
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 10px 30px rgba(0,53,128,0.08);
+            border: 1px solid rgba(0,53,128,0.05);
+            text-align: center;
+        }
+
+        .card-icon {
+            font-size: 3rem; margin-bottom: 16px;
+            display: inline-block;
+            background: #f0f4ff;
+            width: 80px; height: 80px;
+            line-height: 80px; border-radius: 50%;
+        }
+
+        h2.card-title { font-size: 1.5rem; margin-bottom: 12px; color: var(--azul); }
+        p.subtitle { color: #64748b; margin-bottom: 30px; line-height: 1.5; font-size: 0.95rem; }
+
+        .form-group { margin-bottom: 24px; text-align: left; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #475569; margin-bottom: 8px; }
+        
+        input {
+            width: 100%; padding: 14px 18px; border: 2px solid #e2e8f0; border-radius: 12px;
+            font-size: 1.1rem; font-family: 'Inter', sans-serif; transition: all 0.2s;
+            background: #fdfdfd; text-align: center; font-weight: 700; letter-spacing: 1px;
+        }
+        input:focus { outline: none; border-color: var(--azul); box-shadow: 0 0 0 4px rgba(0,53,128,0.1); }
+
+        .btn-primary {
+            width: 100%; padding: 16px; background: var(--azul); color: white;
+            border: none; border-radius: 12px; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s; margin-bottom: 12px; font-family: 'Inter', sans-serif;
+        }
+        .btn-primary:hover { background: var(--azul-claro); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,53,128,0.2); }
+
+        .btn-success {
+            width: 100%; padding: 16px; background: var(--success); color: white;
+            border: none; border-radius: 12px; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s; display: none; font-family: 'Inter', sans-serif;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 70% { box-shadow: 0 0 0 10px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
+
+        .info-panel {
+            margin-top: 30px; padding: 20px; border-radius: 12px;
+            background: #f1f5f9; min-height: 60px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 1px dashed #cbd5e1; transition: all 0.3s;
+        }
+
+        .mesa-tag {
+            background: var(--azul); color: white; padding: 2px 10px; 
+            border-radius: 20px; font-size: 0.85rem; font-weight: 700;
+        }
+
+        .mesa-tag-error {
+            background: #fef2f2; color: var(--error); border: 1px solid #fecaca;
+            padding: 6px 14px; border-radius: 10px; font-size: 0.82rem; font-weight: 600;
+            margin-top: 8px; display: block;
+        }
+
+        .page-footer { text-align: center; margin-top: 32px; }
+        .page-footer p { font-size: 0.75rem; color: #94a3b8; }
+
+        /* Loading spinner */
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #e2e8f0; border-top-color: var(--azul); border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-left">
+            <img src="../imagenes/logo.jpg" alt="Logo CEA" class="header-logo" onerror="this.src='https://placehold.co/44x44/003580/f5a623?text=CEA'">
+            <div>
+              <h1>Control de Mesa Electoral</h1>
+              <p id="header-jefe-nombre">Gestión de Mesa — CEA Pailón</p>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px;">
+            <div class="mesa-badge-header" id="header-mesa-badge" style="display:none;">
+                🪑 Mesa <span id="header-mesa-num">—</span>
+            </div>
+            <button class="btn-salir" onclick="cerrarSesion()">Salir 🚪</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- BANNER JURADO -->
+        <div class="banner-jurado">
+            <div class="banner-jurado-left">
+                <div style="font-size: 2rem;">🛡️</div>
+                <div>
+                    <h2>Modo Jurado de Mesa</h2>
+                    <p>Habilita estudiantes <strong>solo de tu mesa</strong> para votar.</p>
+                    <p id="banner-jefe-info" style="margin-top:4px; color: rgba(255,255,255,0.9); font-size:0.8rem; font-weight:600;"></p>
+                </div>
+            </div>
+            <div class="mesa-num-grande">
+                <div class="label">Mi Mesa</div>
+                <div class="num" id="mesa-num-display">—</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <span class="card-icon">🪪</span>
+            <h2 class="card-title">Habilitar Estudiante</h2>
+            <p class="subtitle">Verifique el C.I. físico del estudiante antes de autorizar su sufragio digital.</p>
+
+            <div class="form-group">
+                <label>Número de C.I.</label>
+                <input type="text" id="ci-votante" placeholder="0000000" maxlength="15" inputmode="numeric">
+            </div>
+
+            <button class="btn-primary" onclick="consultar()" id="btn-consultar">🔍 Consultar Padrón</button>
+            <button class="btn-success" onclick="validar()" id="btn-habilitar">✅ HABILITAR PARA VOTAR</button>
+
+            <div id="info-votante" class="info-panel">
+                <span id="label-info" style="color: #64748b; font-size: 0.9rem;">Esperando C.I...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-footer">
+        <p>Sistema de Gestión Electoral — CEA Prof. Herman Ortiz Camargo</p>
+    </div>
+
+    <script src="../js/api.js?v=4.3.5"></script>
+    <script>
+        let miMesaNumero = null;
+
+        // Protección de ruta + carga de info del jurado
+        (async function() {
+            const rol = localStorage.getItem('user_rol');
+            if(rol !== 'jefe' && rol !== 'admin') {
+                console.warn("Acceso denegado. Rol:", rol);
+                window.location.href = window.location.origin + '/index.html';
+                return;
+            }
+
+            // Cargar info del jurado (su mesa asignada)
+            const res = await apiFetch('/votante/mi-info');
+            if (res && res.ok) {
+                const data = await res.json();
+                miMesaNumero = data.mesa_numero;
+
+                // Mostrar en header
+                if (miMesaNumero) {
+                    document.getElementById('header-mesa-num').textContent = miMesaNumero;
+                    document.getElementById('header-mesa-badge').style.display = 'flex';
+                }
+
+                // Mostrar en banner
+                document.getElementById('mesa-num-display').textContent = miMesaNumero || 'S/M';
+                document.getElementById('banner-jefe-info').textContent = data.nombre ? `Jurado: ${data.nombre}` : '';
+                document.getElementById('header-jefe-nombre').textContent = data.nombre
+                    ? `${data.nombre} — Mesa ${miMesaNumero || 'Sin asignar'}`
+                    : 'Gestión de Mesa — CEA Pailón';
+            }
+
+            // Verificar si hay elección en curso
+            const rElecc = await apiFetch('/votante/estado-eleccion');
+            if (rElecc && rElecc.ok) {
+                const infoElecc = await rElecc.json();
+                if (!infoElecc.activa) {
+                    bloquearMesaCerrada();
+                }
+            } else {
+                // Si retorna error o 404 (No hay elección), bloqueamos
+                bloquearMesaCerrada();
+            }
+        })();
+
+        function bloquearMesaCerrada() {
+            const container = document.querySelector('.container');
+            const msgError = `<div style="background:#fef2f2; border:2px dashed #ef4444; color:#991b1b; padding:20px; border-radius:12px; text-align:center; font-weight:700; margin-bottom:20px; box-shadow: 0 4px 15px rgba(220,38,38,0.15);">
+                <div style="font-size:2rem; margin-bottom:10px;">🔒</div>
+                <div style="font-size:1.2rem; margin-bottom:5px;">ELECCIÓN CERRADA / PAUSADA</div>
+                <span style="font-size:0.9rem; font-weight:400;">La votación ha concluido o no hay ninguna elección activa en este momento. El control de mesa está bloqueado por seguridad.</span>
+            </div>`;
+            container.insertAdjacentHTML('afterbegin', msgError);
+            
+            // Bloquear Formularios
+            document.getElementById('ci-votante').disabled = true;
+            document.getElementById('btn-consultar').disabled = true;
+            document.getElementById('btn-habilitar').disabled = true;
+
+            document.getElementById('ci-votante').style.opacity = '0.6';
+            document.getElementById('ci-votante').style.cursor = 'not-allowed';
+            document.getElementById('btn-consultar').style.opacity = '0.6';
+            document.getElementById('btn-consultar').style.cursor = 'not-allowed';
+        }
+
+        async function consultar() {
+            const ci = document.getElementById('ci-votante').value.trim();
+            const panel = document.getElementById('info-votante');
+            const label = document.getElementById('label-info');
+            const btnHabilitar = document.getElementById('btn-habilitar');
+            
+            if(!ci) return;
+            
+            label.innerHTML = '<span class="spinner"></span>Buscando en el padrón...';
+            label.style.color = '#64748b';
+            btnHabilitar.style.display = 'none';
+            panel.style.background = '#f1f5f9';
+            panel.style.borderStyle = 'dashed';
+            panel.style.borderColor = '#cbd5e1';
+            
+            const res = await apiFetch(`/jefe/votante/${ci}`);
+            if(res && res.ok) {
+                const data = await res.json();
+                panel.style.borderStyle = 'solid';
+                panel.style.background = '#fff';
+
+                if(data.ha_votado) {
+                    panel.style.borderColor = '#fca5a5';
+                    panel.style.background = '#fef2f2';
+                    label.style.color = 'var(--error)';
+                    label.innerHTML = `⚠️ <b>${data.nombre}</b><br><small>CI: ${ci}</small><br>YA EMITIÓ SU VOTO en Mesa ${data.mesa}`;
+                } else if(data.habilitado) {
+                    panel.style.borderColor = '#fcd34d';
+                    panel.style.background = '#fffbeb';
+                    label.style.color = 'var(--warning)';
+                    label.innerHTML = `⌛ <b>${data.nombre}</b><br><small>CI: ${ci}</small><br>YA ESTÁ HABILITADO. Pendiente en Mesa <span class="mesa-tag">${data.mesa}</span>`;
+                } else {
+                    // Verificar si es de esta mesa
+                    if (miMesaNumero && data.mesa != miMesaNumero) {
+                        panel.style.borderColor = '#fca5a5';
+                        panel.style.background = '#fef2f2';
+                        label.style.color = 'var(--error)';
+                        label.innerHTML = `⛔ <b>${data.nombre}</b><br><small>CI: ${ci}</small><br>Este estudiante pertenece a la <span class="mesa-tag" style="background:#ef4444;">Mesa ${data.mesa}</span><br><span class="mesa-tag-error">❌ No puedes habilitarlo — Tú controlas la Mesa ${miMesaNumero}</span>`;
+                        // NO mostrar botón habilitar
+                    } else {
+                        panel.style.borderColor = '#6ee7b7';
+                        panel.style.background = '#f0fdf4';
+                        label.style.color = '#047857';
+                        label.innerHTML = `✅ <b>${data.nombre}</b><br><small>CI: ${ci}</small><br>Asignado a <span class="mesa-tag" style="background:#10b981;">Mesa ${data.mesa}</span>`;
+                        btnHabilitar.style.display = 'block';
+                    }
+                }
+            } else {
+                const err = res ? await res.json() : { detail: 'Error de conexión.' };
+                panel.style.background = '#fef2f2';
+                panel.style.borderStyle = 'solid';
+                panel.style.borderColor = '#fecaca';
+                label.style.color = 'var(--error)';
+                label.innerHTML = `❌ ${err.detail || 'Estudiante no encontrado en el padrón.'}`;
+            }
+        }
+
+        async function validar() {
+            const ci = document.getElementById('ci-votante').value.trim();
+            const label = document.getElementById('label-info');
+            const btnHabilitar = document.getElementById('btn-habilitar');
+            const panel = document.getElementById('info-votante');
+            
+            btnHabilitar.disabled = true;
+            btnHabilitar.textContent = '⏳ Habilitando...';
+
+            const res = await apiFetch(`/jefe/validar-votante?ci=${ci}`, { method: 'POST' });
+            if(res && res.ok) {
+                const data = await res.json();
+                panel.style.background = '#f0fff4';
+                panel.style.borderColor = '#6ee7b7';
+                label.style.color = '#047857';
+                label.innerHTML = `<span style="font-size:1.4rem;">🌟</span><br><b>¡HABILITADO EXITOSAMENTE!</b><br><small>Indique al estudiante que ingrese con su CI.</small>`;
+                btnHabilitar.style.display = 'none';
+                document.getElementById('ci-votante').value = '';
+                
+                // Flash verde en card
+                document.querySelector('.card').style.boxShadow = '0 0 0 4px #6ee7b7';
+                setTimeout(() => { 
+                    document.querySelector('.card').style.boxShadow = '0 10px 30px rgba(0,53,128,0.08)';
+                    btnHabilitar.disabled = false;
+                    btnHabilitar.textContent = '✅ HABILITAR PARA VOTAR';
+                }, 2500);
+            } else {
+                const err = res ? await res.json() : { detail: 'Error de conexión.' };
+                panel.style.background = '#fef2f2';
+                panel.style.borderColor = '#fca5a5';
+                label.style.color = 'var(--error)';
+                label.innerHTML = `❌ ${err.detail || 'Error al habilitar.'}`;
+                btnHabilitar.disabled = false;
+                btnHabilitar.textContent = '✅ HABILITAR PARA VOTAR';
+            }
+        }
+
+        function cerrarSesion() {
+            localStorage.clear();
+            window.location.href = '../index.html';
+        }
+
+        document.getElementById('ci-votante')?.addEventListener('keydown', e => { if(e.key==='Enter') consultar(); });
+    </script>
+</body>
+</html>
+

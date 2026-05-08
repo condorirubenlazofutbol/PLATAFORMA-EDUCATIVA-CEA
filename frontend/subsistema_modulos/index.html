@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistemas Informáticos CEA – Malla Curricular</title>
+<meta property="og:title" content="Sistemas Informáticos CEA – Plataforma Educativa">
+<meta property="og:description" content="Plataforma académica del Centro de Educación Alternativa – Sistemas Informáticos">
+<meta property="og:image" content="https://modulos-cea-frontend.up.railway.app/instalar/icon-512.png">
+<meta property="og:url" content="https://modulos-cea-frontend.up.railway.app">
+<meta name="twitter:card" content="summary_large_image">
+
+<meta name="theme-color" content="#0ea5e9">
+<link rel="apple-touch-icon" href="images/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--a:#0ea5e9;--a2:#38bdf8;--dark:#0b0f1a;--card:#131929;--card2:#1a2338;--b:rgba(255,255,255,.08);--t:#e8eaf0;--m:rgba(255,255,255,.45);--cel:rgba(56,189,248,.13)}
+body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--t);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 20% 20%,rgba(14,165,233,.1) 0%,transparent 70%);pointer-events:none;z-index:0}
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.4rem;border-bottom:1px solid var(--b);backdrop-filter:blur(14px);background:rgba(11,15,26,.9)}
+.logo-img{height:44px;object-fit:contain}
+.btn-login{background:var(--a);color:#fff;padding:.5rem 1.2rem;border-radius:10px;font-weight:800;text-decoration:none;font-size:.82rem}
+.hero{text-align:center;padding:4rem 1rem 2.5rem;position:relative;z-index:1}
+.hero h1{font-size:2.8rem;font-weight:900;margin-bottom:.8rem}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--a2),var(--a));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--m);font-size:.95rem}
+.wrap{max-width:960px;margin:0 auto;padding:0 1rem 5rem;position:relative;z-index:1}
+.lvl-section{margin-bottom:3.5rem}
+.lvl-title{font-size:1.3rem;font-weight:900;margin-bottom:1.2rem;display:flex;align-items:center;gap:.7rem;color:var(--a2)}
+.sem-block{background:var(--cel);border:1.5px solid rgba(56,189,248,.28);border-radius:20px;padding:1.2rem;margin-bottom:1.2rem}
+.sem-title{font-size:.92rem;font-weight:800;margin-bottom:1rem;color:var(--a2)}
+.mod-card{background:var(--card2);border:1px solid var(--b);border-radius:12px;margin-bottom:.6rem;overflow:hidden}
+.mod-header{padding:.85rem 1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.mod-name{font-size:.82rem;font-weight:700;flex:1;padding-right:.5rem}
+.mod-body{display:none;padding:1rem;border-top:1px solid var(--b)}
+.mod-card.open .mod-body{display:block}
+.topic-item{font-size:.75rem;padding:.45rem .7rem;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid var(--b);color:var(--m);margin-bottom:.35rem}
+.locked{display:block;margin-top:.8rem;font-size:.68rem;color:var(--a2);font-weight:700;text-align:center}
+.badge-cea{background:linear-gradient(135deg,#0ea5e9,#38bdf8);color:#fff;font-size:.65rem;font-weight:800;padding:.2rem .6rem;border-radius:20px;text-transform:uppercase;letter-spacing:.05em}
+@media(min-width:640px){.hero h1{font-size:3.5rem}}
+@media(max-width:480px){.hero h1{font-size:2rem}.lvl-title{font-size:1.1rem}}
+</style>
+</head>
+<body>
+<nav>
+  <img src="images/logo.png" alt="CEA" class="logo-img" onerror="this.style.display='none'">
+  <a href="login.html" class="btn-login">Acceder</a>
+</nav>
+
+<div class="hero">
+  <h1>Sistemas <em>Informáticos</em></h1>
+  <p><strong>CEA: "Prof. Herman Ortiz Camargo"</strong><br>
+   Malla Curricular Completa <br>
+    <strong> Niveles, Módulos y Temas.</strong></p>
+</div>
+
+<div class="wrap" id="main-container"></div>
+
+<script>
+const MALLA = [
+  { nivel:"NIVEL TÉCNICO BÁSICO", icon:"🔰", semestres:[
+    { nombre:"1er SEMESTRE – TÉCNICO BÁSICO", modulos:[
+      {n:"TALLER DE SISTEMAS OPERATIVOS I", t:["Introducción a los sistemas operativos","Máquinas virtuales","Administración de recursos de hardware","Administración de plataforma Windows"]},
+      {n:"MATEMÁTICA PARA LA INFORMÁTICA", t:["Fundamentos y Sistemas de Numeración","Lógica Matemática y Álgebra Booleana","Teoría de Conjuntos, Relaciones y Funciones","Sucesiones y series numéricas"]},
+      {n:"PROGRAMACIÓN I-A", t:["Diseño de algoritmos","Lenguaje de programación e IDEs","Estructuras básicas de control","Resolución de Problemas y Pruebas de Escritorio"]},
+      {n:"HARDWARE DE COMPUTADORAS I", t:["Evolución y generación de computadoras","Arquitectura y Partes de una computadora","Instalación de sistemas operativos y software","Internet de las cosas (IoT)"]},
+      {n:"EMERGENTE I (INTELIGENCIA ARTIFICIAL BÁSICA) 🤖", t:["Fundamentos de la Inteligencia Artificial","Uso incorrecto de la IA en la informática","Limitaciones tecnológicas de la IA actual","Uso responsable y ético como futuros profesionales"]}
+    ]}
+  ]},
+  { nivel:"NIVEL TÉCNICO AUXILIAR", icon:"⚙️", semestres:[
+    { nombre:"2do SEMESTRE – TÉCNICO AUXILIAR", modulos:[
+      {n:"TALLER DE SISTEMAS OPERATIVOS II", t:["Administración plataforma Linux","Contenedores y Virtualización Ligera","Utilitarios de Sistema","Seguridad y Gestión de Redes en Linux"]},
+      {n:"OFIMÁTICA Y TECNOLOGÍA MULTIMEDIA I", t:["Procesador de texto avanzado","Hoja de cálculo avanzado","Presentaciones interactivas","Herramientas Colaborativas en la Nube"]},
+      {n:"PROGRAMACIÓN I-B", t:["Estructuras Iterativas (Bucles)","Programación modular","Estructuras de Datos Estáticas","Introducción a la Programación Orientada a Objetos"]},
+      {n:"HARDWARE DE COMPUTADORAS II", t:["Software de mantenimiento e imágenes de sistema","Mantenimiento preventivo","Mantenimiento correctivo","Principios de electrónica aplicados"]},
+      {n:"EMERGENTE II (PROMPTS BÁSICOS) 🤖", t:["Fundamentos de Prompts","Prompts para tareas ofimáticas y soporte técnico","Errores comunes en Modelos de Lenguaje","Buenas prácticas y refinamiento"]}
+    ]}
+  ]},
+  { nivel:"NIVEL TÉCNICO MEDIO", icon:"📚", semestres:[
+    { nombre:"3er SEMESTRE – TÉCNICO MEDIO I", modulos:[
+      {n:"INGLÉS TÉCNICO", t:["Estructuras Gramaticales y Entorno Personal","Vocabulario de Informática e Internet","Inglés para Programación y Sistemas de Medida","Seguridad Industrial y Manuales Técnicos"]},
+      {n:"DISEÑO Y PROGRAMACIÓN WEB I-A", t:["Introducción al diseño web","HTML (Lenguaje de marcas de hipertexto)","CSS (Hojas de estilo en cascada)","Diseño Responsivo y Frameworks Básicos"]},
+      {n:"PROGRAMACIÓN I-C", t:["Programación Orientada a Objetos (POO Avanzada)","Modelado de Software","Estructuras de Datos Lineales","Listas Enlazadas y Colecciones"]},
+      {n:"OFIMÁTICA Y TECNOLOGÍA MULTIMEDIA II", t:["Edición de audio digital","Edición de video","Tratamiento de imágenes","Producción multimedia integral"]},
+      {n:"EMPRENDIMIENTO PRODUCTIVO E IA APLICADA 🤖", t:["Emprendimiento Productivo en Tecnología","Prompt Estructurado para Resolución Lógica","Uso de IA en Programación y Desarrollo","Mejora de Resultados mediante Técnicas de Prompting"]}
+    ]},
+    { nombre:"4to SEMESTRE – TÉCNICO MEDIO II", modulos:[
+      {n:"REDES DE COMPUTADORAS I", t:["Fundamentos y Topologías de Red","Medios de Transmisión, Dispositivos y Modelos","Direccionamiento IP y Subredes","Protocolos y Servicios en TCP/IP"]},
+      {n:"DISEÑO Y PROGRAMACIÓN WEB I-B", t:["Programación Frontend con JavaScript","Desarrollo de aplicaciones Backend","Consumo e Integración de APIs","Administración y publicación de sitios web"]},
+      {n:"BASE DE DATOS I", t:["Introducción a Bases de Datos","Diseño Conceptual: Modelo Entidad-Relación (E-R)","Diseño Lógico y Normalización","Lenguaje SQL y Software para Bases de Datos"]},
+      {n:"PROGRAMACIÓN MÓVIL I", t:["Introducción a las Tecnologías Móviles","Arquitectura y Componentes para el Desarrollo","Diseño de Interfaz (UI) y Experiencia de Usuario (UX)","Aplicación práctica y conexión IoT (Microcontroladores)"]},
+      {n:"MODALIDADES DE GRADUACIÓN Y PROYECTO FINAL", t:["Reglamentación y Elección de Modalidad","Planificación del Proyecto Tecnológico asistido por IA","Desarrollo y Generación Estructural con IA","Iteración, Refinamiento y Defensa Final"]}
+    ]}
+  ]}
+];
+
+function render() {
+  const c = document.getElementById('main-container');
+  c.innerHTML = MALLA.map((lvl, li) => `
+    <div class="lvl-section">
+      <div class="lvl-title">${lvl.icon} ${lvl.nivel}</div>
+      ${lvl.semestres.map((sem, si) => `
+        <div class="sem-block">
+          <div class="sem-title">🔰 ${sem.nombre}</div>
+          ${sem.modulos.map((mod, mi) => `
+            <div class="mod-card" id="mc-${li}-${si}-${mi}">
+              <div class="mod-header" onclick="toggle('mc-${li}-${si}-${mi}')">
+                <div class="mod-name"><span style="color:var(--a2)">Módulo ${mi+1}:</span> ${mod.n}</div>
+                <span>▼</span>
+              </div>
+              <div class="mod-body">
+                ${mod.t.map((t,ti) => `<div class="topic-item">📌 <span style="color:var(--a2)">Tema ${ti+1}:</span> ${t}</div>`).join('')}
+                <span class="locked">🔒 Inicia sesión para ver el material</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+function toggle(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+render();
+</script>
+
+
+
+</body>
+</html>
+
+

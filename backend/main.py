@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from routes import auth, modulos, evaluaciones, comunicados, ai_tools, certificados, votaciones, notas
+from routes import auth, modulos, evaluaciones, comunicados, ai_tools, certificados, votaciones, notas, elecciones
 from database import init_db
 
 load_dotenv()
@@ -49,6 +49,7 @@ app.include_router(ai_tools.router,     prefix="/ai",           tags=["AI Tools"
 app.include_router(certificados.router, prefix="/certificados", tags=["Certificados"])
 app.include_router(votaciones.router,   prefix="/votaciones",   tags=["Votaciones"])
 app.include_router(notas.router,        prefix="/notas",        tags=["Notas"])
+app.include_router(elecciones.router,   tags=["Elecciones"])  # Sin prefijo: /admin/*, /votante/*, /secretaria/*, /candidatos/*
 
 @app.get("/")
 def read_root():
@@ -74,12 +75,15 @@ def instalar_datos_iniciales():
     """Inicializa tablas, crea usuarios por defecto y carga la malla curricular."""
     try:
         import importlib
+        import seed
         import seed_modulos
         import database
         importlib.reload(database)
+        importlib.reload(seed)
         importlib.reload(seed_modulos)
 
         database.init_db()
+        seed.seed_users()
         reparados = seed_modulos.seed_data()
 
         from database import get_db_connection
