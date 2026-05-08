@@ -348,6 +348,12 @@
                         <input type="text" id="ins_email_val" readonly style="opacity: 0.7;">
                         <p class="email-preview" id="email-preview-text">Generando correo...</p>
                     </div>
+                    <div class="form-full form-group hidden" id="carrera-group">
+                        <label>Carrera Técnica</label>
+                        <select id="ins_carrera">
+                            <!-- Dynamic -->
+                        </select>
+                    </div>
                     <div class="form-full form-group">
                         <label id="level-label">Curso</label>
                         <select id="ins_nivel" required>
@@ -530,16 +536,22 @@
         document.getElementById('user-initials').textContent = (user.nombre || 'S')[0];
 
         const levels = {
-            humanistica: ['Aplicados Primer Año', 'Complementarios Segundo Año', 'Especializados Tercer Año'],
-            tecnica: [
+            humanistica: ['Aplicados (Primer Año)', 'Complementarios (Segundo Año)', 'Especializados (Tercer Año)'],
+            tecnica_carreras: [
                 'Sistemas Informáticos', 
                 'Gastronomía', 
                 'Belleza Integral', 
                 'Corte y Confección', 
-                'Secretariado Ejecutivo', 
-                'Contabilidad', 
-                'Mecánica Automotriz', 
-                'Electrónica'
+                'Educación Parvularia', 
+                'Contabilidad General', 
+                'Fisioterapia', 
+                'Veterinaria'
+            ],
+            tecnica_niveles: [
+                'Nivel Básico',
+                'Nivel Auxiliar',
+                'Nivel Medio I',
+                'Nivel Medio II'
             ]
         };
 
@@ -571,10 +583,22 @@
             document.querySelectorAll('.area-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${area}`).classList.add('active');
             
-            const select = document.getElementById('ins_nivel');
-            select.innerHTML = levels[area].map(l => `<option value="${l}">${l}</option>`).join('');
+            const selectNivel = document.getElementById('ins_nivel');
+            const selectCarrera = document.getElementById('ins_carrera');
+            const carreraGroup = document.getElementById('carrera-group');
             
-            document.getElementById('level-label').textContent = area === 'humanistica' ? 'Curso' : 'Nivel Técnico';
+            if (area === 'humanistica') {
+                carreraGroup.classList.add('hidden');
+                selectCarrera.removeAttribute('required');
+                selectNivel.innerHTML = levels.humanistica.map(l => `<option value="${l}">${l}</option>`).join('');
+                document.getElementById('level-label').textContent = 'Curso';
+            } else {
+                carreraGroup.classList.remove('hidden');
+                selectCarrera.setAttribute('required', 'true');
+                selectCarrera.innerHTML = levels.tecnica_carreras.map(c => `<option value="${c}">${c}</option>`).join('');
+                selectNivel.innerHTML = levels.tecnica_niveles.map(l => `<option value="${l}">${l}</option>`).join('');
+                document.getElementById('level-label').textContent = 'Nivel Técnico';
+            }
         }
 
         function updateEmailPreview() {
@@ -657,12 +681,18 @@
         // HANDLERS
         document.getElementById('form-estudiante').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            let nivel_final = document.getElementById('ins_nivel').value;
+            if (currentArea === 'tecnica') {
+                nivel_final = document.getElementById('ins_carrera').value + ' - ' + nivel_final;
+            }
+
             const payload = {
                 nombre: document.getElementById('ins_nombres').value,
                 apellido: document.getElementById('ins_apellidos').value,
                 carnet: document.getElementById('ins_carnet').value,
                 rol: 'estudiante',
-                nivel_asignado: document.getElementById('ins_nivel').value,
+                nivel_asignado: nivel_final,
                 subsistema_id: 1
             };
             

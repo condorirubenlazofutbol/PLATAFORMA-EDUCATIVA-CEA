@@ -237,7 +237,6 @@ def init_db():
             )
         ''')
 
-        # Add columns if they dont exist yet (safe migrations for existing users)
         for col_sql in [
             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS subsistema_id INT",
             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS nivel_asignado VARCHAR(100)",
@@ -266,6 +265,17 @@ def init_db():
         ]:
             try:
                 cursor.execute(col_sql)
+            except:
+                connection.rollback()
+                
+        # Asegurar que existe el subsistema 1
+        try:
+            cursor.execute("INSERT INTO subsistemas (id, nombre, descripcion) VALUES (1, 'CEA Central', 'Subsistema principal') ON CONFLICT (id) DO NOTHING")
+        except:
+            connection.rollback()
+            try:
+                # If ON CONFLICT fails because no constraint on id (should have PRIMARY KEY though), try this:
+                cursor.execute("INSERT INTO subsistemas (id, nombre, descripcion) SELECT 1, 'CEA Central', 'Subsistema principal' WHERE NOT EXISTS (SELECT 1 FROM subsistemas WHERE id = 1)")
             except:
                 connection.rollback()
 

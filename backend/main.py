@@ -16,20 +16,10 @@ app = FastAPI(title="Educonnect-Ruben API", description="LMS Backend – EduConn
 @app.on_event("startup")
 def startup_event():
     print("Servidor EduConnect Ruben iniciado correctamente.")
-    # Migración automática: asegurar columna carnet existe
     try:
-        from database import get_db_connection
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS carnet VARCHAR(50)")
-        cur.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS nivel_asignado VARCHAR(100)")
-        cur.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS estado VARCHAR(20) DEFAULT 'activo'")
-        cur.execute("ALTER TABLE modulos ADD COLUMN IF NOT EXISTS subnivel VARCHAR(100)")
-        cur.execute("ALTER TABLE modulos ADD COLUMN IF NOT EXISTS orden INT DEFAULT 0")
-        cur.execute("ALTER TABLE contenidos ADD COLUMN IF NOT EXISTS tema_num INT DEFAULT 1")
-        conn.commit()
-        cur.close(); conn.close()
-        print("Migración de columnas completada.")
+        from database import init_db
+        init_db()
+        print("Migración y seeding automático completado.")
     except Exception as e:
         print(f"Migración startup warning: {e}")
 
