@@ -412,6 +412,15 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Registro de Docentes</h3>
+                    <div class="flex-center">
+                        <button class="btn-action btn-outline" onclick="downloadDocenteTemplate()">
+                            <span>📥</span> Descargar Plantilla
+                        </button>
+                        <button class="btn-action btn-outline" onclick="document.getElementById('doc-excel-input').click()">
+                            <span>📊</span> Importar Excel
+                        </button>
+                        <input type="file" id="doc-excel-input" hidden accept=".xlsx, .xls" onchange="handleDocenteExcelImport(this)">
+                    </div>
                 </div>
                 <div class="form-group" style="margin-bottom: 2rem;">
                     <label>Área de Formación</label>
@@ -629,7 +638,19 @@
             const ws = XLSX.utils.aoa_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Estudiantes");
-            XLSX.writeFile(wb, "Plantilla_Inscripcion_CEA.xlsx");
+            XLSX.writeFile(wb, "Plantilla_Estudiantes_CEA.xlsx");
+        }
+
+        function downloadDocenteTemplate() {
+            const data = [
+                ["Nombre", "Apellido", "Carnet"],
+                ["Carlos", "Mamani", "8877665"],
+                ["Ana", "Suarez", "5544332"]
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Docentes");
+            XLSX.writeFile(wb, "Plantilla_Docentes_CEA.xlsx");
         }
 
         function showTab(id, el) {
@@ -905,6 +926,33 @@
                     Swal.fire('Error', data.detail, 'error');
                 }
             } catch(e) { Swal.fire('Error', 'Fallo al procesar el archivo.', 'error'); }
+            input.value = "";
+        }
+
+        async function handleDocenteExcelImport(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const nivel = document.getElementById('doc_especialidad').value;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            Swal.fire({ title: 'Procesando Docentes...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const r = await fetch(`${API_URL}/auth/bulk-register?rol=profesor&nivel=${encodeURIComponent(nivel)}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await r.json();
+                Swal.close();
+                if (r.ok) {
+                    Swal.fire('Importación Completa', `Docentes registrados: ${data.registrados}\nErrores: ${data.errores.length}`, 'success');
+                } else {
+                    Swal.fire('Error', data.detail, 'error');
+                }
+            } catch(e) { Swal.fire('Error', 'Fallo al procesar docentes.', 'error'); }
             input.value = "";
         }
 

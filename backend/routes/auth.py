@@ -77,10 +77,10 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     return {"id": row[0], "nombre": row[1], "apellido": row[2], "email": row[3], "rol": row[4], "nivel_asignado": row[5], "subsistema_id": row[6]}
 
 def generate_cea_email(nombre: str, apellido: str):
-    clean_n = nombre.strip().replace(" ", "").lower()
-    clean_a = apellido.strip().replace(" ", "").lower()
-    # Limitar longitud para evitar correos gigantes
-    return f"{clean_n}{clean_a}"[:30] + "@ceapilon.com"
+    # Usar solo primer nombre y primer apellido (paterno)
+    clean_n = nombre.strip().split(" ")[0].lower()
+    clean_a = apellido.strip().split(" ")[0].lower()
+    return f"{clean_n}{clean_a}" + "@ceapilon.com"
 
 @router.post("/register-usuario", dependencies=[Depends(get_current_user)])
 def register_usuario(data: RegistroUsuario):
