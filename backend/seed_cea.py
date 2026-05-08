@@ -23,24 +23,19 @@ NIVELES_HUMANISTICOS = ["Aplicados (Primer Año)", "Complementarios (Segundo Añ
 
 def seed_cea_data():
     """Genera las carreras, materias y sus módulos en la base de datos según la estructura oficial."""
+    print("Iniciando sembrado institucional CEA...")
     conn = get_db_connection()
     if not conn:
-        print("Error: No database connection")
         return 0
     
+    modulos_creados = 0
     try:
         cur = conn.cursor()
         
-        # Ensure subsistema 1 exists
-        try:
-            cur.execute("INSERT INTO subsistemas (id, nombre, descripcion) VALUES (1, 'CEA Central', 'Subsistema principal') ON CONFLICT (id) DO NOTHING")
-        except:
-            conn.rollback()
-            cur.execute("INSERT INTO subsistemas (id, nombre, descripcion) SELECT 1, 'CEA Central', 'Subsistema principal' WHERE NOT EXISTS (SELECT 1 FROM subsistemas WHERE id = 1)")
+        # 1. Asegurar Subsistema 1
+        cur.execute("INSERT INTO subsistemas (id, nombre, descripcion) VALUES (1, 'CEA Central', 'Subsistema principal') ON CONFLICT (id) DO NOTHING")
         
-        modulos_creados = 0
-        
-        # 1. Seed Técnicas
+        # 2. Técnicas
         for nombre_carrera in CARRERAS_TECNICAS:
             cur.execute("SELECT id FROM carreras WHERE nombre = %s AND area = 'Técnica'", (nombre_carrera,))
             row = cur.fetchone()
@@ -50,16 +45,15 @@ def seed_cea_data():
             else:
                 c_id = row[0]
                 
-            # Create modules
             for nivel in NIVELES_TECNICOS:
                 for i in range(1, 6):
                     mod_name = f"Módulo {i}"
-                    cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s AND nombre = %s", (c_id, nivel, mod_name))
-                    if not cur.fetchone():
-                        cur.execute("INSERT INTO modulos (nombre, nivel, carrera_id, orden) VALUES (%s, %s, %s, %s)", (mod_name, nivel, c_id, i))
-                        modulos_creados += 1
+                    # Borrar si existe para asegurar que sea exacto
+                    cur.execute("DELETE FROM modulos WHERE carrera_id = %s AND nivel = %s AND nombre = %s", (c_id, nivel, mod_name))
+                    cur.execute("INSERT INTO modulos (nombre, nivel, carrera_id, orden) VALUES (%s, %s, %s, %s)", (mod_name, nivel, c_id, i))
+                    modulos_creados += 1
                         
-        # 2. Seed Humanísticas
+        # 3. Humanísticas
         for materia in MATERIAS_HUMANISTICAS:
             cur.execute("SELECT id FROM carreras WHERE nombre = %s AND area = 'Humanística'", (materia,))
             row = cur.fetchone()
@@ -72,17 +66,16 @@ def seed_cea_data():
             for nivel in NIVELES_HUMANISTICOS:
                 for i in range(1, 3):
                     mod_name = f"Módulo {i}"
-                    cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s AND nombre = %s", (c_id, nivel, mod_name))
-                    if not cur.fetchone():
-                        cur.execute("INSERT INTO modulos (nombre, nivel, carrera_id, orden) VALUES (%s, %s, %s, %s)", (mod_name, nivel, c_id, i))
-                        modulos_creados += 1
+                    cur.execute("DELETE FROM modulos WHERE carrera_id = %s AND nivel = %s AND nombre = %s", (c_id, nivel, mod_name))
+                    cur.execute("INSERT INTO modulos (nombre, nivel, carrera_id, orden) VALUES (%s, %s, %s, %s)", (mod_name, nivel, c_id, i))
+                    modulos_creados += 1
 
         conn.commit()
-        print(f"CEA Seed completado. {modulos_creados} módulos nuevos generados.")
+        print(f"Sembrado finalizado. {modulos_creados} módulos procesados.")
         return modulos_creados
     except Exception as e:
         conn.rollback()
-        print(f"Error en CEA seed: {e}")
+        print(f"Error en seed: {e}")
         return 0
     finally:
         cur.close()
