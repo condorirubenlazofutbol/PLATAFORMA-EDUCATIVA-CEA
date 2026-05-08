@@ -1,11 +1,16 @@
 /* ═════════════════════════════════════════════
    EduConnect – Shared JavaScript  (app.js)
-   Importar en todos los portales via:
-   <script src="app.js"></script>
    ═════════════════════════════════════════════ */
-const API = 'http://localhost:8000';
+const API = window.location.hostname === 'localhost'
+    ? 'http://localhost:8000'
+    : 'https://educonnect-backend-ay2z.onrender.com';
+
+// Unify token: always use the portal's 'token' key
 let token = localStorage.getItem('token');
 let currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+// Normalise user fields from different portals
+if (currentUser.nombre && !currentUser.first_name) currentUser.first_name = currentUser.nombre;
+if (currentUser.rol && !currentUser.role)           currentUser.role = currentUser.rol;
 /* ─── User UI Initialization ────────────────────────── */
 function initUserUI() {
     const welcomeEl = document.getElementById('welcomeName');
