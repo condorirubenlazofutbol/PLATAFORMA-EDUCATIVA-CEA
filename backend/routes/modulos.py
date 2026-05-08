@@ -57,41 +57,39 @@ def get_stats():
 
 @router.get("/reset-ingenieria")
 def reset_ingenieria():
-    """Limpia los módulos de ingeniería de la base de datos y re-siembra los módulos del CEA."""
+    """Limpia TOTALMENTE la base de datos de módulos y carreras y re-siembra el CEA."""
     from database import get_db_connection
     from seed_cea import seed_cea_data
     conn = get_db_connection()
     if not conn: raise HTTPException(status_code=500, detail="Error DB")
     try:
         cur = conn.cursor()
-        carreras_oficiales = [
-            'Sistemas Informáticos', 'Veterinaria', 'Educación Parvularia', 
-            'Fisioterapia', 'Contabilidad General', 'Corte y Confección', 
-            'Belleza Integral', 'Gastronomía', 'Matemática', 'Lenguaje', 
-            'Ciencias Naturales', 'Ciencias Sociales'
-        ]
-        format_strings = ','.join(['%s'] * len(carreras_oficiales))
-        cur.execute(f"SELECT id FROM carreras WHERE nombre NOT IN ({format_strings})", tuple(carreras_oficiales))
-        carreras_a_borrar = cur.fetchall()
         
-        if carreras_a_borrar:
-            carrera_ids = tuple(c[0] for c in carreras_a_borrar)
-            cur.execute(f"SELECT id FROM modulos WHERE carrera_id IN %s", (carrera_ids,))
-            modulos_a_borrar = cur.fetchall()
-            
-            if modulos_a_borrar:
-                modulo_ids = tuple(m[0] for m in modulos_a_borrar)
-                cur.execute(f"DELETE FROM temas WHERE modulo_id IN %s", (modulo_ids,))
-                cur.execute(f"DELETE FROM modulos WHERE carrera_id IN %s", (carrera_ids,))
-            
-            cur.execute(f"DELETE FROM carreras WHERE id IN %s", (carrera_ids,))
-            
-        cur.execute("DELETE FROM temas WHERE modulo_id IN (SELECT id FROM modulos WHERE nombre LIKE '%Cloud Computing%' OR nombre LIKE '%Algoritmos%' OR nombre LIKE '%Módulo Emergente%' OR nombre LIKE '%Base de Datos%')")
-        cur.execute("DELETE FROM modulos WHERE nombre LIKE '%Cloud Computing%' OR nombre LIKE '%Algoritmos%' OR nombre LIKE '%Módulo Emergente%' OR nombre LIKE '%Base de Datos%'")
+        # 1. Limpiar inscripciones (Dualidad)
+        cur.execute("DELETE FROM inscripciones")
+        
+        # 2. Borrar todas las carreras (Esto borrará módulos, temas, evaluaciones por CASCADE)
+        cur.execute("DELETE FROM carreras")
+        
+        # 3. Borrar subsistemas residuales (Excepto el 1 que es CEA)
+        cur.execute("DELETE FROM subsistemas WHERE id != 1")
+        
+        # 4. Reset secuencias para limpieza visual de IDs
+        try:
+            cur.execute("ALTER SEQUENCE carreras_id_seq RESTART WITH 1")
+            cur.execute("ALTER SEQUENCE modulos_id_seq RESTART WITH 1")
+        except: pass
         
         conn.commit()
-        seed_cea_data()
-        return {"msg": "Módulos de ingeniería borrados exitosamente. Se restablecieron los módulos del CEA."}
+        
+        # 5. Re-sembrar malla institucional oficial del CEA
+        creados = seed_cea_data()
+        
+        return {
+            "status": "success",
+            "msg": f"PURGA TOTAL EXITOSA. Se han eliminado todos los módulos de ingeniería. Se generaron {creados} módulos oficiales del CEA.",
+            "detalle": "La plataforma ahora solo muestra Niveles Básico, Auxiliar, Medio I y II (Técnica) y Ciclos Humanísticos."
+        }
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
