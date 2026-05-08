@@ -375,22 +375,37 @@
                 <div class="card-header">
                     <h3 class="card-title">Registro de Docentes</h3>
                 </div>
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label>Área de Formación</label>
+                    <div class="area-selector">
+                        <button class="area-btn active" id="btn-doc-humanistica" onclick="setDocArea('humanistica')" type="button">Humanística</button>
+                        <button class="area-btn" id="btn-doc-tecnica" onclick="setDocArea('tecnica')" type="button">Técnica</button>
+                    </div>
+                </div>
+
                 <form id="form-docente" class="form-grid">
                     <div class="form-group">
                         <label>Nombres</label>
-                        <input type="text" id="doc_nombres" required>
+                        <input type="text" id="doc_nombres" required oninput="updateDocEmailPreview()">
                     </div>
                     <div class="form-group">
                         <label>Apellidos</label>
-                        <input type="text" id="doc_apellidos" required>
+                        <input type="text" id="doc_apellidos" required oninput="updateDocEmailPreview()">
                     </div>
                     <div class="form-group">
                         <label>Carnet / CI</label>
                         <input type="text" id="doc_carnet" required>
                     </div>
                     <div class="form-group">
-                        <label>Especialidad</label>
-                        <input type="text" id="doc_especialidad" placeholder="Ej: Informática">
+                        <label>Correo Generado</label>
+                        <input type="text" id="doc_email_val" readonly style="opacity: 0.7;">
+                        <p class="email-preview" id="doc-email-preview-text">Generando correo...</p>
+                    </div>
+                    <div class="form-full form-group">
+                        <label id="doc-level-label">Materia</label>
+                        <select id="doc_especialidad" required>
+                            <!-- Dynamic -->
+                        </select>
                     </div>
                     <div class="form-full">
                         <button type="submit" class="btn-action" style="width: 100%;">
@@ -614,6 +629,38 @@
             document.getElementById('email-preview-text').textContent = "Correo Sugerido: " + email;
         }
 
+        let currentDocArea = 'humanistica';
+
+        const docLevels = {
+            humanistica: ['Matemática', 'Lenguaje', 'Ciencias Naturales', 'Ciencias Sociales'],
+            tecnica: levels.tecnica_carreras
+        };
+
+        function setDocArea(area) {
+            currentDocArea = area;
+            document.getElementById('btn-doc-humanistica').classList.remove('active');
+            document.getElementById('btn-doc-tecnica').classList.remove('active');
+            document.getElementById(`btn-doc-${area}`).classList.add('active');
+            
+            const select = document.getElementById('doc_especialidad');
+            select.innerHTML = docLevels[area].map(l => `<option value="${l}">${l}</option>`).join('');
+            
+            document.getElementById('doc-level-label').textContent = area === 'humanistica' ? 'Materia' : 'Carrera Técnica';
+        }
+
+        function updateDocEmailPreview() {
+            const nombres = document.getElementById('doc_nombres').value.trim();
+            const apellidos = document.getElementById('doc_apellidos').value.trim();
+            if (!nombres || !apellidos) return;
+
+            const cleanN = nombres.replace(/\s+/g, '').toLowerCase();
+            const cleanA = apellidos.replace(/\s+/g, '').toLowerCase();
+            const email = (cleanN + cleanA).substring(0, 30) + "@ceapilon.com";
+            
+            document.getElementById('doc_email_val').value = email;
+            document.getElementById('doc-email-preview-text').textContent = "Correo Sugerido: " + email;
+        }
+
         async function loadStats() {
             try {
                 const r = await fetch(`${API_URL}/modulos/stats`, { headers: {'Authorization': `Bearer ${token}`} });
@@ -731,6 +778,7 @@
                 if (res.ok) {
                     Swal.fire('¡Docente Registrado!', 'Se generó su acceso automático.', 'success');
                     e.target.reset();
+                    updateDocEmailPreview();
                 }
             } catch(e) {}
         });
@@ -807,6 +855,7 @@
 
         // Init
         setArea('humanistica');
+        setDocArea('humanistica');
         loadStats();
     </script>
 </body>
