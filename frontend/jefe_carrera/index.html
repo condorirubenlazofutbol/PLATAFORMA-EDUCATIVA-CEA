@@ -130,15 +130,35 @@
         <div class="card">
             <div class="card-title">Gestionar Malla Curricular</div>
             <div class="card-sub">Añade nuevas materias al programa de estudios.</div>
+            <div style="display:flex; gap:8px; margin-bottom:1rem;">
+                <button class="btn-primary" id="jef-btn-hum" onclick="setJefArea('humanistica')" type="button" style="background:var(--primary);">Humanística</button>
+                <button class="btn-primary" id="jef-btn-tec" onclick="setJefArea('tecnica')" type="button" style="background:rgba(255,255,255,0.1);color:var(--muted);">Técnica</button>
+            </div>
             <form id="formMallaJef">
-                <label>Nombre de la Materia</label>
-                <input type="text" id="mj_nombre" required placeholder="Ej: Programación Orientada a Objetos">
-                <label>Semestre / Nivel</label>
+                <div id="jef-group-mat">
+                    <label id="jef-lbl-mat">Materia Humanística</label>
+                    <select id="mj_nombre">
+                        <option>Matemática</option><option>Lenguaje</option>
+                        <option>Ciencias Naturales</option><option>Ciencias Sociales</option>
+                    </select>
+                </div>
+                <div id="jef-group-car" style="display:none">
+                    <label>Carrera Técnica</label>
+                    <select id="mj_carrera">
+                        <option>Sistemas Informáticos</option><option>Veterinaria</option>
+                        <option>Educación Parvularia</option><option>Fisioterapia</option>
+                        <option>Contabilidad General</option><option>Corte y Confección</option>
+                        <option>Belleza Integral</option><option>Gastronomía</option>
+                    </select>
+                </div>
+                <label id="jef-lbl-niv">Ciclo / Nivel</label>
                 <select id="mj_nivel">
-                    <option>Primer Semestre</option><option>Segundo Semestre</option>
-                    <option>Tercer Semestre</option><option>Cuarto Semestre</option>
-                    <option>Quinto Semestre</option><option>Sexto Semestre</option>
+                    <option>Aplicados (Primer Año)</option>
+                    <option>Complementarios (Segundo Año)</option>
+                    <option>Especializados (Tercer Año)</option>
                 </select>
+                <label>Nombre del Módulo</label>
+                <input type="text" id="mj_modulo" required placeholder="Ej: Módulo 1 - Aritmética">
                 <button type="submit" class="btn-primary">Agregar a la Malla</button>
             </form>
         </div>
@@ -180,13 +200,34 @@
         if (id==='notas') cargarNotasJef();
     }
 
+    let jefArea = 'humanistica';
+    function setJefArea(area) {
+        jefArea = area;
+        const isHum = area === 'humanistica';
+        document.getElementById('jef-btn-hum').style.background = isHum ? 'var(--primary)' : 'rgba(255,255,255,0.1)';
+        document.getElementById('jef-btn-hum').style.color = isHum ? 'white' : 'var(--muted)';
+        document.getElementById('jef-btn-tec').style.background = !isHum ? 'var(--violet)' : 'rgba(255,255,255,0.1)';
+        document.getElementById('jef-btn-tec').style.color = !isHum ? 'white' : 'var(--muted)';
+        document.getElementById('jef-group-mat').style.display = isHum ? '' : 'none';
+        document.getElementById('jef-group-car').style.display = isHum ? 'none' : '';
+        const nivelSel = document.getElementById('mj_nivel');
+        if (isHum) {
+            nivelSel.innerHTML = '<option>Aplicados (Primer Año)</option><option>Complementarios (Segundo Año)</option><option>Especializados (Tercer Año)</option>';
+            document.getElementById('jef-lbl-mat').textContent = 'Materia Humanística';
+            document.getElementById('jef-lbl-niv').textContent = 'Ciclo Humanístico';
+        } else {
+            nivelSel.innerHTML = '<option>Nivel Básico</option><option>Nivel Auxiliar</option><option>Nivel Medio I</option><option>Nivel Medio II</option>';
+            document.getElementById('jef-lbl-niv').textContent = 'Nivel Técnico';
+        }
+    }
+
     async function cargarStats() {
         try {
-            const s = await fetch(`${API_BASE}/modulos/stats`,{headers:{'Authorization':`Bearer ${token}`}}).then(r=>r.ok?r.json():{});
+            const s = await fetch(`${API_URL}/modulos/stats`,{headers:{'Authorization':`Bearer ${token}`}}).then(r=>r.ok?r.json():{});
             document.getElementById('jEst').textContent = s.estudiantes??'--';
             document.getElementById('jDoc').textContent = s.profesores??'--';
             document.getElementById('jMod').textContent = s.modulos??'--';
-            const s2 = await fetch(`${API_BASE}/notas/estadisticas`,{headers:{'Authorization':`Bearer ${token}`}}).then(r=>r.ok?r.json():{aprobados:0});
+            const s2 = await fetch(`${API_URL}/notas/estadisticas`,{headers:{'Authorization':`Bearer ${token}`}}).then(r=>r.ok?r.json():{aprobados:0});
             document.getElementById('jApro').textContent = s2.aprobados??'--';
         } catch(e) { ['jEst','jDoc','jMod','jApro'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='🔌'; }); }
     }
@@ -222,7 +263,7 @@
         const tbody = document.getElementById('notasJefBody');
         let alumnos = [];
         try {
-            const r = await fetch(`${API_BASE}/notas/modulo/1`,{headers:{'Authorization':`Bearer ${token}`}});
+            const r = await fetch(`${API_URL}/notas/modulo/1`,{headers:{'Authorization':`Bearer ${token}`}});
             if(r.ok){ const d=await r.json(); alumnos=d.alumnos||[]; }
         } catch(e){}
         if(alumnos.length===0) alumnos=[
@@ -244,11 +285,15 @@
 
     document.getElementById('formMallaJef').addEventListener('submit', async e=>{
         e.preventDefault();
-        const nombre=document.getElementById('mj_nombre').value, nivel=document.getElementById('mj_nivel').value;
-        try { await fetch(`${API_BASE}/modulos`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({nombre,nivel})}); } catch(e){}
-        Swal.fire({icon:'success',title:'Módulo añadido a la malla',timer:1500,showConfirmButton:false});
+        const nombre = document.getElementById('mj_modulo').value || (jefArea === 'tecnica' ? document.getElementById('mj_carrera').value : document.getElementById('mj_nombre').value);
+        const nivel  = document.getElementById('mj_nivel').value;
+        try { await fetch(`${API_URL}/modulos`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({nombre,nivel})}); } catch(e){}
+        Swal.fire({icon:'success',title:'Módulo añadido a la malla CEA',timer:1500,showConfirmButton:false});
         document.getElementById('formMallaJef').reset();
+        setJefArea(jefArea);
     });
+
+    setJefArea('humanistica');
 
     function logout(){ localStorage.clear(); window.location.href='../login.html'; }
     cargarStats();

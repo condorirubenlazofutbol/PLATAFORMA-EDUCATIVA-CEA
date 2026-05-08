@@ -190,20 +190,40 @@
         </div>
     </div>
 
-    <!-- MALLA -->
     <div class="tab-panel" id="tab-malla">
         <div class="card">
-            <div class="card-title">Gestión de Malla Curricular</div>
+            <div class="card-title">Gestión de Malla Curricular CEA</div>
             <div class="card-sub">Añadir o supervisar los módulos del programa de estudios.</div>
+            <div style="display:flex; gap:8px; margin-bottom:1rem;">
+                <button class="btn-primary" id="dir-btn-hum" onclick="setDirArea('humanistica')" type="button">Humanística</button>
+                <button class="btn-primary" id="dir-btn-tec" onclick="setDirArea('tecnica')" type="button" style="background:rgba(255,255,255,0.1);color:var(--muted);">Técnica</button>
+            </div>
             <form id="formMallaDir" class="form-row">
-                <div><label>Nombre del Módulo</label><input type="text" id="md_nombre" required placeholder="Ej: Bases de Datos Avanzadas"></div>
-                <div><label>Semestre / Nivel</label>
-                    <select id="md_nivel">
-                        <option>Primer Semestre</option><option>Segundo Semestre</option>
-                        <option>Tercer Semestre</option><option>Cuarto Semestre</option>
-                        <option>Quinto Semestre</option><option>Sexto Semestre</option>
+                <div id="dir-group-mat">
+                    <label id="dir-lbl-mat">Materia Humanística</label>
+                    <select id="md_materia">
+                        <option>Matemática</option><option>Lenguaje</option>
+                        <option>Ciencias Naturales</option><option>Ciencias Sociales</option>
                     </select>
                 </div>
+                <div id="dir-group-car" style="display:none">
+                    <label>Carrera Técnica</label>
+                    <select id="md_carrera">
+                        <option>Sistemas Informáticos</option><option>Veterinaria</option>
+                        <option>Educación Parvularia</option><option>Fisioterapia</option>
+                        <option>Contabilidad General</option><option>Corte y Confección</option>
+                        <option>Belleza Integral</option><option>Gastronomía</option>
+                    </select>
+                </div>
+                <div>
+                    <label id="dir-lbl-niv">Ciclo / Nivel</label>
+                    <select id="md_nivel">
+                        <option>Aplicados (Primer Año)</option>
+                        <option>Complementarios (Segundo Año)</option>
+                        <option>Especializados (Tercer Año)</option>
+                    </select>
+                </div>
+                <div><label>Nombre del Módulo</label><input type="text" id="md_nombre" required placeholder="Ej: Módulo 1 - Álgebra"></div>
                 <div><button type="submit" class="btn-primary">Agregar Módulo</button></div>
             </form>
         </div>
@@ -232,17 +252,16 @@
     // ── Stats + Charts ───────────────────────────────────────────────
     async function cargarStats() {
         try {
-            const s1 = await fetch(`${API_BASE}/modulos/stats`, { headers:{'Authorization':`Bearer ${token}`}}).then(r=>r.ok?r.json():{});
+            const s1 = await fetch(`${API_URL}/modulos/stats`, { headers:{'Authorization':`Bearer ${token}`}}).then(r=>r.ok?r.json():{});
             document.getElementById('dEst').textContent = s1.estudiantes ?? '--';
             document.getElementById('dDoc').textContent = s1.profesores  ?? '--';
             document.getElementById('dMod').textContent = s1.modulos     ?? '--';
 
-            const s2 = await fetch(`${API_BASE}/notas/estadisticas`, { headers:{'Authorization':`Bearer ${token}`}}).then(r=>r.ok?r.json():{aprobados:0,reprobados:0,cursando:0});
+            const s2 = await fetch(`${API_URL}/notas/estadisticas`, { headers:{'Authorization':`Bearer ${token}`}}).then(r=>r.ok?r.json():{aprobados:0,reprobados:0,cursando:0});
             document.getElementById('dApro').textContent  = s2.aprobados  ?? '--';
             document.getElementById('dRepro').textContent = s2.reprobados ?? '--';
             document.getElementById('dCurs').textContent  = s2.cursando   ?? '--';
 
-            // Gráfico de dona: estados académicos
             new Chart(document.getElementById('chartEstados'), {
                 type:'doughnut',
                 data:{ labels:['Aprobados','Reprobados','Cursando'],
@@ -251,8 +270,7 @@
                 options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#94a3b8'}}} }
             });
 
-            // Gráfico de barras: módulos por nivel
-            const mods = await fetch(`${API_BASE}/modulos/`, { headers:{'Authorization':`Bearer ${token}`}}).then(r=>r.ok?r.json():{modulos:[]});
+            const mods = await fetch(`${API_URL}/modulos/`, { headers:{'Authorization':`Bearer ${token}`}}).then(r=>r.ok?r.json():{modulos:[]});
             const lista = mods.modulos || mods;
             const porNivel = lista.reduce((acc,m)=>{ acc[m.nivel||'General']=(acc[m.nivel||'General']||0)+1; return acc; },{});
             new Chart(document.getElementById('chartNiveles'), {
@@ -267,17 +285,12 @@
         }
     }
 
-    // ── Usuarios ─────────────────────────────────────────────────────
     async function cargarUsuarios() {
         const tbody = document.getElementById('dirUsuariosBody');
         tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;">Cargando...</td></tr>';
-        let users = [
-            {id:1,nombre:'Carlos',apellido:'Mendoza',email:'c@edu.com',rol:'docente',nivel_asignado:'Nivel I'},
-            {id:2,nombre:'Ana',apellido:'Paredes',email:'a@edu.com',rol:'estudiante',nivel_asignado:'Nivel II'},
-            {id:3,nombre:'Luis',apellido:'Torre',email:'l@edu.com',rol:'secretaria',nivel_asignado:null}
-        ];
+        let users = [];
         try {
-            const r = await fetch(`${API_BASE}/auth/usuarios`, {headers:{'Authorization':`Bearer ${token}`}});
+            const r = await fetch(`${API_URL}/auth/usuarios`, {headers:{'Authorization':`Bearer ${token}`}});
             if (r.ok) { const d=await r.json(); if(d.length) users=d; }
         } catch(e) {}
         tbody.innerHTML = '';
@@ -316,20 +329,43 @@
     document.getElementById('formVotDir').addEventListener('submit', async e => {
         e.preventDefault();
         const payload = {titulo:document.getElementById('vd_titulo').value,descripcion:document.getElementById('vd_desc').value,fecha_inicio:document.getElementById('vd_inicio').value,fecha_fin:document.getElementById('vd_fin').value};
-        try { await fetch(`${API_BASE}/votaciones/elecciones`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify(payload)}); } catch(e){}
+        try { await fetch(`${API_URL}/votaciones/elecciones`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify(payload)}); } catch(e){}
         Swal.fire({icon:'success',title:'🗳️ Votación creada',timer:1500,showConfirmButton:false});
         document.getElementById('formVotDir').reset();
     });
 
-    // ── Malla ────────────────────────────────────────────────────────
+    // ── Malla CEA ──────────────────────────────────────────────
+    let dirArea = 'humanistica';
+    function setDirArea(area) {
+        dirArea = area;
+        const isHum = area === 'humanistica';
+        document.getElementById('dir-btn-hum').style.background = isHum ? 'var(--primary)' : 'rgba(255,255,255,0.1)';
+        document.getElementById('dir-btn-hum').style.color = isHum ? 'white' : 'var(--muted)';
+        document.getElementById('dir-btn-tec').style.background = !isHum ? 'var(--violet)' : 'rgba(255,255,255,0.1)';
+        document.getElementById('dir-btn-tec').style.color = !isHum ? 'white' : 'var(--muted)';
+        document.getElementById('dir-group-mat').style.display = isHum ? '' : 'none';
+        document.getElementById('dir-group-car').style.display = isHum ? 'none' : '';
+        const nivelSel = document.getElementById('md_nivel');
+        if (isHum) {
+            nivelSel.innerHTML = '<option>Aplicados (Primer Año)</option><option>Complementarios (Segundo Año)</option><option>Especializados (Tercer Año)</option>';
+            document.getElementById('dir-lbl-niv').textContent = 'Ciclo Humanístico';
+        } else {
+            nivelSel.innerHTML = '<option>Nivel Básico</option><option>Nivel Auxiliar</option><option>Nivel Medio I</option><option>Nivel Medio II</option>';
+            document.getElementById('dir-lbl-niv').textContent = 'Nivel Técnico';
+        }
+    }
+
     document.getElementById('formMallaDir').addEventListener('submit', async e => {
         e.preventDefault();
-        const nombre=document.getElementById('md_nombre').value, nivel=document.getElementById('md_nivel').value;
-        try { await fetch(`${API_BASE}/modulos`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({nombre,nivel})}); } catch(e){}
+        const nombre = document.getElementById('md_nombre').value || (dirArea === 'tecnica' ? document.getElementById('md_carrera').value : document.getElementById('md_materia').value);
+        const nivel  = document.getElementById('md_nivel').value;
+        try { await fetch(`${API_URL}/modulos`, {method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({nombre,nivel})}); } catch(e){}
         Swal.fire({icon:'success',title:'Módulo añadido',timer:1500,showConfirmButton:false});
         document.getElementById('formMallaDir').reset();
+        setDirArea(dirArea);
     });
 
+    setDirArea('humanistica');
     function logout() { localStorage.clear(); window.location.href='../login.html'; }
     cargarStats();
 </script>
