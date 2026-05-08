@@ -11,7 +11,7 @@
             --primary: #0ea5e9;
             --secondary: #48d18e;
             --bg-dark: #0b0f1a;
-            --sidebar-bg: rgba(15, 23, 42, 0.95);
+            --sidebar-bg: rgba(15, 23, 42, 0.98);
             --card-bg: rgba(19, 25, 41, 0.7);
             --border: rgba(255, 255, 255, 0.08);
             --text: #f8fafc;
@@ -26,12 +26,18 @@
             background: var(--sidebar-bg);
             border-right: 1px solid var(--border);
             display: flex; flex-direction: column;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
         }
-        .sidebar-header { padding: 2rem 1.5rem; border-bottom: 1px solid var(--border); }
+        .sidebar-header { padding: 2rem 1.5rem; border-bottom: 1px solid var(--border); position: relative; }
         .sidebar-header h2 { font-size: 1.2rem; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 10px; }
         .back-link { display: block; margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted); text-decoration: none; font-weight: 600; }
         .back-link:hover { color: var(--primary); }
+
+        /* Mobile Toggle */
+        .mobile-header { display: none; padding: 1rem; background: var(--sidebar-bg); border-bottom: 1px solid var(--border); align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; z-index: 900; }
+        .btn-toggle { background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; }
 
         .modulos-list { flex: 1; overflow-y: auto; padding: 1rem; }
         .modulo-item {
@@ -45,39 +51,53 @@
         .modulo-item p { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-top: 2px; }
 
         /* Main Content */
-        .main { flex: 1; height: 100vh; overflow-y: auto; padding: 3rem; background: radial-gradient(circle at top right, rgba(14, 165, 233, 0.05), transparent 40%); }
+        .main { flex: 1; height: 100vh; overflow-y: auto; padding: 3rem; background: radial-gradient(circle at top right, rgba(14, 165, 233, 0.05), transparent 40%); transition: all 0.3s; }
         
         .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); text-align: center; }
         .empty-state h2 { color: var(--text); margin-bottom: 1rem; }
 
         /* Tabs */
-        .tabs { display: flex; gap: 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
-        .tab { padding: 1rem 0; font-weight: 700; font-size: 0.9rem; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tabs { display: flex; gap: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; overflow-x: auto; padding-bottom: 2px; }
+        .tab { padding: 1rem 0; font-weight: 700; font-size: 0.9rem; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; white-space: nowrap; }
         .tab:hover { color: var(--text); }
         .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
         /* Content Cards */
-        .content-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; }
+        .content-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; flex-wrap: wrap; gap: 1rem; }
         .content-card:hover { border-color: var(--primary); transform: translateX(5px); }
         .content-info h4 { font-size: 1.1rem; margin-bottom: 0.3rem; }
         .content-info p { color: var(--muted); font-size: 0.85rem; }
         .content-icon { width: 45px; height: 45px; border-radius: 12px; background: rgba(14, 165, 233, 0.1); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 
-        .btn-view { padding: 8px 20px; background: var(--primary); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; }
+        .btn-view { padding: 8px 20px; background: var(--primary); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; width: auto; }
         
-        /* Form Subir */
-        .form-group { margin-bottom: 1.5rem; }
-        label { display: block; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: white; font-size: 0.95rem; }
-        input:focus, select:focus { border-color: var(--primary); outline: none; }
-        .btn-submit { padding: 12px 30px; background: var(--secondary); color: #000; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; margin-top: 1rem; }
+        /* Mobile Overlay */
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; backdrop-filter: blur(4px); }
 
-        .loading { padding: 2rem; text-align: center; color: var(--muted); }
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            .sidebar { position: fixed; left: 0; transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .mobile-header { display: flex; }
+            .main { padding: 5rem 1.5rem 2rem; }
+            .sidebar-overlay.active { display: block; }
+            .hero h1 { font-size: 1.8rem; }
+            .tabs { gap: 1rem; }
+            .content-card { flex-direction: column; align-items: flex-start; }
+            .btn-view { width: 100%; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
+    <div class="mobile-header">
+        <h2 style="font-size: 1.1rem; color: var(--primary); font-weight: 900;">📚 Aula Virtual</h2>
+        <button class="btn-toggle" onclick="toggleSidebar()">☰</button>
+    </div>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+    <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2>📚 Aula Virtual</h2>
             <a href="../../portal/index.html" class="back-link">← Volver al Portal</a>
@@ -104,6 +124,14 @@
 
         const esDocente = ['docente', 'profesor', 'director', 'jefe_carrera', 'administrador'].includes(user.rol);
 
+        // ======= Responsive Toggle =======
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
         // ======= Cargar lista de módulos =======
         async function cargarModulos() {
             try {
@@ -129,7 +157,10 @@
                             <p>${m.nivel || 'Módulo General'}</p>
                         </div>
                     `;
-                    div.onclick = () => seleccionarModulo(m, div);
+                    div.onclick = () => {
+                        seleccionarModulo(m, div);
+                        if (window.innerWidth <= 900) toggleSidebar();
+                    };
                     list.appendChild(div);
                 });
             } catch (e) {

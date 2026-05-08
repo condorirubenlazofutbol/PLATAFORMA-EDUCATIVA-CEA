@@ -3,20 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduConnect Pro | Innovación Educativa</title>
+    <title>EduConnect Pro | CEA Prof. Hérman Ortiz Camargo</title>
+    
+    <!-- SEO Primary Tags -->
+    <meta name="title" content="EduConnect Pro | CEA Prof. Hérman Ortiz Camargo">
+    <meta name="description" content="Plataforma educativa líder del CEA Pailón. Gestión de notas, asistencia, biblioteca virtual y subsistema de elecciones estudiantiles con tecnología Pro.">
+    <meta name="keywords" content="CEA, Pailón, Educación, Plataforma Educativa, Bolivia, Técnico Medio, Humanística">
+    <meta name="author" content="Antigravity AI">
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://educonnect-cea.onrender.com/">
+    <meta property="og:url" content="https://va-cea.onrender.com/">
     <meta property="og:title" content="CEA Prof. Hérman Ortiz Camargo | Plataforma Educativa">
-    <meta property="og:description" content="Ecosistema digital integral para la gestión académica del CEA Pailón. Innovación en educación secundaria de adultos y técnica tecnológica.">
-    <meta property="og:image" content="portal/images/compartir.png">
+    <meta property="og:description" content="Ecosistema digital integral para la gestión académica institucional. Innovación y excelencia educativa.">
+    <meta property="og:image" content="https://va-cea.onrender.com/portal/images/compartir.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://educonnect-cea.onrender.com/">
+    <meta property="twitter:url" content="https://va-cea.onrender.com/">
     <meta property="twitter:title" content="CEA Prof. Hérman Ortiz Camargo">
     <meta property="twitter:description" content="Gestión académica pro-level para educación técnica y humanística.">
-    <meta property="twitter:image" content="portal/images/compartir.png">
+    <meta property="twitter:image" content="https://va-cea.onrender.com/portal/images/compartir.png">
+
     <link rel="manifest" href="portal/instalar/manifest.json">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap');
@@ -47,52 +55,43 @@
         /* Navigation */
         nav {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 1.5rem 5%; background: rgba(11, 15, 26, 0.8);
-            backdrop-filter: blur(15px); border-bottom: 1px solid var(--border);
+            padding: 1.2rem 5%; background: rgba(11, 15, 26, 0.85);
+            backdrop-filter: blur(20px); border-bottom: 1px solid var(--border);
             position: fixed; width: 100%; top: 0; z-index: 1000;
         }
-        .logo { font-size: 1.6rem; font-weight: 900; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .nav-links { display: flex; gap: 2.5rem; align-items: center; }
-        .nav-links a { color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: 0.3s; }
+        .logo { font-size: 1.5rem; font-weight: 900; background: linear-gradient(90deg, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 2rem; align-items: center; }
+        .nav-links a { color: var(--text); text-decoration: none; font-weight: 600; font-size: 0.85rem; transition: 0.3s; }
         .nav-links a:hover { color: var(--primary); }
-        .btn-login { padding: 0.8rem 2rem; background: var(--primary); border-radius: 12px; color: white; font-weight: 800; }
+        .btn-login { padding: 0.7rem 1.8rem; background: var(--primary); border-radius: 12px; color: white; font-weight: 800; text-decoration: none; font-size: 0.85rem; }
 
         /* Hero */
         .hero {
             height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; padding: 0 10%; position: relative;
+            text-align: center; padding: 0 5%; position: relative;
         }
         .hero-badge {
-            padding: 8px 16px; background: rgba(14, 165, 233, 0.1); border: 1px solid var(--primary);
-            border-radius: 50px; color: var(--primary); font-weight: 800; font-size: 0.8rem;
+            padding: 8px 20px; background: rgba(14, 165, 233, 0.1); border: 1px solid var(--primary);
+            border-radius: 50px; color: var(--primary); font-weight: 800; font-size: 0.75rem;
             text-transform: uppercase; margin-bottom: 2rem; letter-spacing: 2px;
         }
-        .hero h1 { font-size: 4.8rem; font-weight: 900; line-height: 1; margin-bottom: 1.5rem; letter-spacing: -0.04em; }
+        .hero h1 { font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 900; line-height: 1.1; margin-bottom: 1.5rem; letter-spacing: -0.04em; }
         .hero h1 span { color: var(--primary); }
-        .hero p { font-size: 1.3rem; color: var(--muted); max-width: 700px; margin-bottom: 3rem; line-height: 1.6; }
+        .hero p { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--muted); max-width: 800px; margin-bottom: 3rem; line-height: 1.6; }
         
-        .hero-btns { display: flex; gap: 1.5rem; }
-        .btn-main { padding: 1.2rem 3rem; border-radius: 14px; font-weight: 900; text-decoration: none; transition: 0.3s; font-size: 1.1rem; }
+        .hero-btns { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+        .btn-main { padding: 1.2rem 2.8rem; border-radius: 14px; font-weight: 900; text-decoration: none; transition: 0.3s; font-size: 1rem; }
         .btn-filled { background: var(--primary); color: #000; }
         .btn-filled:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(14, 165, 233, 0.3); }
         .btn-border { border: 1px solid var(--border); color: white; background: rgba(255,255,255,0.05); }
         .btn-border:hover { background: rgba(255,255,255,0.1); border-color: white; }
 
-        /* Features */
-        .features { padding: 8rem 5%; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1300px; margin: 0 auto; }
-        .f-card { background: var(--card-bg); border: 1px solid var(--border); padding: 3rem; border-radius: 24px; transition: 0.4s; }
-        .f-card:hover { border-color: var(--primary); transform: translateY(-10px); }
-        .f-icon { font-size: 2.5rem; margin-bottom: 1.5rem; }
-        .f-card h3 { font-size: 1.5rem; margin-bottom: 1rem; color: #fff; }
-        .f-card p { color: var(--muted); line-height: 1.7; }
-
-        footer { padding: 4rem 5%; text-align: center; border-top: 1px solid var(--border); color: var(--muted); }
-
         @media (max-width: 768px) {
-            .hero h1 { font-size: 3rem; }
-            .hero p { font-size: 1.1rem; }
-            .hero-btns { flex-direction: column; width: 100%; }
+            nav { padding: 1rem 1.5rem; }
             .nav-links { display: none; }
+            .hero { padding-top: 5rem; }
+            .hero-btns { flex-direction: column; width: 100%; max-width: 300px; }
+            .btn-main { text-align: center; }
         }
     </style>
 </head>
@@ -169,10 +168,20 @@
         </div>
     </section>
 
-    <section id="ia" style="padding: 6rem 10%; text-align: center;">
-        <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">¿Listo para transformar tu educación?</h2>
-        <p style="color: var(--muted); max-width: 600px; margin: 0 auto 3rem; font-size: 1.1rem;">Únete a nuestra comunidad educativa y accede a todas nuestras herramientas digitales de última generación.</p>
-        <a href="login.html" class="btn-main btn-filled">Ingresar a la Plataforma</a>
+    <section id="nosotros" style="padding: 4rem 10%; background: rgba(14, 165, 233, 0.03); border-top: 1px solid var(--border);">
+        <div style="max-width: 1000px; margin: 0 auto; text-align: center;">
+            <h2 style="font-size: 2.2rem; margin-bottom: 3rem; font-weight: 900;">Nuestra <span style="color: var(--primary);">Identidad</span></h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 3rem; text-align: left;">
+                <div style="background: var(--card-bg); padding: 2rem; border-radius: 20px; border: 1px solid var(--border);">
+                    <h4 style="color: var(--primary); margin-bottom: 1rem; font-weight: 800; font-size: 1.2rem;">Misión</h4>
+                    <p style="font-size: 0.95rem; color: var(--muted); line-height: 1.6;">Proporcionar una formación integral y tecnológica de excelencia que permita a jóvenes y adultos de Pailón integrarse con éxito al mercado laboral y contribuir al desarrollo de la región.</p>
+                </div>
+                <div style="background: var(--card-bg); padding: 2rem; border-radius: 20px; border: 1px solid var(--border);">
+                    <h4 style="color: var(--secondary); margin-bottom: 1rem; font-weight: 800; font-size: 1.2rem;">Visión</h4>
+                    <p style="font-size: 0.95rem; color: var(--muted); line-height: 1.6;">Consolidarnos como el Centro de Educación Alternativa líder en innovación digital de Bolivia, siendo un modelo de transformación educativa mediante el uso de IA y plataformas avanzadas.</p>
+                </div>
+            </div>
+        </div>
     </section>
 
     <footer>
