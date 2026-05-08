@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Institucional | Director CEA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{--azul:#003580;--azul2:#0056b3;--dorado:#f59e0b;--verde:#10b981;--rojo:#ef4444;--violet:#8b5cf6;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+.h-brand{display:flex;align-items:center;gap:12px;}
+.h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;}
+.h-title h1{color:#fff;font-size:1rem;font-weight:800;}
+.h-title p{color:rgba(255,255,255,.7);font-size:.75rem;}
+.btn-back{padding:8px 16px;border-radius:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;transition:.2s;}
+.btn-back:hover{background:#fff;color:var(--azul);}
+
+.container{max-width:1200px;margin:0 auto;padding:24px 20px;}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);}
+.kpi-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;}
+.kpi-info h3{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.kpi-info .num{font-size:1.8rem;font-weight:900;color:var(--text);line-height:1;}
+.icon-blue{background:#eff6ff;color:var(--azul2);}
+.icon-green{background:#dcfce7;color:var(--verde);}
+.icon-orange{background:#fef3c7;color:#d97706;}
+.icon-purple{background:#f3e8ff;color:var(--violet);}
+
+/* CHARTS & TABLES */
+.layout{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);}
+.panel-title{font-size:.95rem;font-weight:800;color:var(--azul);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.chart-wrap{position:relative;height:300px;width:100%;}
+
+.tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+.tbl th{background:#f1f5f9;color:var(--muted);padding:10px;text-align:left;font-weight:700;text-transform:uppercase;font-size:.7rem;}
+.tbl td{padding:12px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:#f8fafc;}
+.badge{padding:4px 8px;border-radius:6px;font-size:.7rem;font-weight:700;}
+.b-ok{background:#dcfce7;color:#166534;}
+.b-err{background:#fee2e2;color:#991b1b;}
+
+.feed-item{display:flex;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.feed-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.feed-icon{width:36px;height:36px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.feed-content strong{font-size:.85rem;color:var(--text);display:block;}
+.feed-content span{font-size:.75rem;color:var(--muted);}
+
+.loading{text-align:center;padding:60px;color:var(--muted);font-weight:600;}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-brand">
+    <div class="h-logo" style="display:flex;align-items:center;justify-content:center;background:var(--dorado);font-size:1.2rem;">📈</div>
+    <div class="h-title">
+      <h1>Dashboard Institucional</h1>
+      <p>Vista General Director · CEA Pailón</p>
+    </div>
+  </div>
+  <a href="../portal/index.html" class="btn-back">← Volver al Portal</a>
+</header>
+
+<div class="container" id="mainContent">
+  <div class="loading">⏳ Recopilando estadísticas en tiempo real...</div>
+</div>
+
+<script src="../portal/js/api.js"></script>
+<script>
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user')||'{}');
+if(!token || !['director','administrador','secretaria'].includes(user.rol)) window.location.href='../login.html';
+
+async function init() {
+  try {
+    const [resR, resC, resN, resA] = await Promise.all([
+      fetch(`${API_BASE}/estadisticas/resumen`, {headers:{Authorization:`Bearer ${token}`}}),
+      fetch(`${API_BASE}/estadisticas/por-carrera`, {headers:{Authorization:`Bearer ${token}`}}),
+      fetch(`${API_BASE}/estadisticas/por-nivel`, {headers:{Authorization:`Bearer ${token}`}}),
+      fetch(`${API_BASE}/estadisticas/actividad-reciente`, {headers:{Authorization:`Bearer ${token}`}})
+    ]);
+    
+    if(!resR.ok) throw new Error('Error al cargar datos');
+
+    const sum = await resR.json();
+    const {carreras} = await resC.json();
+    const {niveles} = await resN.json();
+    const act = await resA.json();
+
+    renderUI(sum, carreras, niveles, act);
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML = `<div class="loading" style="color:var(--rojo);">❌ Error: ${e.message}</div>`;
+  }
+}
+
+function renderUI(sum, carreras, niveles, act) {
+  const c = document.getElementById('mainContent');
+  
+  c.innerHTML = `
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon icon-blue">👨‍🎓</div>
+        <div class="kpi-info"><h3>Estudiantes Activos</h3><div class="num">${sum.total_estudiantes}</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon icon-purple">👨‍🏫</div>
+        <div class="kpi-info"><h3>Plantel Docente</h3><div class="num">${sum.total_docentes}</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon icon-green">✅</div>
+        <div class="kpi-info"><h3>Tasa de Aprobación</h3><div class="num">${sum.tasa_aprobacion}%</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon icon-orange">📜</div>
+        <div class="kpi-info"><h3>Cert. / Constancias</h3><div class="num">${sum.total_certificados+sum.total_constancias}</div></div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- Columna Principal -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div class="panel">
+          <div class="panel-title">Distribución por Carrera</div>
+          <div class="chart-wrap"><canvas id="carreraChart"></canvas></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Rendimiento por Nivel de Formación</div>
+          <div style="overflow-x:auto;">
+            <table class="tbl">
+              <thead><tr><th>Nivel</th><th>Inscritos</th><th>Aprobados</th><th>Promedio General</th></tr></thead>
+              <tbody>
+                ${niveles.map(n=>`<tr>
+                  <td><strong>${n.nivel}</strong></td>
+                  <td>${n.inscritos}</td>
+                  <td><span class="badge b-ok">${n.aprobados}</span></td>
+                  <td><strong>${n.promedio}</strong> / 100</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Secundaria -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div class="panel">
+          <div class="panel-title">Certificados Recientes</div>
+          <div>
+            ${act.certificados_recientes.length ? act.certificados_recientes.map(x=>`
+              <div class="feed-item">
+                <div class="feed-icon">🎓</div>
+                <div class="feed-content">
+                  <strong>${x.nombre} ${x.apellido||''}</strong>
+                  <span>${x.modulo}</span><br>
+                  <span style="font-size:.65rem;">${new Date(x.fecha).toLocaleDateString()} · ${x.codigo}</span>
+                </div>
+              </div>`).join('') : '<p style="color:var(--muted);font-size:.8rem;">Sin emisiones recientes</p>'}
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Nuevos Estudiantes</div>
+          <div>
+            ${act.usuarios_recientes.filter(u=>u.rol==='estudiante').slice(0,5).map(x=>`
+              <div class="feed-item">
+                <div class="feed-icon">👤</div>
+                <div class="feed-content">
+                  <strong>${x.nombre} ${x.apellido||''}</strong>
+                  <span>Matriculado el ${new Date(x.fecha).toLocaleDateString()}</span>
+                </div>
+              </div>`).join('') || '<p style="color:var(--muted);font-size:.8rem;">Sin registros recientes</p>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Render Chart
+  const ctx = document.getElementById('carreraChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: carreras.map(c=>c.carrera.substring(0,20)+(c.carrera.length>20?'...':'')),
+      datasets: [
+        { label: 'Inscritos', data: carreras.map(c=>c.inscritos), backgroundColor: '#3b82f6', borderRadius: 4 },
+        { label: 'Aprobados', data: carreras.map(c=>c.aprobados), backgroundColor: '#10b981', borderRadius: 4 },
+        { label: 'Reprobados/Abandonos', data: carreras.map(c=>c.reprobados), backgroundColor: '#ef4444', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } }
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>

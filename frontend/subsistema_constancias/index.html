@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Constancias y Certificaciones CEA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#003580;--dorado:#f59e0b;--verde:#10b981;--rojo:#ef4444;--bg:#f0f4ff;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);}
+header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+.h-brand{display:flex;align-items:center;gap:12px;}
+.h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;}
+.h-title h1{color:#fff;font-size:.95rem;font-weight:800;}
+.h-title p{color:rgba(255,255,255,.6);font-size:.7rem;}
+.btn{padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s;}
+.btn-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;}
+.btn-back:hover{background:#fff;color:var(--azul);}
+.btn-primary{background:var(--azul);color:#fff;}
+.btn-dorado{background:var(--dorado);color:#000;}
+.btn-verde{background:var(--verde);color:#fff;}
+.btn-rojo{background:var(--rojo);color:#fff;}
+.btn-sm{padding:5px 10px;font-size:.75rem;}
+.container{max-width:1080px;margin:0 auto;padding:24px 16px 60px;}
+.tabs{display:flex;gap:6px;background:rgba(0,0,0,.04);padding:4px;border-radius:12px;margin-bottom:22px;width:fit-content;flex-wrap:wrap;}
+.tab{padding:8px 18px;border-radius:9px;border:none;background:none;font-size:.85rem;font-weight:600;cursor:pointer;color:var(--muted);transition:.2s;}
+.tab.active{background:var(--azul);color:#fff;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:16px;}
+.card h2{font-size:.9rem;font-weight:800;color:var(--azul);margin-bottom:16px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg{margin-bottom:12px;}
+.fg label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:8px;font-size:.85rem;font-family:'Inter',sans-serif;background:#fafafe;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--azul);}
+.fg textarea{min-height:130px;resize:vertical;}
+.plantilla-card{border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;background:#fff;}
+.plantilla-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+.plantilla-title{font-size:.9rem;font-weight:800;color:var(--azul);}
+.plantilla-meta{font-size:.72rem;color:var(--muted);margin-top:2px;}
+.badge{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;}
+.badge-activa{background:#dcfce7;color:#166534;}
+.badge-inactiva{background:#fee2e2;color:#991b1b;}
+.preview-text{font-size:.78rem;color:var(--muted);background:var(--bg);padding:10px;border-radius:8px;line-height:1.5;max-height:70px;overflow:hidden;margin-bottom:10px;}
+.acciones{display:flex;gap:8px;flex-wrap:wrap;}
+.empty{text-align:center;padding:50px;color:var(--muted);}
+.empty span{font-size:2.5rem;display:block;margin-bottom:10px;opacity:.3;}
+.msg{padding:10px 14px;border-radius:8px;font-size:.82rem;font-weight:600;margin-top:8px;display:none;}
+.msg.ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;display:block;}
+.msg.err{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;display:block;}
+.vars-box{font-size:.72rem;background:#eff6ff;border:1px solid #bfdbfe;padding:10px 14px;border-radius:8px;margin-bottom:12px;line-height:1.8;}
+.vars-box code{background:#dbeafe;padding:1px 5px;border-radius:4px;color:#1e40af;font-size:.7rem;}
+.info-bar{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;font-size:.82rem;color:#1e40af;margin-bottom:16px;}
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem;}
+.tbl th{background:var(--azul);color:#fff;padding:8px 10px;text-align:left;font-weight:700;}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--border);}
+.tbl tr:hover td{background:#f8faff;}
+@media(max-width:600px){.grid2{grid-template-columns:1fr;}.tabs{flex-wrap:wrap;}.h-title p{display:none;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-brand">
+    <img class="h-logo" src="../portal/images/logo.png" alt="CEA" onerror="this.src='https://placehold.co/42x42/003580/f5a623?text=CEA'">
+    <div class="h-title">
+      <h1>📜 Constancias y Certificaciones</h1>
+      <p>CEA Prof. Herman Ortiz Camargo · Pailón</p>
+    </div>
+  </div>
+  <a href="../portal/index.html" class="btn btn-back">← Portal</a>
+</header>
+
+<div class="container">
+  <div class="tabs" id="tabsBar"></div>
+  <div id="mainContent"><p style="text-align:center;padding:40px;color:var(--muted);">⏳ Cargando...</p></div>
+</div>
+
+<script src="../portal/js/api.js"></script>
+<script>
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user')||'{}');
+if(!token) window.location.href='../login.html';
+const isDir = ['director','administrador'].includes(user.rol);
+const isAdmin = ['director','administrador','secretaria'].includes(user.rol);
+
+function buildTabs(){
+  const t = document.getElementById('tabsBar');
+  let h = `<button class="tab active" onclick="switchView('ver',this)">📜 Mis Constancias</button>`;
+  if(isAdmin) h += `<button class="tab" onclick="switchView('gestionar',this)">⚙️ Gestionar Plantillas</button>`;
+  if(isAdmin) h += `<button class="tab" onclick="switchView('historial',this)">📋 Historial</button>`;
+  t.innerHTML = h;
+}
+
+function switchView(v,btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(v==='ver') renderVer();
+  else if(v==='gestionar') renderGestionar();
+  else renderHistorial();
+}
+
+// ── VER CONSTANCIAS DEL ESTUDIANTE ──────────────────────────────
+async function renderVer(){
+  set('<p style="text-align:center;padding:30px;color:var(--muted);">⏳ Cargando...</p>');
+  const res = await fetch(`${API_BASE}/constancias/disponibles`,{headers:{Authorization:`Bearer ${token}`}});
+  if(!res.ok){ set('<div class="empty"><span>🔌</span><p>Error al cargar. Verifica la conexión.</p></div>'); return; }
+  const data = await res.json();
+  const pl = data.plantillas||[];
+  const inc = data.inscripciones||[];
+  const incInfo = inc.length ? inc.map(i=>`<strong>${i.nivel||''}</strong> · ${i.carrera||''}`).join(' &nbsp;|&nbsp; ') : 'Sin inscripción activa';
+  let html = `<div class="info-bar">📚 Tu inscripción actual: ${incInfo}</div>`;
+  if(!pl.length){
+    html += `<div class="empty"><span>📜</span><p>No hay constancias disponibles para tu nivel/carrera.<br>El director debe crear las plantillas.</p></div>`;
+  } else {
+    html += pl.map(p=>{
+      const ya = p.ya_generada;
+      const fecha = ya&&p.fecha_generacion ? new Date(p.fecha_generacion).toLocaleDateString('es-BO',{day:'2-digit',month:'long',year:'numeric'}) : '';
+      return `<div class="plantilla-card">
+        <div class="plantilla-top">
+          <div>
+            <div class="plantilla-title">${p.titulo}</div>
+            <div class="plantilla-meta">${p.nivel||'Todos los niveles'}${p.carrera?' · '+p.carrera:''}</div>
+            ${ya?`<div style="font-size:.72rem;color:var(--verde);margin-top:2px;">✅ Generada el ${fecha} · Código: <code style="font-size:.65rem;">${p.codigo}</code></div>`:''}
+          </div>
+          <span class="badge" style="background:#eff6ff;color:#1e40af;">${p.area||'General'}</span>
+        </div>
+        <div class="preview-text">${(p.cuerpo_texto||'').replace(/\[NOMBRE\]/g,`${user.nombre||''} ${user.apellido||''}`).replace(/\[FECHA\]/g,new Date().toLocaleDateString('es-BO')).substring(0,200)}</div>
+        <div class="acciones">
+          ${ya
+            ? `<button class="btn btn-sm btn-primary" onclick="reimprimir(${p.id})">🖨️ Reimprimir</button>
+               <button class="btn btn-sm" style="background:#f1f5f9;color:var(--text);" onclick="alert('Código: ${p.codigo}')">🔍 Ver Código</button>`
+            : `<button class="btn btn-sm btn-dorado" onclick="generarConstancia(${p.id},this)">📜 Generar mi Constancia</button>`}
+        </div>
+        <div class="msg" id="msg-${p.id}"></div>
+      </div>`;
+    }).join('');
+  }
+  set(html);
+}
+
+async function generarConstancia(pid,btn){
+  btn.disabled=true; btn.textContent='⏳ Generando...';
+  const res = await fetch(`${API_BASE}/constancias/generar/${pid}`,{method:'POST',headers:{Authorization:`Bearer ${token}`}});
+  const data = await res.json();
+  if(res.ok){
+    showMsg(`msg-${pid}`,'✅ Constancia generada. Abriendo...','ok');
+    setTimeout(()=>{ imprimirDoc(data); renderVer(); },800);
+  } else {
+    showMsg(`msg-${pid}`,data.detail||'Error','err');
+    btn.disabled=false; btn.textContent='📜 Generar mi Constancia';
+  }
+}
+
+async function reimprimir(pid){
+  const res = await fetch(`${API_BASE}/constancias/generar/${pid}`,{method:'POST',headers:{Authorization:`Bearer ${token}`}});
+  const data = await res.json();
+  if(res.ok) imprimirDoc(data);
+}
+
+function imprimirDoc(data){
+  const est = data.estudiante||{};
+  const pl = data.plantilla||{};
+  const fecha = new Date(data.fecha_generacion||new Date()).toLocaleDateString('es-BO',{day:'2-digit',month:'long',year:'numeric'});
+  const nombre = `${est.nombre||user.nombre||''} ${est.apellido||user.apellido||''}`.trim().toUpperCase();
+  const vars = {
+    '[NOMBRE]':nombre,'[CARNET]':est.carnet||user.carnet||'',
+    '[NIVEL]':est.nivel||'','[CARRERA]':est.carrera||'',
+    '[FECHA]':fecha,'[CODIGO]':data.codigo||''
+  };
+  const repl = (txt)=> txt ? Object.entries(vars).reduce((t,[k,v])=>t.replaceAll(k,v),txt) : '';
+  const cuerpo = repl(pl.cuerpo_texto||'');
+  const pie = repl(pl.pie_texto||'');
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>${pl.titulo||'Constancia'}</title>
+<style>
+body{font-family:Georgia,serif;margin:0;padding:20px;background:#fff;}
+.page{max-width:720px;margin:0 auto;padding:50px 55px;border:10px solid #003580;position:relative;min-height:880px;}
+.page::after{content:'';position:absolute;inset:14px;border:2px solid #f59e0b;pointer-events:none;}
+.logo{text-align:center;font-size:2.5rem;margin-bottom:4px;}
+.inst1{font-size:.82rem;font-weight:bold;color:#003580;text-transform:uppercase;letter-spacing:.1em;text-align:center;}
+.inst2{font-size:.7rem;color:#64748b;text-align:center;margin-bottom:24px;}
+.tit{font-size:1.45rem;font-weight:bold;color:#f59e0b;text-align:center;text-transform:uppercase;letter-spacing:.05em;margin:18px 0 6px;}
+.sub{font-size:.82rem;color:#003580;text-align:center;margin-bottom:28px;font-style:italic;}
+.cuerpo{font-size:.95rem;line-height:2;color:#1e293b;text-align:justify;white-space:pre-wrap;}
+.pie{font-size:.82rem;color:#64748b;text-align:center;margin-top:24px;white-space:pre-wrap;}
+.firmas{display:flex;justify-content:space-around;margin-top:70px;}
+.firma{text-align:center;min-width:160px;}
+.f-line{border-top:1px solid #003580;padding-top:5px;font-size:.72rem;color:#64748b;}
+.cod{font-size:.6rem;color:#94a3b8;text-align:center;margin-top:20px;font-family:monospace;}
+@media print{body{padding:0;}}
+</style></head><body>
+<div class="page">
+  <div class="logo">🏛️</div>
+  <div class="inst1">CENTRO DE EDUCACIÓN ALTERNATIVA</div>
+  <div class="inst1">PROF. "HERMAN ORTIZ CAMARGO"</div>
+  <div class="inst2">Pailón, Santa Cruz — Bolivia · Ministerio de Educación</div>
+  <div class="tit">${pl.titulo||'CONSTANCIA'}</div>
+  <div class="sub">República de Bolivia — Estado Plurinacional</div>
+  <div class="cuerpo">${cuerpo}</div>
+  ${pie?`<div class="pie">${pie}</div>`:''}
+  <div class="firmas">
+    <div class="firma"><div class="f-line">Director(a) CEA<br>Prof. Herman Ortiz Camargo</div></div>
+    <div class="firma"><div class="f-line">Sello Institucional</div></div>
+  </div>
+  <div class="cod">Código: ${data.codigo||''} · ${fecha}</div>
+</div>
+<script>setTimeout(()=>window.print(),600);<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+// ── GESTIONAR PLANTILLAS (DIRECTOR) ─────────────────────────────
+async function renderGestionar(){
+  set('<p style="text-align:center;padding:30px;color:var(--muted);">⏳ Cargando...</p>');
+  const [resP, resC] = await Promise.all([
+    fetch(`${API_BASE}/constancias/plantillas`,{headers:{Authorization:`Bearer ${token}`}}),
+    fetch(`${API_BASE}/malla/carreras`)
+  ]);
+  const {plantillas=[]} = await resP.json();
+  const {carreras=[]} = await resC.json();
+  const cOpts = carreras.map(c=>`<option value="${c.id}">${c.nombre}</option>`).join('');
+  const niveles = ['Técnico Básico','Técnico Auxiliar','Técnico Medio I','Técnico Medio II','Aprendizajes Aplicados','Aprendizajes Complementarios','Aprendizajes Especializados'];
+  let html = `<div class="card">
+    <h2>➕ Nueva Plantilla de Constancia / Certificación</h2>
+    <div class="vars-box"><strong>Variables para personalizar el texto:</strong><br>
+      <code>[NOMBRE]</code> Nombre del estudiante &nbsp;
+      <code>[CARNET]</code> CI/Carnet &nbsp;
+      <code>[NIVEL]</code> Nivel inscrito &nbsp;
+      <code>[CARRERA]</code> Carrera &nbsp;
+      <code>[FECHA]</code> Fecha de generación &nbsp;
+      <code>[CODIGO]</code> Código único de verificación
+    </div>
+    <div class="fg"><label>Título</label><input type="text" id="f-titulo" placeholder="Ej: Constancia de Estudios, Certificación de Matrícula..."></div>
+    <div class="grid2">
+      <div class="fg"><label>Nivel (dejar vacío = todos)</label>
+        <select id="f-nivel"><option value="">Todos los niveles</option>${niveles.map(n=>`<option>${n}</option>`).join('')}</select>
+      </div>
+      <div class="fg"><label>Carrera (dejar vacío = todas)</label>
+        <select id="f-carrera"><option value="">Todas las carreras</option>${cOpts}</select>
+      </div>
+    </div>
+    <div class="fg"><label>Área</label>
+      <select id="f-area"><option value="">General (todas las áreas)</option><option value="Técnica">Técnica</option><option value="Humanística">Humanística</option></select>
+    </div>
+    <div class="fg"><label>Texto del cuerpo de la constancia</label>
+      <textarea id="f-cuerpo" placeholder="El Director(a) del CEA Prof. Herman Ortiz Camargo certifica que el/la participante [NOMBRE], con CI [CARNET], se encuentra debidamente inscrito/a en el Nivel [NIVEL] de la especialidad [CARRERA].&#10;&#10;Se extiende la presente a solicitud del interesado/a para los fines que estime conveniente."></textarea>
+    </div>
+    <div class="fg"><label>Pie / Lugar y fecha (opcional)</label>
+      <textarea id="f-pie" style="min-height:70px;" placeholder="Pailón, [FECHA]&#10;&#10;Se certifica su veracidad."></textarea>
+    </div>
+    <button class="btn btn-primary" onclick="crearPlantilla()">✅ Guardar Plantilla</button>
+    <div class="msg" id="msg-crear"></div>
+  </div>
+  <h3 style="font-size:.8rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Plantillas existentes (${plantillas.length})</h3>`;
+
+  if(!plantillas.length){
+    html += `<div class="empty"><span>📋</span><p>Sin plantillas. Crea la primera arriba.</p></div>`;
+  } else {
+    html += plantillas.map(p=>`
+      <div class="plantilla-card">
+        <div class="plantilla-top">
+          <div>
+            <div class="plantilla-title">${p.titulo}</div>
+            <div class="plantilla-meta">${p.nivel||'Todos los niveles'} · ${p.carrera||'Todas las carreras'} · ${p.area||'General'}</div>
+            <div style="font-size:.7rem;color:var(--muted);margin-top:2px;">Creado por: ${p.creado_por||'Director'}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <span class="badge ${p.activa?'badge-activa':'badge-inactiva'}">${p.activa?'Activa':'Inactiva'}</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-sm" style="background:#f1f5f9;color:var(--text);" onclick="toggleActiva(${p.id},${p.activa})">${p.activa?'⏸️ Desactivar':'▶️ Activar'}</button>
+              <button class="btn btn-sm btn-rojo" onclick="eliminarPlantilla(${p.id})">🗑️</button>
+            </div>
+          </div>
+        </div>
+        <div class="preview-text">${(p.cuerpo_texto||'').substring(0,220)}</div>
+      </div>`).join('');
+  }
+  set(html);
+}
+
+async function crearPlantilla(){
+  const payload={
+    titulo:document.getElementById('f-titulo').value.trim(),
+    nivel:document.getElementById('f-nivel').value||null,
+    carrera_id:parseInt(document.getElementById('f-carrera').value)||null,
+    area:document.getElementById('f-area').value||null,
+    cuerpo_texto:document.getElementById('f-cuerpo').value.trim(),
+    pie_texto:document.getElementById('f-pie').value.trim()
+  };
+  if(!payload.titulo||!payload.cuerpo_texto){showMsg('msg-crear','Título y cuerpo son requeridos','err');return;}
+  const res=await fetch(`${API_BASE}/constancias/plantillas`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(payload)});
+  const data=await res.json();
+  showMsg('msg-crear',res.ok?'✅ Plantilla creada correctamente':data.detail||'Error',res.ok?'ok':'err');
+  if(res.ok) setTimeout(()=>renderGestionar(),1200);
+}
+
+async function toggleActiva(id,actual){
+  await fetch(`${API_BASE}/constancias/plantillas/${id}`,{method:'PUT',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({activa:!actual})});
+  renderGestionar();
+}
+
+async function eliminarPlantilla(id){
+  if(!confirm('¿Eliminar esta plantilla?')) return;
+  await fetch(`${API_BASE}/constancias/plantillas/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
+  renderGestionar();
+}
+
+// ── HISTORIAL ────────────────────────────────────────────────────
+async function renderHistorial(){
+  set('<p style="text-align:center;padding:30px;color:var(--muted);">⏳ Cargando...</p>');
+  const res=await fetch(`${API_BASE}/constancias/admin/todas-constancias`,{headers:{Authorization:`Bearer ${token}`}});
+  const {constancias=[]}=await res.json();
+  set(`<p style="font-size:.82rem;color:var(--muted);margin-bottom:14px;">${constancias.length} constancias generadas</p>
+  <div style="overflow-x:auto;background:#fff;border:1px solid var(--border);border-radius:14px;">
+  <table class="tbl">
+    <thead><tr><th>Estudiante</th><th>Carnet</th><th>Constancia</th><th>Nivel</th><th>Código</th><th>Fecha</th></tr></thead>
+    <tbody>${constancias.map(x=>`<tr>
+      <td>${x.nombre} ${x.apellido||''}</td>
+      <td style="text-align:center;">${x.carnet||'-'}</td>
+      <td>${x.plantilla}</td>
+      <td style="text-align:center;">${x.nivel||'-'}</td>
+      <td><code style="font-size:.62rem;">${x.codigo}</code></td>
+      <td style="text-align:center;">${new Date(x.fecha_generacion).toLocaleDateString('es')}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`);
+}
+
+function set(html){document.getElementById('mainContent').innerHTML=html;}
+function showMsg(id,text,type){const el=document.getElementById(id);if(!el)return;el.textContent=text;el.className=`msg ${type}`;}
+
+buildTabs();
+renderVer();
+</script>
+</body>
+</html>

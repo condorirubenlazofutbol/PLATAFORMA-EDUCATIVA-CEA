@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secretaría | EduConnect Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+        
+        :root {
+            --primary: #0ea5e9;
+            --secondary: #48d18e;
+            --violet: #8b5cf6;
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --bg-dark: #0b1120;
+            --sidebar-bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --glass: rgba(15, 23, 42, 0.8);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            background-color: var(--bg-dark); 
+            color: var(--text); 
+            min-height: 100vh; 
+            display: flex; 
+            overflow: hidden; 
+        }
+
+        /* Ambient Glow */
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background: 
+                radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.08), transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(139, 92, 246, 0.08), transparent 40%);
+            z-index: -1; pointer-events: none;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1.2rem;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 3rem;
+            padding-left: 0.5rem;
+        }
+
+        .brand-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--violet));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .brand-text { font-size: 1.2rem; font-weight: 900; letter-spacing: -0.02em; }
+
+        .nav-group { margin-bottom: 2rem; }
+        .nav-label { font-size: 0.7rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; padding-left: 0.5rem; }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            color: var(--muted);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border: 1px solid transparent;
+            margin-bottom: 4px;
+        }
+
+        .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+        .nav-item.active { 
+            background: rgba(14, 165, 233, 0.1); 
+            color: var(--primary); 
+            border-color: rgba(14, 165, 233, 0.2); 
+        }
+
+        .sidebar-footer { margin-top: auto; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 2.5rem;
+            position: relative;
+        }
+
+        .header-actions {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;
+        }
+
+        .page-title h1 { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.02em; }
+        .page-title p { color: var(--muted); font-size: 0.95rem; margin-top: 4px; }
+
+        .user-pill {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 6px 16px;
+            border-radius: 50px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        /* Tabs Panels */
+        .tab-panel { display: none; animation: slideUp 0.4s ease; }
+        .tab-panel.active { display: block; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 20px;
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .stat-info h4 { font-size: 1.5rem; font-weight: 800; }
+        .stat-info p { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; font-weight: 700; }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header { margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 1.25rem; font-weight: 800; color: var(--primary); }
+
+        /* Form Controls */
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+        .form-full { grid-column: 1 / -1; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        
+        label { font-size: 0.75rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        input, select, textarea {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
+        
+        .area-selector {
+            display: flex; gap: 10px; margin-bottom: 1rem;
+        }
+        .area-btn {
+            flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
+            background: transparent; color: var(--muted); font-weight: 700; cursor: pointer; transition: 0.2s;
+        }
+        .area-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .email-preview { font-size: 0.8rem; color: var(--secondary); margin-top: 4px; font-weight: 600; }
+
+        .btn-action {
+            padding: 12px 24px; border-radius: 12px; border: none; 
+            background: var(--primary); color: white; font-weight: 800;
+            cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 10px; justify-content: center;
+        }
+        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); }
+        .btn-outline:hover { background: rgba(255,255,255,0.05); }
+
+        /* Search List */
+        .search-results {
+            background: var(--sidebar-bg); border: 1px solid var(--border); border-radius: 12px;
+            margin-top: 8px; max-height: 200px; overflow-y: auto; display: none;
+        }
+        .search-item {
+            padding: 12px; cursor: pointer; border-bottom: 1px solid var(--border); transition: 0.2s;
+        }
+        .search-item:hover { background: rgba(255,255,255,0.05); }
+
+        /* Table */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 1rem; color: var(--muted); font-size: 0.75rem; border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .badge { padding: 4px 10px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+        .badge-info { background: rgba(14, 165, 233, 0.1); color: var(--primary); }
+
+        /* Helpers */
+        .flex-center { display: flex; align-items: center; gap: 10px; }
+        .hidden { display: none; }
+        
+        /* Responsividad */
+        @media (max-width: 900px) {
+            body { flex-direction: column; overflow-y: auto; }
+            .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 1rem; }
+            .brand { margin-bottom: 1rem; }
+            .main-content { padding: 1.5rem; height: auto; }
+            .grid { grid-template-columns: 1fr; }
+            .form-grid { grid-template-columns: 1fr; }
+            .header-actions { flex-direction: column; gap: 1rem; text-align: center; }
+            .nav-group { display: flex; flex-wrap: wrap; gap: 5px; }
+            .nav-item { flex: 1; min-width: 120px; font-size: 0.8rem; padding: 0.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">📋</div>
+            <div class="brand-text">Secretaría CEA</div>
+        </div>
+
+        <div class="nav-group">
+            <p class="nav-label">Administración</p>
+            <div class="nav-item active" onclick="showTab('dashboard', this)">
+                <span>📊</span> Dashboard
+            </div>
+            <div class="nav-item" onclick="showTab('inscripciones', this)">
+                <span>📝</span> Inscripciones
+            </div>
+            <div class="nav-item" onclick="showTab('usuarios', this)">
+                <span>👥</span> Directorio
+            </div>
+        </div>
+
+        <div class="nav-group">
+            <p class="nav-label">Académico & Extras</p>
+            <div class="nav-item" onclick="showTab('docentes', this)">
+                <span>👩‍🏫</span> Docentes
+            </div>
+            <div class="nav-item" onclick="showTab('candidatos', this)">
+                <span>🗳️</span> Candidatos
+            </div>
+            <div class="nav-item" onclick="showTab('comunicados', this)">
+                <span>📢</span> Comunicados
+            </div>
+        </div>
+
+        <div class="sidebar-footer">
+            <a href="../../portal/index.html" class="nav-item" style="color: var(--muted)">
+                <span>←</span> Volver al Portal
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        
+        <header class="header-actions">
+            <div class="page-title">
+                <h1 id="tab-title">Panel de Control</h1>
+                <p id="tab-subtitle">Resumen general de la institución</p>
+            </div>
+            <div class="user-pill">
+                <span id="user-initials" style="background: var(--violet); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800;">S</span>
+                <span id="user-name" style="font-size: 0.85rem; font-weight: 700;">Secretaría</span>
+            </div>
+        </header>
+
+        <!-- TAB: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-panel active">
+            <div class="grid">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: var(--primary);">👥</div>
+                    <div class="stat-info"><h4 id="stat-est">0</h4><p>Estudiantes</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(72, 209, 142, 0.1); color: var(--secondary);">👩‍🏫</div>
+                    <div class="stat-info"><h4 id="stat-doc">0</h4><p>Docentes</p></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background: rgba(139, 92, 246, 0.1); color: var(--violet);">📖</div>
+                    <div class="stat-info"><h4 id="stat-mod">0</h4><p>Módulos Activos</p></div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Bienvenida al Portal Administrativo</h3>
+                </div>
+                <p style="color: var(--muted); line-height: 1.6;">
+                    Desde este panel podrás gestionar la inscripción masiva de estudiantes, la designación de docentes y la administración de candidatos electorales. 
+                    Toda la generación de correos institucionales (@ceapilon.com) se realiza de forma automática.
+                </p>
+            </div>
+        </section>
+
+        <!-- TAB: INSCRIPCIONES -->
+        <section id="tab-inscripciones" class="tab-panel">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Inscripción Estudiantil</h3>
+                    <div class="flex-center">
+                        <button class="btn-action btn-outline" onclick="document.getElementById('excel-input').click()">
+                            <span>📊</span> Importar Excel
+                        </button>
+                        <input type="file" id="excel-input" hidden accept=".xlsx, .xls" onchange="handleExcelImport(this)">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label>Tipo de Formación</label>
+                    <div class="area-selector">
+                        <button class="area-btn active" id="btn-humanistica" onclick="setArea('humanistica')">Humanística</button>
+                        <button class="area-btn" id="btn-tecnica" onclick="setArea('tecnica')">Técnica</button>
+                    </div>
+                </div>
+
+                <form id="form-estudiante" class="form-grid">
+                    <div class="form-group">
+                        <label>Nombres</label>
+                        <input type="text" id="ins_nombres" required oninput="updateEmailPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Apellidos</label>
+                        <input type="text" id="ins_apellidos" required oninput="updateEmailPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Carnet / CI</label>
+                        <input type="text" id="ins_carnet" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Generado</label>
+                        <input type="text" id="ins_email_val" readonly style="opacity: 0.7;">
+                        <p class="email-preview" id="email-preview-text">Generando correo...</p>
+                    </div>
+                    <div class="form-full form-group hidden" id="carrera-group">
+                        <label>Carrera Técnica</label>
+                        <select id="ins_carrera">
+                            <!-- Dynamic -->
+                        </select>
+                    </div>
+                    <div class="form-full form-group">
+                        <label id="level-label">Curso</label>
+                        <select id="ins_nivel" required>
+                            <!-- Dynamic -->
+                        </select>
+                    </div>
+                    <div class="form-full">
+                        <button type="submit" class="btn-action" style="width: 100%;">
+                            <span>✅</span> Finalizar Inscripción
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB: DOCENTES -->
+        <section id="tab-docentes" class="tab-panel">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Registro de Docentes</h3>
+                </div>
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label>Área de Formación</label>
+                    <div class="area-selector">
+                        <button class="area-btn active" id="btn-doc-humanistica" onclick="setDocArea('humanistica')" type="button">Humanística</button>
+                        <button class="area-btn" id="btn-doc-tecnica" onclick="setDocArea('tecnica')" type="button">Técnica</button>
+                    </div>
+                </div>
+
+                <form id="form-docente" class="form-grid">
+                    <div class="form-group">
+                        <label>Nombres</label>
+                        <input type="text" id="doc_nombres" required oninput="updateDocEmailPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Apellidos</label>
+                        <input type="text" id="doc_apellidos" required oninput="updateDocEmailPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Carnet / CI</label>
+                        <input type="text" id="doc_carnet" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Generado</label>
+                        <input type="text" id="doc_email_val" readonly style="opacity: 0.7;">
+                        <p class="email-preview" id="doc-email-preview-text">Generando correo...</p>
+                    </div>
+                    <div class="form-full form-group">
+                        <label id="doc-level-label">Materia</label>
+                        <select id="doc_especialidad" required>
+                            <!-- Dynamic -->
+                        </select>
+                    </div>
+                    <div class="form-full">
+                        <button type="submit" class="btn-action" style="width: 100%;">
+                            <span>👩‍🏫</span> Registrar Docente
+                        </button>
+                    </div>
+                </form>
+                <p style="margin-top: 1.5rem; color: var(--muted); font-size: 0.8rem; text-align: center;">
+                    * El nivel y curso serán asignados posteriormente por la Dirección.
+                </p>
+            </div>
+        </section>
+
+        <!-- TAB: CANDIDATOS -->
+        <section id="tab-candidatos" class="tab-panel">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Inscripción de Candidatos Electorales</h3>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 2rem; position: relative;">
+                    <label>Buscar Estudiante por CI</label>
+                    <div class="flex-center">
+                        <input type="text" id="search-ci" placeholder="Ingrese CI para buscar..." style="flex: 1;">
+                        <button class="btn-action" onclick="buscarEstudiante()"><span>🔍</span> Buscar</button>
+                    </div>
+                    <div id="search-results" class="search-results"></div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
+
+                <form id="form-candidato" class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre Completo</label>
+                        <input type="text" id="can_nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Frente Político</label>
+                        <input type="text" id="can_frente" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Sigla</label>
+                        <input type="text" id="can_sigla" required placeholder="Ej: ABC">
+                    </div>
+                    <div class="form-group">
+                        <label>Cargo Postulado</label>
+                        <select id="can_cargo" required>
+                            <option value="Presidente">Presidente</option>
+                            <option value="Vicepresidente">Vicepresidente</option>
+                            <option value="Secretario">Secretario</option>
+                        </select>
+                    </div>
+                    <div class="form-full form-group">
+                        <label>Descripción / Propuestas</label>
+                        <textarea id="can_desc" rows="3"></textarea>
+                    </div>
+                    <div class="form-full form-group">
+                        <label>Elección</label>
+                        <select id="can_eleccion" required>
+                            <!-- Cargar dinámicamente -->
+                        </select>
+                    </div>
+                    <div class="form-full form-group">
+                        <label>Fotografía del Candidato</label>
+                        <input type="file" id="can_foto" accept="image/*">
+                        <p style="font-size: 0.7rem; color: var(--muted);">Formato: JPG/PNG, Máx 1MB.</p>
+                    </div>
+                    <div class="form-full">
+                        <button type="submit" class="btn-action" style="width: 100%; background: var(--violet);">
+                            <span>🗳️</span> Registrar Candidato
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- TAB: USUARIOS -->
+        <section id="tab-usuarios" class="tab-panel">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Directorio Institucional</h3>
+                    <div class="flex-center">
+                        <input type="text" id="user-filter" placeholder="Filtrar por nombre..." oninput="filtrarUsuarios(this.value)">
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Correo</th>
+                                <th>CI</th>
+                                <th>Rol</th>
+                                <th>Nivel</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body">
+                            <!-- JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: COMUNICADOS -->
+        <section id="tab-comunicados" class="tab-panel">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Nuevo Comunicado</h3>
+                </div>
+                <form id="form-comunicado" class="form-grid">
+                    <div class="form-full form-group">
+                        <label>Título</label>
+                        <input type="text" id="com_titulo" required>
+                    </div>
+                    <div class="form-full form-group">
+                        <label>Contenido</label>
+                        <textarea id="com_contenido" rows="5" required></textarea>
+                    </div>
+                    <div class="form-full">
+                        <button type="submit" class="btn-action" style="width: 100%;">
+                            <span>📢</span> Publicar Comunicado
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="../../portal/js/api.js"></script>
+    <script>
+        let currentArea = 'humanistica';
+        let allUsers = [];
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) window.location.href = '../../login.html';
+        if (!['secretaria', 'admin', 'administrador'].includes(user.rol)) window.location.href = '../../portal/index.html';
+
+        // Init UI
+        document.getElementById('user-name').textContent = user.nombre || 'Secretaría';
+        document.getElementById('user-initials').textContent = (user.nombre || 'S')[0];
+
+        const levels = {
+            humanistica: ['Aplicados (Primer Año)', 'Complementarios (Segundo Año)', 'Especializados (Tercer Año)'],
+            tecnica_carreras: [
+                'Sistemas Informáticos', 
+                'Gastronomía', 
+                'Belleza Integral', 
+                'Corte y Confección', 
+                'Educación Parvularia', 
+                'Contabilidad General', 
+                'Fisioterapia', 
+                'Veterinaria'
+            ],
+            tecnica_niveles: [
+                'Nivel Básico',
+                'Nivel Auxiliar',
+                'Nivel Medio I',
+                'Nivel Medio II'
+            ]
+        };
+
+        function showTab(id, el) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            
+            document.getElementById(`tab-${id}`).classList.add('active');
+            el.classList.add('active');
+
+            const titles = {
+                dashboard: ['Panel de Control', 'Resumen general de la institución'],
+                inscripciones: ['Inscripciones', 'Gestión de ingreso de estudiantes'],
+                usuarios: ['Directorio', 'Lista completa de usuarios'],
+                docentes: ['Cuerpo Docente', 'Registro de profesores'],
+                candidatos: ['Elecciones', 'Gestión de candidatos electorales'],
+                comunicados: ['Comunicados', 'Publicaciones institucionales']
+            };
+            document.getElementById('tab-title').textContent = titles[id][0];
+            document.getElementById('tab-subtitle').textContent = titles[id][1];
+
+            if (id === 'dashboard') loadStats();
+            if (id === 'usuarios') loadUsers();
+            if (id === 'candidatos') loadElecciones();
+        }
+
+        function setArea(area) {
+            currentArea = area;
+            document.querySelectorAll('.area-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-${area}`).classList.add('active');
+            
+            const selectNivel = document.getElementById('ins_nivel');
+            const selectCarrera = document.getElementById('ins_carrera');
+            const carreraGroup = document.getElementById('carrera-group');
+            
+            if (area === 'humanistica') {
+                carreraGroup.classList.add('hidden');
+                selectCarrera.removeAttribute('required');
+                selectNivel.innerHTML = levels.humanistica.map(l => `<option value="${l}">${l}</option>`).join('');
+                document.getElementById('level-label').textContent = 'Curso';
+            } else {
+                carreraGroup.classList.remove('hidden');
+                selectCarrera.setAttribute('required', 'true');
+                selectCarrera.innerHTML = levels.tecnica_carreras.map(c => `<option value="${c}">${c}</option>`).join('');
+                selectNivel.innerHTML = levels.tecnica_niveles.map(l => `<option value="${l}">${l}</option>`).join('');
+                document.getElementById('level-label').textContent = 'Nivel Técnico';
+            }
+        }
+
+        function updateEmailPreview() {
+            const nombres = document.getElementById('ins_nombres').value.trim();
+            const apellidos = document.getElementById('ins_apellidos').value.trim();
+            if (!nombres || !apellidos) return;
+
+            const cleanN = nombres.replace(/\s+/g, '').toLowerCase();
+            const cleanA = apellidos.replace(/\s+/g, '').toLowerCase();
+            const email = (cleanN + cleanA).substring(0, 30) + "@ceapilon.com";
+            
+            document.getElementById('ins_email_val').value = email;
+            document.getElementById('email-preview-text').textContent = "Correo Sugerido: " + email;
+        }
+
+        let currentDocArea = 'humanistica';
+
+        const docLevels = {
+            humanistica: ['Matemática', 'Lenguaje', 'Ciencias Naturales', 'Ciencias Sociales'],
+            tecnica: levels.tecnica_carreras
+        };
+
+        function setDocArea(area) {
+            currentDocArea = area;
+            document.getElementById('btn-doc-humanistica').classList.remove('active');
+            document.getElementById('btn-doc-tecnica').classList.remove('active');
+            document.getElementById(`btn-doc-${area}`).classList.add('active');
+            
+            const select = document.getElementById('doc_especialidad');
+            select.innerHTML = docLevels[area].map(l => `<option value="${l}">${l}</option>`).join('');
+            
+            document.getElementById('doc-level-label').textContent = area === 'humanistica' ? 'Materia' : 'Carrera Técnica';
+        }
+
+        function updateDocEmailPreview() {
+            const nombres = document.getElementById('doc_nombres').value.trim();
+            const apellidos = document.getElementById('doc_apellidos').value.trim();
+            if (!nombres || !apellidos) return;
+
+            const cleanN = nombres.replace(/\s+/g, '').toLowerCase();
+            const cleanA = apellidos.replace(/\s+/g, '').toLowerCase();
+            const email = (cleanN + cleanA).substring(0, 30) + "@ceapilon.com";
+            
+            document.getElementById('doc_email_val').value = email;
+            document.getElementById('doc-email-preview-text').textContent = "Correo Sugerido: " + email;
+        }
+
+        async function loadStats() {
+            try {
+                const r = await fetch(`${API_URL}/modulos/stats`, { headers: {'Authorization': `Bearer ${token}`} });
+                const s = await r.json();
+                document.getElementById('stat-est').textContent = s.estudiantes || 0;
+                document.getElementById('stat-doc').textContent = s.profesores || 0;
+                document.getElementById('stat-mod').textContent = s.modulos || 0;
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadUsers() {
+            try {
+                const r = await fetch(`${API_URL}/auth/usuarios`, { headers: {'Authorization': `Bearer ${token}`} });
+                allUsers = await r.json();
+                renderUserTable(allUsers);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderUserTable(list) {
+            const tbody = document.getElementById('user-table-body');
+            tbody.innerHTML = list.map(u => `
+                <tr>
+                    <td><div class="flex-center"><div style="width:32px; height:32px; background:rgba(255,255,255,0.05); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.7rem;">${u.nombre[0]}</div> <b>${u.nombre} ${u.apellido || ''}</b></div></td>
+                    <td style="color:var(--primary);">${u.email}</td>
+                    <td style="font-family:monospace;">${u.carnet || '-'}</td>
+                    <td><span class="badge badge-info">${u.rol}</span></td>
+                    <td>${u.nivel_asignado || '-'}</td>
+                    <td><button onclick="eliminarUsuario(${u.id})" style="background:transparent; border:none; color:var(--rose); cursor:pointer; font-weight:700;">Baja</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function filtrarUsuarios(val) {
+            const filtered = allUsers.filter(u => 
+                (u.nombre + ' ' + (u.apellido||'')).toLowerCase().includes(val.toLowerCase()) ||
+                (u.carnet || '').includes(val)
+            );
+            renderUserTable(filtered);
+        }
+
+        async function loadElecciones() {
+            try {
+                const r = await fetch(`${API_URL}/admin/elecciones`, { headers: {'Authorization': `Bearer ${token}`} });
+                const list = await r.json();
+                const select = document.getElementById('can_eleccion');
+                select.innerHTML = list.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
+            } catch(e) {}
+        }
+
+        async function buscarEstudiante() {
+            const ci = document.getElementById('search-ci').value.trim();
+            if (!ci) return;
+            try {
+                const r = await fetch(`${API_URL}/secretaria/votantes/buscar/${ci}`, { headers: {'Authorization': `Bearer ${token}`} });
+                if (r.ok) {
+                    const data = await r.json();
+                    document.getElementById('can_nombre').value = data.nombre;
+                    Swal.fire({ icon: 'success', title: 'Estudiante Encontrado', text: data.nombre, timer: 1500 });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'No Encontrado', text: 'Verifique que el estudiante esté inscrito en el sistema.' });
+                }
+            } catch(e) {}
+        }
+
+        // HANDLERS
+        document.getElementById('form-estudiante').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            let nivel_final = document.getElementById('ins_nivel').value;
+            if (currentArea === 'tecnica') {
+                nivel_final = document.getElementById('ins_carrera').value + ' - ' + nivel_final;
+            }
+
+            const payload = {
+                nombre: document.getElementById('ins_nombres').value,
+                apellido: document.getElementById('ins_apellidos').value,
+                carnet: document.getElementById('ins_carnet').value,
+                rol: 'estudiante',
+                nivel_asignado: nivel_final,
+                subsistema_id: 1
+            };
+            
+            try {
+                const res = await fetch(`${API_URL}/auth/register-usuario`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    Swal.fire('¡Éxito!', `Inscrito: ${data.email}`, 'success');
+                    e.target.reset(); updateEmailPreview();
+                } else {
+                    Swal.fire('Error', data.detail, 'error');
+                }
+            } catch(e) { Swal.fire('Error', 'Fallo de conexión', 'error'); }
+        });
+
+        document.getElementById('form-docente').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                nombre: document.getElementById('doc_nombres').value,
+                apellido: document.getElementById('doc_apellidos').value,
+                carnet: document.getElementById('doc_carnet').value,
+                rol: 'profesor',
+                nivel_asignado: document.getElementById('doc_especialidad').value || 'Docente',
+                subsistema_id: 1
+            };
+            try {
+                const res = await fetch(`${API_URL}/auth/register-usuario`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    Swal.fire('¡Docente Registrado!', 'Se generó su acceso automático.', 'success');
+                    e.target.reset();
+                    updateDocEmailPreview();
+                }
+            } catch(e) {}
+        });
+
+        document.getElementById('form-candidato').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fotoFile = document.getElementById('can_foto').files[0];
+            let base64 = "";
+            
+            if (fotoFile) {
+                const reader = new FileReader();
+                reader.readAsDataURL(fotoFile);
+                await new Promise(resolve => reader.onload = resolve);
+                base64 = reader.result;
+            }
+
+            const payload = {
+                eleccion_id: document.getElementById('can_eleccion').value,
+                nombre: document.getElementById('can_nombre').value,
+                sigla: document.getElementById('can_sigla').value,
+                cargo: document.getElementById('can_cargo').value,
+                frente: document.getElementById('can_frente').value,
+                descripcion: document.getElementById('can_desc').value,
+                imagen_base64: base64
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/secretaria/candidatos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    Swal.fire('¡Inscrito!', 'Candidato agregado a la elección.', 'success');
+                    e.target.reset();
+                }
+            } catch(e) {}
+        });
+
+        async function handleExcelImport(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const r = await fetch(`${API_URL}/auth/importar-estudiantes-excel`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const data = await r.json();
+                Swal.close();
+                if (r.ok) {
+                    Swal.fire('Importación Completa', `Registrados: ${data.registrados}\nErrores: ${data.errores.length}`, 'success');
+                } else {
+                    Swal.fire('Error', data.detail, 'error');
+                }
+            } catch(e) { Swal.fire('Error', 'Fallo al procesar el archivo.', 'error'); }
+            input.value = "";
+        }
+
+        async function eliminarUsuario(id) {
+            const r = await Swal.fire({ title: '¿Dar de Baja?', text: 'El usuario ya no podrá ingresar.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#f43f5e', confirmButtonText: 'Sí, dar baja' });
+            if (!r.isConfirmed) return;
+            try {
+                await fetch(`${API_URL}/modulos/usuarios/${id}`, { method: 'DELETE', headers: {'Authorization': `Bearer ${token}`} });
+                loadUsers();
+            } catch(e) {}
+        }
+
+        // Init
+        setArea('humanistica');
+        setDocArea('humanistica');
+        loadStats();
+    </script>
+</body>
+</html>

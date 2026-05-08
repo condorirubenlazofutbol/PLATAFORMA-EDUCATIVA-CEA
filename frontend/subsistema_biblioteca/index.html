@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biblioteca Digital CEA | Recursos Académicos</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#003580;--azul2:#0056b3;--dorado:#f59e0b;--verde:#10b981;--rojo:#ef4444;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+.h-brand{display:flex;align-items:center;gap:12px;}
+.h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;display:flex;align-items:center;justify-content:center;background:var(--dorado);font-size:1.2rem;}
+.h-title h1{color:#fff;font-size:1rem;font-weight:800;}
+.h-title p{color:rgba(255,255,255,.7);font-size:.75rem;}
+.btn{padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s;}
+.btn-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;}
+.btn-back:hover{background:#fff;color:var(--azul);}
+.btn-primary{background:var(--azul);color:#fff;}
+.btn-primary:hover{background:#002255;}
+.btn-outline{border:2px solid var(--azul);color:var(--azul);background:transparent;}
+
+.container{max-width:1200px;margin:24px auto;padding:0 20px;}
+
+.search-bar{display:flex;gap:12px;margin-bottom:24px;background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--border);box-shadow:0 4px 6px -1px rgba(0,0,0,.02);}
+.search-bar input{flex:1;padding:12px 16px;border:2px solid var(--border);border-radius:8px;font-size:.95rem;}
+.search-bar input:focus{outline:none;border-color:var(--azul);}
+.search-bar select{padding:12px 16px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:20px;}
+
+.r-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;transition:.2s;position:relative;}
+.r-card:hover{box-shadow:0 10px 15px -3px rgba(0,0,0,.1);transform:translateY(-2px);border-color:#bfdbfe;}
+.r-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:12px;}
+.ic-pdf{background:#fee2e2;color:#ef4444;}
+.ic-video{background:#f3e8ff;color:#9333ea;}
+.ic-enlace{background:#e0f2fe;color:#0ea5e9;}
+.ic-doc{background:#dbeafe;color:#1e40af;}
+.ic-otro{background:#f1f5f9;color:#64748b;}
+
+.r-tag{position:absolute;top:20px;right:20px;font-size:.65rem;font-weight:800;text-transform:uppercase;background:#f1f5f9;padding:4px 8px;border-radius:6px;color:var(--muted);}
+.r-title{font-size:1rem;font-weight:800;color:var(--text);margin-bottom:6px;line-height:1.3;}
+.r-desc{font-size:.8rem;color:var(--muted);line-height:1.5;flex:1;margin-bottom:16px;}
+.r-meta{font-size:.7rem;color:var(--muted);margin-bottom:16px;border-top:1px solid var(--border);padding-top:10px;}
+.r-meta span{display:block;margin-bottom:4px;}
+.r-meta strong{color:var(--text);}
+
+/* Modal Subir */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:999;}
+.modal{background:#fff;padding:24px;border-radius:16px;width:100%;max-width:500px;}
+.modal h2{font-size:1.2rem;color:var(--azul);margin-bottom:16px;}
+.fg{margin-bottom:12px;}
+.fg label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);margin-bottom:4px;}
+.fg input, .fg select, .fg textarea{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;font-family:inherit;}
+.fg input:focus, .fg select:focus, .fg textarea:focus{outline:none;border-color:var(--azul);}
+
+.empty{text-align:center;padding:50px;color:var(--muted);grid-column:1/-1;}
+.empty span{font-size:3rem;display:block;margin-bottom:10px;opacity:.3;}
+
+@media(max-width:768px){.search-bar{flex-direction:column;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-brand">
+    <div class="h-logo">📚</div>
+    <div class="h-title">
+      <h1>Biblioteca Digital</h1>
+      <p>Repositorio de Recursos Académicos</p>
+    </div>
+  </div>
+  <a href="../portal/index.html" class="btn btn-back">← Portal</a>
+</header>
+
+<div class="container">
+  <div class="search-bar">
+    <input type="text" id="inpBusqueda" placeholder="Buscar por título, descripción o tema..." onkeyup="if(event.key==='Enter') buscarRecursos()">
+    <select id="selTipo" onchange="buscarRecursos()">
+      <option value="">Todos los Tipos</option>
+      <option value="pdf">Documentos PDF</option>
+      <option value="video">Videos</option>
+      <option value="enlace">Enlaces / Web</option>
+      <option value="documento">Word / Excel</option>
+      <option value="presentacion">Presentaciones</option>
+    </select>
+    <button class="btn btn-primary" onclick="buscarRecursos()" style="padding:10px 24px;">🔍 Buscar</button>
+    <div id="btnSubir" style="display:none;margin-left:10px;border-left:1px solid var(--border);padding-left:10px;">
+      <button class="btn btn-outline" onclick="abrirModal()">➕ Subir Material</button>
+    </div>
+  </div>
+
+  <div class="grid" id="mainContent">
+    <div class="empty"><span>⏳</span><p>Cargando biblioteca...</p></div>
+  </div>
+</div>
+
+<!-- Modal Subir Recurso -->
+<div class="modal-overlay" id="modalSubir">
+  <div class="modal">
+    <h2>Subir Recurso Académico</h2>
+    <div class="fg">
+      <label>Título del Recurso</label>
+      <input type="text" id="f-titulo" placeholder="Ej: Manual de Ensamblaje, Video Tutorial...">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="fg">
+        <label>Tipo de Recurso</label>
+        <select id="f-tipo">
+          <option value="pdf">Documento PDF</option>
+          <option value="video">Video (YouTube/Drive)</option>
+          <option value="enlace">Enlace Web</option>
+          <option value="documento">Documento Word/Excel</option>
+          <option value="presentacion">Presentación (PPT)</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Módulo Relacionado</label>
+        <select id="f-modulo"><option value="">Ninguno (General)</option></select>
+      </div>
+    </div>
+    <div class="fg">
+      <label>URL / Enlace del Archivo</label>
+      <input type="url" id="f-url" placeholder="https://drive.google.com/... o enlace web">
+      <span style="font-size:.65rem;color:var(--muted);">(Pega el enlace de Google Drive, YouTube, o la web donde esté alojado)</span>
+    </div>
+    <div class="fg">
+      <label>Breve Descripción</label>
+      <textarea id="f-desc" style="min-height:80px;"></textarea>
+    </div>
+    
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+      <button class="btn" style="background:#f1f5f9;color:var(--text);" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarRecurso()">Guardar y Publicar</button>
+    </div>
+  </div>
+</div>
+
+<script src="../portal/js/api.js"></script>
+<script>
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user')||'{}');
+if(!token) window.location.href='../login.html';
+const isDocente = ['docente','profesor','director','jefe_carrera','administrador'].includes(user.rol);
+
+const iconMap = {
+  'pdf': {ic:'📄', cls:'ic-pdf'},
+  'video': {ic:'▶️', cls:'ic-video'},
+  'enlace': {ic:'🔗', cls:'ic-enlace'},
+  'documento': {ic:'📝', cls:'ic-doc'},
+  'presentacion': {ic:'📊', cls:'ic-doc'},
+  'otro': {ic:'📁', cls:'ic-otro'}
+};
+
+async function init(){
+  if(isDocente){
+    document.getElementById('btnSubir').style.display = 'block';
+    loadMisModulos();
+  }
+  await buscarRecursos();
+}
+
+async function loadMisModulos(){
+  try {
+    const res = await fetch(`${API_BASE}/cuadro/mis-modulos-docente`,{headers:{Authorization:`Bearer ${token}`}});
+    if(res.ok){
+      const {modulos} = await res.json();
+      const sel = document.getElementById('f-modulo');
+      modulos.forEach(m => { sel.innerHTML += `<option value="${m.id}">${m.nombre}</option>`; });
+    }
+  } catch(e){}
+}
+
+async function buscarRecursos(){
+  const q = document.getElementById('inpBusqueda').value;
+  const tipo = document.getElementById('selTipo').value;
+  const c = document.getElementById('mainContent');
+  
+  c.innerHTML = '<div class="empty"><span>⏳</span><p>Buscando...</p></div>';
+  
+  try {
+    let url = `${API_BASE}/recursos/`;
+    let params = new URLSearchParams();
+    if(q) params.append('q', q);
+    if(tipo) params.append('tipo', tipo);
+    if(params.toString()) url += '?' + params.toString();
+
+    const res = await fetch(url);
+    const data = await res.json();
+    const recs = data.recursos || [];
+    
+    if(!recs.length){
+      c.innerHTML = '<div class="empty"><span>📚</span><p>No se encontraron recursos.</p></div>';
+      return;
+    }
+
+    c.innerHTML = recs.map(r => {
+      const conf = iconMap[r.tipo] || iconMap['otro'];
+      return `
+        <div class="r-card">
+          <span class="r-tag">${r.tipo}</span>
+          ${isDocente && (r.subido_por===user.nombre || isDocente) ? `<button onclick="eliminarRecurso(${r.id})" style="position:absolute;top:20px;right:75px;background:none;border:none;color:var(--rojo);cursor:pointer;font-size:1rem;" title="Eliminar">✖</button>` : ''}
+          <div class="r-icon ${conf.cls}">${conf.ic}</div>
+          <div class="r-title">${r.titulo}</div>
+          <div class="r-desc">${r.descripcion || 'Sin descripción'}</div>
+          <div class="r-meta">
+            <span><strong>Módulo:</strong> ${r.modulo || 'General'}</span>
+            <span><strong>Subido por:</strong> ${r.subido_por || 'Anónimo'}</span>
+            <span><strong>Fecha:</strong> ${new Date(r.fecha).toLocaleDateString()}</span>
+          </div>
+          <a href="${r.url}" target="_blank" class="btn btn-primary" style="justify-content:center;width:100%;">Abrir / Descargar</a>
+        </div>
+      `;
+    }).join('');
+
+  } catch(e) {
+    c.innerHTML = '<div class="empty"><span>🔌</span><p>Error de conexión.</p></div>';
+  }
+}
+
+function abrirModal(){ document.getElementById('modalSubir').style.display='flex'; }
+function cerrarModal(){ document.getElementById('modalSubir').style.display='none'; }
+
+async function guardarRecurso(){
+  const payload = {
+    titulo: document.getElementById('f-titulo').value.trim(),
+    tipo: document.getElementById('f-tipo').value,
+    modulo_id: document.getElementById('f-modulo').value ? parseInt(document.getElementById('f-modulo').value) : null,
+    url: document.getElementById('f-url').value.trim(),
+    descripcion: document.getElementById('f-desc').value.trim()
+  };
+
+  if(!payload.titulo || !payload.url){
+    alert('El título y la URL son obligatorios'); return;
+  }
+
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  try {
+    const res = await fetch(`${API_BASE}/recursos/`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
+      body: JSON.stringify(payload)
+    });
+    if(res.ok){
+      cerrarModal();
+      document.getElementById('f-titulo').value='';
+      document.getElementById('f-url').value='';
+      document.getElementById('f-desc').value='';
+      buscarRecursos();
+    } else {
+      const err = await res.json();
+      alert(err.detail||'Error al guardar');
+    }
+  } catch(e) { alert('Error de red'); }
+  
+  btn.disabled = false; btn.textContent = 'Guardar y Publicar';
+}
+
+async function eliminarRecurso(id){
+  if(!confirm('¿Eliminar este recurso?')) return;
+  try {
+    await fetch(`${API_BASE}/recursos/${id}`, {method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
+    buscarRecursos();
+  } catch(e){}
+}
+
+init();
+</script>
+</body>
+</html>

@@ -27,13 +27,22 @@
         .login-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 28px;
-            padding: 3.5rem 2.5rem;
+            border-radius: 24px;
+            padding: 3rem;
             width: 100%;
             max-width: 420px;
             backdrop-filter: blur(20px);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             text-align: center;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 480px) {
+            .login-card { padding: 2rem 1.5rem; border-radius: 0; height: 100vh; max-width: none; display: flex; flex-direction: column; justify-content: center; border: none; }
+            body { background: var(--bg-dark); }
         }
 
         .logo-box { font-size: 2.5rem; margin-bottom: 1.5rem; }
@@ -104,7 +113,7 @@
 
     <div id="toast"></div>
 
-    <script src="js/api.js"></script>
+    <script src="portal/js/api.js"></script>
     <script>
         const form = document.getElementById('loginForm');
         const btn = document.getElementById('btnSubmit');

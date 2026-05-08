@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kardex Institucional | Expediente CEA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#003580;--azul2:#0056b3;--dorado:#f59e0b;--verde:#10b981;--rojo:#ef4444;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;}
+.h-brand{display:flex;align-items:center;gap:12px;}
+.h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;display:flex;align-items:center;justify-content:center;background:var(--dorado);font-size:1.2rem;}
+.h-title h1{color:#fff;font-size:1rem;font-weight:800;}
+.h-title p{color:rgba(255,255,255,.7);font-size:.75rem;}
+.btn{padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s;}
+.btn-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;}
+.btn-back:hover{background:#fff;color:var(--azul);}
+
+.container{max-width:1100px;margin:24px auto;padding:0 20px;}
+
+.toolbar{display:flex;justify-content:space-between;align-items:center;background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;}
+.search-box{display:flex;gap:10px;flex:1;max-width:400px;}
+.search-box input{flex:1;padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;}
+.search-box input:focus{outline:none;border-color:var(--azul);}
+.btn-primary{background:var(--azul);color:#fff;}
+.btn-print{background:var(--dorado);color:#000;}
+
+/* VISTA KARDEX (IMPRIMIBLE) */
+.kardex-page{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;box-shadow:0 10px 15px -3px rgba(0,0,0,.05);}
+.k-header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--azul);padding-bottom:16px;margin-bottom:24px;}
+.k-header-left h2{font-size:1.5rem;font-weight:900;color:var(--azul);text-transform:uppercase;letter-spacing:.05em;}
+.k-header-left p{color:var(--muted);font-size:.85rem;margin-top:4px;}
+.k-header-right{text-align:right;}
+.k-header-right img{height:60px;}
+
+.k-section{margin-bottom:30px;}
+.k-section-title{font-size:1rem;font-weight:800;color:var(--azul);background:#f1f5f9;padding:8px 12px;border-radius:6px;margin-bottom:16px;display:inline-block;}
+
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
+.info-item{background:#f8fafc;padding:12px;border-radius:8px;border:1px solid var(--border);}
+.info-item label{display:block;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+.info-item div{font-size:.95rem;font-weight:800;color:var(--text);}
+
+.tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+.tbl th{background:var(--azul);color:#fff;padding:10px;text-align:left;font-weight:700;}
+.tbl td{padding:10px;border-bottom:1px solid var(--border);}
+.tbl tr:hover td{background:#f8fafc;}
+.tbl .center{text-align:center;}
+
+.b-ok{color:#166534;font-weight:800;background:#dcfce7;padding:2px 8px;border-radius:4px;}
+.b-err{color:#991b1b;font-weight:800;background:#fee2e2;padding:2px 8px;border-radius:4px;}
+
+.kpi-row{display:flex;gap:16px;margin-bottom:20px;}
+.kpi{flex:1;background:#fff;border:1px solid var(--border);border-left:4px solid var(--azul);padding:16px;border-radius:8px;}
+.kpi .num{font-size:1.6rem;font-weight:900;color:var(--text);}
+.kpi label{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;}
+
+.empty{text-align:center;padding:50px;color:var(--muted);}
+.empty span{font-size:3rem;display:block;margin-bottom:10px;opacity:.3;}
+
+@media print{
+  body{background:#fff;}
+  header, .toolbar, .btn{display:none !important;}
+  .container{margin:0;padding:0;max-width:100%;}
+  .kardex-page{border:none;box-shadow:none;padding:0;}
+  .tbl th{color:#000 !important;background:#e2e8f0 !important;border-bottom:2px solid #000;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-brand">
+    <div class="h-logo">📁</div>
+    <div class="h-title">
+      <h1>Kardex Estudiantil</h1>
+      <p>Historial Académico Institucional</p>
+    </div>
+  </div>
+  <a href="../portal/index.html" class="btn btn-back">← Portal</a>
+</header>
+
+<div class="container">
+  <div class="toolbar" id="toolbar" style="display:none;">
+    <div class="search-box">
+      <input type="text" id="inpBusqueda" placeholder="Buscar por Nombre, Apellido o Carnet...">
+      <button class="btn btn-primary" onclick="buscarEstudiante()">🔍 Buscar</button>
+    </div>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir Kardex</button>
+  </div>
+  <div class="toolbar" id="toolbarEstudiante" style="display:none;">
+    <h2 style="font-size:1.1rem;color:var(--azul);">Tu Expediente Académico</h2>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir Kardex</button>
+  </div>
+
+  <div id="searchResults" style="display:none;margin-bottom:20px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;"></div>
+
+  <div id="mainContent">
+    <div class="empty"><span>⏳</span><p>Cargando información...</p></div>
+  </div>
+</div>
+
+<script src="../portal/js/api.js"></script>
+<script>
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user')||'{}');
+if(!token) window.location.href='../login.html';
+const isDir = ['director','administrador','secretaria'].includes(user.rol);
+
+async function init(){
+  if(isDir){
+    document.getElementById('toolbar').style.display = 'flex';
+    document.getElementById('mainContent').innerHTML = '<div class="empty"><span>🔎</span><p>Busca un estudiante para ver su Kardex.</p></div>';
+  } else {
+    document.getElementById('toolbarEstudiante').style.display = 'flex';
+    await cargarKardex('mi-kardex');
+  }
+}
+
+async function buscarEstudiante(){
+  const q = document.getElementById('inpBusqueda').value.trim();
+  if(!q) return;
+  const res = await fetch(`${API_BASE}/auth/usuarios`);
+  const {usuarios} = await res.json();
+  const resFiltro = usuarios.filter(u => u.rol==='estudiante' && (
+    u.nombre.toLowerCase().includes(q.toLowerCase()) || 
+    (u.apellido||'').toLowerCase().includes(q.toLowerCase()) || 
+    (u.carnet||'').includes(q)
+  ));
+  
+  const resDiv = document.getElementById('searchResults');
+  resDiv.style.display = 'block';
+  
+  if(!resFiltro.length){
+    resDiv.innerHTML = '<p style="color:var(--muted);text-align:center;">No se encontraron estudiantes.</p>';
+    return;
+  }
+  
+  resDiv.innerHTML = `
+    <h3 style="font-size:.85rem;color:var(--muted);margin-bottom:10px;">Resultados de búsqueda:</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      ${resFiltro.map(u=>`
+        <button class="btn" style="background:#f8fafc;border:1px solid var(--border);color:var(--text);font-weight:600;" onclick="cargarKardex(${u.id}); document.getElementById('searchResults').style.display='none';">
+          👤 ${u.apellido} ${u.nombre} - CI: ${u.carnet||'S/N'}
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+async function cargarKardex(id){
+  document.getElementById('mainContent').innerHTML = '<div class="empty"><span>⏳</span><p>Generando Kardex...</p></div>';
+  try {
+    const res = await fetch(`${API_BASE}/kardex/${id}`,{headers:{Authorization:`Bearer ${token}`}});
+    if(!res.ok) throw new Error('Error al cargar kardex');
+    const data = await res.json();
+    renderKardex(data);
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML = `<div class="empty"><span>🔌</span><p>${e.message}</p></div>`;
+  }
+}
+
+function renderKardex(data){
+  const {estudiante: e, modulos: m, resumen: r, asistencia: a, certificados: c, constancias: co} = data;
+  
+  const html = `
+  <div class="kardex-page">
+    <div class="k-header">
+      <div class="k-header-left">
+        <h2>Kardex Académico Institucional</h2>
+        <p>Centro de Educación Alternativa Prof. "Herman Ortiz Camargo"</p>
+        <p style="font-size:.7rem;margin-top:2px;">Fecha de emisión: ${new Date().toLocaleDateString('es-BO')}</p>
+      </div>
+      <div class="k-header-right">
+        <img src="../portal/images/logo.png" alt="Logo CEA" onerror="this.style.display='none'">
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="info-item"><label>Nombre Completo</label><div>${e.nombre} ${e.apellido||''}</div></div>
+      <div class="info-item"><label>Cédula de Identidad</label><div>${e.carnet||'No registrado'}</div></div>
+      <div class="info-item"><label>Estado Académico</label><div><span class="${e.estado==='activo'?'b-ok':'b-err'}">${(e.estado||'').toUpperCase()}</span></div></div>
+      <div class="info-item"><label>Fecha de Admisión</label><div>${new Date(e.fecha_registro).toLocaleDateString('es-BO')}</div></div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="num">${r.promedio_general}</div><label>Promedio General</label></div>
+      <div class="kpi"><div class="num">${r.aprobados}</div><label>Módulos Aprobados</label></div>
+      <div class="kpi" style="border-left-color:var(--rojo);"><div class="num">${r.reprobados}</div><label>Módulos Reprobados/Abandono</label></div>
+    </div>
+
+    <!-- NOTAS POR MÓDULO -->
+    <div class="k-section">
+      <div class="k-section-title">📊 Historial de Calificaciones</div>
+      ${m.length ? `
+        <table class="tbl">
+          <thead><tr><th>Carrera/Especialidad</th><th>Nivel</th><th>Módulo</th><th class="center">Nota Final</th><th>Estado</th></tr></thead>
+          <tbody>
+            ${m.map(mod=>`
+              <tr>
+                <td>${mod.carrera||'Área Humanística'}</td>
+                <td>${mod.nivel}</td>
+                <td>${mod.modulo}</td>
+                <td class="center"><strong>${mod.nota_final||'-'}</strong> / 100</td>
+                <td><span class="${mod.estado==='aprobado'?'b-ok':'b-err'}">${(mod.estado||'EN CURSO').toUpperCase()}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : '<p style="color:var(--muted);font-size:.85rem;">No hay registros de notas en el sistema.</p>'}
+    </div>
+
+    <!-- ASISTENCIA -->
+    <div class="k-section">
+      <div class="k-section-title">✅ Resumen de Asistencia</div>
+      ${a.length ? `
+        <table class="tbl">
+          <thead><tr><th>Módulo</th><th class="center">Total Sesiones</th><th class="center">Presente</th><th class="center">% Asistencia</th></tr></thead>
+          <tbody>
+            ${a.map(ast=>`
+              <tr>
+                <td>${ast.modulo}</td>
+                <td class="center">${ast.sesiones}</td>
+                <td class="center">${ast.presentes}</td>
+                <td class="center"><strong>${ast.porcentaje}%</strong></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : '<p style="color:var(--muted);font-size:.85rem;">No hay registros de asistencia.</p>'}
+    </div>
+
+    <!-- CERTIFICACIONES Y CONSTANCIAS -->
+    <div class="k-section">
+      <div class="k-section-title">📜 Documentos Emitidos</div>
+      ${c.length || co.length ? `
+        <table class="tbl">
+          <thead><tr><th>Tipo de Documento</th><th>Detalle</th><th class="center">Fecha de Emisión</th><th>Código Ref.</th></tr></thead>
+          <tbody>
+            ${c.map(cert=>`
+              <tr>
+                <td><strong style="color:var(--dorado);">Certificado de Módulo</strong></td>
+                <td>${cert.modulo} (${cert.nivel})</td>
+                <td class="center">${new Date(cert.fecha_emision).toLocaleDateString()}</td>
+                <td style="font-family:monospace;font-size:.7rem;">${cert.codigo_qr}</td>
+              </tr>
+            `).join('')}
+            ${co.map(cons=>`
+              <tr>
+                <td><strong style="color:var(--azul);">Constancia Institucional</strong></td>
+                <td>${cons.titulo}</td>
+                <td class="center">${new Date(cons.fecha_generacion).toLocaleDateString()}</td>
+                <td style="font-family:monospace;font-size:.7rem;">${cons.codigo}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : '<p style="color:var(--muted);font-size:.85rem;">No hay certificados ni constancias emitidas.</p>'}
+    </div>
+
+    <div style="margin-top:60px;text-align:center;font-size:.8rem;color:var(--muted);border-top:1px solid var(--border);padding-top:20px;">
+      <p>Este documento constituye una representación oficial del expediente académico almacenado en el sistema informático del CEA.</p>
+    </div>
+  </div>
+  `;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+init();
+</script>
+</body>
+</html>

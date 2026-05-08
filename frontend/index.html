@@ -4,7 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EduConnect Pro | Innovación Educativa</title>
-    <link rel="manifest" href="instalar/manifest.json">
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://educonnect-cea.onrender.com/">
+    <meta property="og:title" content="CEA Prof. Hérman Ortiz Camargo | Plataforma Educativa">
+    <meta property="og:description" content="Ecosistema digital integral para la gestión académica del CEA Pailón. Innovación en educación secundaria de adultos y técnica tecnológica.">
+    <meta property="og:image" content="portal/images/compartir.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://educonnect-cea.onrender.com/">
+    <meta property="twitter:title" content="CEA Prof. Hérman Ortiz Camargo">
+    <meta property="twitter:description" content="Gestión académica pro-level para educación técnica y humanística.">
+    <meta property="twitter:image" content="portal/images/compartir.png">
+    <link rel="manifest" href="portal/instalar/manifest.json">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap');
 
@@ -89,7 +102,10 @@
     <div class="blob blob-2"></div>
 
     <nav>
-        <div class="logo">CEA "Prof. Hérman Ortiz Camargo"</div>
+        <div class="logo">
+            <img src="portal/images/logo.png" alt="Logo CEA" style="height: 40px; vertical-align: middle; margin-right: 10px;">
+            CEA "Prof. Hérman Ortiz Camargo"
+        </div>
         <div class="nav-links">
             <a href="#institucion">Institución</a>
             <a href="#modulos">Módulos</a>
@@ -131,6 +147,7 @@
         <p>© 2026 CEA "Prof. Hérman Ortiz Camargo". Todos los derechos reservados. Desarrollado por Ruben Lazo.</p>
     </footer>
 
-    <script src="instalar/pwa.js"></script>
+    <script src="portal/js/pwa.js"></script>
+    <script src="portal/js/api.js"></script>
 </body>
 </html>

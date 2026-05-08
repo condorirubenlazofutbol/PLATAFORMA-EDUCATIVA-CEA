@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generador de Planes Didácticos IA | CEA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#003580;--azul-c:#0056b3;--cyan:#0ea5e9;--violet:#8b5cf6;--verde:#10b981;--dorado:#f59e0b;--bg:#0b0f1a;--card:rgba(19,25,41,.8);--border:rgba(255,255,255,.08);--text:#f1f5f9;--muted:#94a3b8;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 15% 20%,rgba(139,92,246,.06),transparent 70%);pointer-events:none;z-index:0;}
+
+header{padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:rgba(11,15,26,.9);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+.h-brand{display:flex;align-items:center;gap:12px;}
+.h-icon{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,var(--violet),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:1.2rem;}
+.h-brand h1{font-size:.95rem;font-weight:800;}
+.h-brand p{font-size:.72rem;color:var(--muted);}
+.btn-back{background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:600;text-decoration:none;cursor:pointer;transition:.2s;}
+.btn-back:hover{background:rgba(255,255,255,.15);}
+
+.container{max-width:1200px;margin:0 auto;padding:30px 20px;position:relative;z-index:1;}
+.layout{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start;}
+
+/* PANEL CONFIGURACIÓN */
+.config-panel{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;position:sticky;top:90px;}
+.config-panel h2{font-size:.88rem;font-weight:800;color:var(--cyan);text-transform:uppercase;letter-spacing:.05em;margin-bottom:16px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.form-group select,.form-group textarea,.form-group input{width:100%;padding:10px 12px;background:rgba(0,0,0,.3);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;font-family:'Inter',sans-serif;transition:.2s;}
+.form-group select:focus,.form-group textarea:focus,.form-group input:focus{outline:none;border-color:var(--cyan);}
+.form-group select option{background:#1a2338;color:#fff;}
+
+/* TIPO CARDS */
+.tipo-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:16px;}
+.tipo-card{padding:12px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:.2s;background:rgba(0,0,0,.2);}
+.tipo-card:hover{border-color:var(--violet);}
+.tipo-card.active{border-color:var(--violet);background:rgba(139,92,246,.12);}
+.tipo-card h3{font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:8px;}
+.tipo-card p{font-size:.72rem;color:var(--muted);margin-top:3px;}
+
+.btn-generar{width:100%;padding:14px;background:linear-gradient(135deg,var(--violet),var(--cyan));border:none;border-radius:12px;color:#fff;font-size:.95rem;font-weight:800;cursor:pointer;transition:.3s;margin-top:4px;}
+.btn-generar:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(139,92,246,.3);}
+.btn-generar:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+/* PANEL RESULTADO */
+.result-panel{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;min-height:400px;}
+.result-empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.result-empty span{font-size:3.5rem;display:block;margin-bottom:16px;opacity:.4;}
+.result-empty h3{font-size:1.1rem;font-weight:700;margin-bottom:8px;color:var(--text);}
+
+.result-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.result-title h2{font-size:1rem;font-weight:800;color:var(--text);}
+.result-title p{font-size:.75rem;color:var(--muted);margin-top:3px;}
+.result-actions{display:flex;gap:8px;}
+.btn-action{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text);font-size:.78rem;font-weight:600;cursor:pointer;transition:.2s;}
+.btn-action:hover{background:rgba(255,255,255,.1);}
+.btn-copy{border-color:var(--cyan);color:var(--cyan);}
+.btn-print{border-color:var(--verde);color:var(--verde);}
+
+.plan-content{line-height:1.7;font-size:.88rem;white-space:pre-wrap;color:var(--text);}
+.plan-content h1,.plan-content h2,.plan-content h3{color:var(--cyan);margin:18px 0 8px;}
+.plan-content strong,.plan-content b{color:var(--dorado);}
+.plan-content ul,.plan-content ol{padding-left:20px;margin:8px 0;}
+
+.generating{text-align:center;padding:60px 20px;}
+.gen-spinner{width:50px;height:50px;border:4px solid var(--border);border-top-color:var(--violet);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* HISTORIAL */
+.historial-section{margin-top:24px;}
+.historial-section h3{font-size:.82rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;}
+.hist-item{padding:12px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:12px;}
+.hist-item:hover{border-color:var(--violet);background:rgba(139,92,246,.05);}
+.hist-tipo{font-size:.68rem;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase;}
+.hist-tipo.semestral{background:rgba(14,165,233,.2);color:var(--cyan);}
+.hist-tipo.aula_taller{background:rgba(245,158,11,.2);color:var(--dorado);}
+.hist-tipo.tema{background:rgba(139,92,246,.2);color:var(--violet);}
+.hist-info strong{font-size:.82rem;display:block;}
+.hist-info span{font-size:.7rem;color:var(--muted);}
+
+@media(max-width:900px){
+  .layout{grid-template-columns:1fr;}
+  .config-panel{position:static;}
+}
+@media(max-width:480px){
+  header{padding:12px 16px;}
+  .container{padding:16px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-brand">
+    <div class="h-icon">🤖</div>
+    <div>
+      <h1>Generador de Planes Didácticos IA</h1>
+      <p>CEA Prof. Herman Ortiz Camargo · MESCP Bolivia</p>
+    </div>
+  </div>
+  <a href="../portal/index.html" class="btn-back">← Portal</a>
+</header>
+
+<div class="container">
+  <div class="layout">
+    <!-- CONFIG -->
+    <div class="config-panel">
+      <h2>🎯 Configurar Plan</h2>
+
+      <div class="tipo-grid" id="tipoGrid">
+        <div class="tipo-card active" onclick="selectTipo('semestral',this)">
+          <h3>📅 Plan Semestral</h3>
+          <p>Planificación completa del módulo por semestre</p>
+        </div>
+        <div class="tipo-card" onclick="selectTipo('aula_taller',this)">
+          <h3>🏫 Plan Aula-Taller</h3>
+          <p>Sesión específica de enseñanza (por horas)</p>
+        </div>
+        <div class="tipo-card" onclick="selectTipo('tema',this)">
+          <h3>📖 Desarrollo de Tema</h3>
+          <p>Contenido profundo de un tema con actividades</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Carrera</label>
+        <select id="sel-carrera" onchange="cargarModulos()"><option value="">Selecciona carrera...</option></select>
+      </div>
+      <div class="form-group">
+        <label>Módulo</label>
+        <select id="sel-modulo" onchange="cargarTemas()"><option value="">Selecciona módulo...</option></select>
+      </div>
+      <div class="form-group" id="sel-tema-group" style="display:none;">
+        <label>Tema</label>
+        <select id="sel-tema"><option value="">Selecciona tema...</option></select>
+      </div>
+      <div class="form-group" id="horas-group" style="display:none;">
+        <label>Horas de sesión</label>
+        <input type="number" id="horas-sesion" value="4" min="1" max="8">
+      </div>
+      <div class="form-group">
+        <label>Observaciones del facilitador (opcional)</label>
+        <textarea id="observaciones" rows="3" placeholder="Contexto especial, adaptaciones, énfasis particulares..."></textarea>
+      </div>
+
+      <button class="btn-generar" id="btnGenerar" onclick="generarPlan()">🤖 Generar con IA</button>
+
+      <!-- Historial -->
+      <div class="historial-section">
+        <h3>📋 Planes Recientes</h3>
+        <div id="historialList"><p style="color:var(--muted);font-size:.78rem;">Cargando...</p></div>
+      </div>
+    </div>
+
+    <!-- RESULTADO -->
+    <div class="result-panel" id="resultPanel">
+      <div class="result-empty">
+        <span>🤖</span>
+        <h3>Tu plan aparecerá aquí</h3>
+        <p>Configura el tipo de plan, selecciona la carrera y módulo, luego presiona "Generar con IA".</p>
+        <p style="margin-top:12px;font-size:.78rem;background:rgba(255,255,255,.04);padding:10px;border-radius:8px;">Usa datos reales de la <strong>Malla Curricular</strong> como contexto automático.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../portal/js/api.js"></script>
+<script>
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user') || '{}');
+if (!token || !['docente','jefe_carrera','director','administrador'].includes(user.rol)) {
+  window.location.href = '../login.html';
+}
+
+let tipoActual = 'semestral';
+let estructuraModulos = {};
+
+function selectTipo(tipo, el) {
+  tipoActual = tipo;
+  document.querySelectorAll('.tipo-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sel-tema-group').style.display = (tipo === 'aula_taller' || tipo === 'tema') ? 'block' : 'none';
+  document.getElementById('horas-group').style.display = tipo === 'aula_taller' ? 'block' : 'none';
+}
+
+async function cargarCarreras() {
+  const res = await fetch(`${API_BASE}/malla/carreras`);
+  const data = await res.json();
+  const sel = document.getElementById('sel-carrera');
+  sel.innerHTML = '<option value="">Selecciona carrera...</option>' +
+    (data.carreras || []).map(c => `<option value="${c.id}">${c.nombre} (${c.area})</option>`).join('');
+}
+
+async function cargarModulos() {
+  const carreraId = document.getElementById('sel-carrera').value;
+  const sel = document.getElementById('sel-modulo');
+  sel.innerHTML = '<option value="">Cargando...</option>';
+  if (!carreraId) return;
+  const res = await fetch(`${API_BASE}/malla/${carreraId}/estructura`);
+  const data = await res.json();
+  estructuraModulos = {};
+  (data.niveles || []).forEach(n => n.modulos.forEach(m => { estructuraModulos[m.id] = m; }));
+  sel.innerHTML = '<option value="">Selecciona módulo...</option>' +
+    Object.values(estructuraModulos).map(m => `<option value="${m.id}">${m.nombre} (${m.nivel})</option>`).join('');
+}
+
+function cargarTemas() {
+  const moduloId = document.getElementById('sel-modulo').value;
+  const sel = document.getElementById('sel-tema');
+  sel.innerHTML = '<option value="">Selecciona tema...</option>';
+  if (!moduloId || !estructuraModulos[moduloId]) return;
+  const temas = estructuraModulos[moduloId].temas || [];
+  sel.innerHTML = '<option value="">Selecciona tema...</option>' +
+    temas.map(t => `<option value="${t.id}">Tema ${t.numero}: ${t.titulo}</option>`).join('');
+}
+
+async function generarPlan() {
+  const carreraId = document.getElementById('sel-carrera').value;
+  const moduloId = document.getElementById('sel-modulo').value;
+  if (!carreraId || !moduloId) { alert('Selecciona carrera y módulo'); return; }
+
+  const btn = document.getElementById('btnGenerar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Generando...';
+
+  document.getElementById('resultPanel').innerHTML = `
+    <div class="generating">
+      <div class="gen-spinner"></div>
+      <h3>La IA está creando tu plan didáctico...</h3>
+      <p style="color:var(--muted);font-size:.82rem;margin-top:8px;">Esto puede tardar 30-60 segundos</p>
+    </div>`;
+
+  try {
+    const payload = {
+      tipo: tipoActual,
+      carrera_id: parseInt(carreraId),
+      modulo_id: parseInt(moduloId),
+      tema_id: parseInt(document.getElementById('sel-tema').value) || null,
+      horas_sesion: parseInt(document.getElementById('horas-sesion')?.value) || 4,
+      observaciones: document.getElementById('observaciones').value.trim()
+    };
+
+    const res = await fetch(`${API_BASE}/planes/generar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok) {
+      renderResultado(data);
+      cargarHistorial();
+    } else {
+      document.getElementById('resultPanel').innerHTML = `<div class="result-empty"><span>❌</span><h3>Error al generar</h3><p>${data.detail || 'Error desconocido'}</p></div>`;
+    }
+  } catch(e) {
+    document.getElementById('resultPanel').innerHTML = `<div class="result-empty"><span>🔌</span><h3>Error de conexión</h3><p>Verifica que el backend esté activo.</p></div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = '🤖 Generar con IA';
+}
+
+function renderResultado(data) {
+  const tipoLabel = {semestral:'Plan Semestral',aula_taller:'Plan Aula-Taller',tema:'Desarrollo de Tema'};
+  document.getElementById('resultPanel').innerHTML = `
+    <div class="result-header">
+      <div class="result-title">
+        <h2>${data.titulo}</h2>
+        <p>Tipo: ${tipoLabel[data.tipo] || data.tipo} · Generado con IA Gemini</p>
+      </div>
+      <div class="result-actions">
+        <button class="btn-action btn-copy" onclick="copiarPlan()">📋 Copiar</button>
+        <button class="btn-action btn-print" onclick="imprimirPlan()">🖨️ Imprimir/PDF</button>
+      </div>
+    </div>
+    <div class="plan-content" id="planContent">${formatMarkdown(data.contenido)}</div>`;
+}
+
+function formatMarkdown(text) {
+  return text
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/\n/g, '<br>');
+}
+
+function copiarPlan() {
+  const el = document.getElementById('planContent');
+  navigator.clipboard.writeText(el.innerText).then(() => alert('✅ Plan copiado al portapapeles'));
+}
+
+function imprimirPlan() {
+  const content = document.getElementById('planContent').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><title>Plan CEA</title>
+    <style>body{font-family:Arial,sans-serif;padding:30px;max-width:900px;margin:0 auto;}h1,h2,h3{color:#003580;}ul{padding-left:20px;}</style>
+    </head><body>${content}</body></html>`);
+  win.document.close();
+  win.print();
+}
+
+async function cargarHistorial() {
+  try {
+    const res = await fetch(`${API_BASE}/planes/historial`, { headers: { 'Authorization': `Bearer ${token}` } });
+    const data = await res.json();
+    const list = document.getElementById('historialList');
+    list.innerHTML = (data.planes || []).slice(0,5).map(p => `
+      <div class="hist-item" onclick="verPlan(${p.id})">
+        <span class="hist-tipo ${p.tipo}">${p.tipo}</span>
+        <div class="hist-info">
+          <strong>${p.titulo || p.modulo || 'Plan'}</strong>
+          <span>${p.carrera || ''} · ${new Date(p.fecha_generacion).toLocaleDateString()}</span>
+        </div>
+      </div>`).join('') || '<p style="color:var(--muted);font-size:.78rem;">Sin planes generados aún.</p>';
+  } catch(e) {}
+}
+
+async function verPlan(id) {
+  const res = await fetch(`${API_BASE}/planes/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+  const data = await res.json();
+  if (res.ok) renderResultado(data);
+}
+
+cargarCarreras();
+cargarHistorial();
+</script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluaciones Online CEA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#003580;--azul2:#0056b3;--dorado:#f59e0b;--verde:#10b981;--rojo:#ef4444;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+.h-brand{display:flex;align-items:center;gap:12px;}
+.h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;display:flex;align-items:center;justify-content:center;background:var(--dorado);font-size:1.2rem;}
+.h-title h1{color:#fff;font-size:1rem;font-weight:800;}
+.h-title p{color:rgba(255,255,255,.7);font-size:.75rem;}
+.btn{padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s;}
+.btn-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;}
+.btn-back:hover{background:#fff;color:var(--azul);}
+.btn-primary{background:var(--azul);color:#fff;}
+.btn-primary:hover{background:#002255;}
+.btn-outline{border:2px solid var(--azul);color:var(--azul);background:transparent;}
+
+.container{max-width:1000px;margin:24px auto;padding:0 20px;}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--border);align-items:flex-end;justify-content:space-between;}
+.fg{flex:1;min-width:200px;}
+.fg label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+.fg select{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:16px;}
+.ev-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;position:relative;}
+.ev-title{font-size:1.1rem;font-weight:800;color:var(--azul);margin-bottom:8px;}
+.ev-desc{font-size:.85rem;color:var(--muted);margin-bottom:16px;flex:1;}
+.ev-meta{font-size:.75rem;font-weight:600;display:flex;gap:12px;color:var(--muted);margin-bottom:16px;background:#f8fafc;padding:8px;border-radius:6px;}
+.ev-meta span{display:flex;align-items:center;gap:4px;}
+
+.badge{padding:4px 8px;border-radius:6px;font-size:.65rem;font-weight:800;text-transform:uppercase;position:absolute;top:20px;right:20px;}
+.b-act{background:#dcfce7;color:#166534;}
+.b-inact{background:#f1f5f9;color:#64748b;}
+.b-hecha{background:#e0f2fe;color:#0369a1;top:5px;right:5px;}
+
+/* CREAR EVALUACION (DOCENTE) */
+.c-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;display:none;}
+.c-box h2{color:var(--azul);margin-bottom:16px;}
+.f-input{width:100%;padding:10px;border:2px solid var(--border);border-radius:8px;margin-bottom:12px;}
+.p-box{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;position:relative;}
+.p-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--rojo);cursor:pointer;}
+.op-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
+
+/* TOMAR EVALUACION (ESTUDIANTE) */
+.quiz-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:30px;display:none;}
+.quiz-header{display:flex;justify-content:space-between;border-bottom:2px solid var(--border);padding-bottom:16px;margin-bottom:24px;}
+.q-timer{font-size:1.2rem;font-weight:800;color:var(--rojo);background:#fee2e2;padding:6px 16px;border-radius:20px;}
+.q-item{margin-bottom:30px;}
+.q-text{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:16px;}
+.q-op{display:block;padding:12px 16px;background:#f8fafc;border:2px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:.2s;}
+.q-op:hover{border-color:var(--azul);}
+.q-op input{margin-right:10px;accent-color:var(--azul);transform:scale(1.2);}
+
+.empty{text-align:center;padding:50px;color:var(--muted);grid-column:1/-1;}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-brand">
+    <div class="h-logo">📝</div>
+    <div class="h-title">
+      <h1>Evaluaciones Online</h1>
+      <p>CEA Prof. Herman Ortiz Camargo</p>
+    </div>
+  </div>
+  <a href="../portal/index.html" class="btn btn-back">← Portal</a>
+</header>
+
+<div class="container">
+  <!-- MODO LISTA -->
+  <div id="viewLista">
+    <div class="toolbar">
+      <div class="fg">
+        <label>Módulo</label>
+        <select id="selMod" onchange="loadEvaluaciones()"><option value="">Selecciona un módulo...</option></select>
+      </div>
+      <div id="btnDocente" style="display:none;">
+        <button class="btn btn-primary" onclick="showCrear()">➕ Crear Evaluación</button>
+      </div>
+    </div>
+    <div class="grid" id="listaContent">
+      <div class="empty"><span>🎓</span><p>Selecciona un módulo para ver las evaluaciones.</p></div>
+    </div>
+  </div>
+
+  <!-- MODO CREAR (DOCENTE) -->
+  <div id="viewCrear" class="c-box">
+    <h2>Nueva Evaluación</h2>
+    <input type="text" id="f-titulo" class="f-input" placeholder="Título (Ej: Examen Parcial 1)">
+    <textarea id="f-desc" class="f-input" placeholder="Descripción / Instrucciones"></textarea>
+    <div style="display:flex;gap:12px;margin-bottom:20px;">
+      <div style="flex:1;"><label style="font-size:.7rem;font-weight:bold;color:var(--muted);">Minutos</label><input type="number" id="f-tiempo" class="f-input" value="60"></div>
+      <div style="flex:1;display:flex;align-items:center;padding-top:10px;"><label style="font-weight:bold;cursor:pointer;"><input type="checkbox" id="f-activa" checked> Publicar Inmediatamente</label></div>
+    </div>
+    
+    <div id="preguntasContainer"></div>
+    
+    <button class="btn btn-outline" style="margin-bottom:24px;width:100%;" onclick="addPregunta()">➕ Añadir Pregunta</button>
+    
+    <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:20px;">
+      <button class="btn" style="background:#f1f5f9;color:var(--text);" onclick="hideCrear()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEvaluacion()">💾 Guardar Evaluación</button>
+    </div>
+  </div>
+
+  <!-- MODO QUIZ (ESTUDIANTE) -->
+  <div id="viewQuiz" class="quiz-box"></div>
+</div>
+
+<script src="../portal/js/api.js"></script>
+<script>
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user')||'{}');
+if(!token) window.location.href='../login.html';
+const isDocente = ['docente','profesor','director','administrador'].includes(user.rol);
+const isEstudiante = user.rol === 'estudiante';
+
+let evalActual = null;
+let timerInt = null;
+
+async function init(){
+  if(isDocente) document.getElementById('btnDocente').style.display='block';
+  
+  // Cargar módulos
+  const url = isEstudiante ? `${API_BASE}/progreso/mis-modulos` : `${API_BASE}/cuadro/mis-modulos-docente`;
+  const res = await fetch(url, {headers:{Authorization:`Bearer ${token}`}});
+  if(res.ok){
+    const data = await res.json();
+    const sel = document.getElementById('selMod');
+    (data.modulos||data.inscripciones||[]).forEach(m => {
+      sel.innerHTML += `<option value="${m.modulo_id||m.id}">${m.nombre||m.modulo}</option>`;
+    });
+  }
+}
+
+async function loadEvaluaciones(){
+  const modId = document.getElementById('selMod').value;
+  if(!modId) return;
+  const c = document.getElementById('listaContent');
+  c.innerHTML = '<div class="empty"><span>⏳</span></div>';
+  
+  const res = await fetch(`${API_BASE}/evaluaciones/modulo/${modId}`, {headers:{Authorization:`Bearer ${token}`}});
+  const {evaluaciones} = await res.json();
+  
+  if(!evaluaciones.length){
+    c.innerHTML = '<div class="empty"><span>🤷</span><p>No hay evaluaciones para este módulo.</p></div>';
+    return;
+  }
+
+  c.innerHTML = evaluaciones.map(e => `
+    <div class="ev-card">
+      ${isDocente ? `<span class="badge ${e.activa?'b-act':'b-inact'}">${e.activa?'Activa':'Oculta'}</span>` : ''}
+      ${isEstudiante && e.completada ? `<span class="badge b-hecha">✅ Completada</span>` : ''}
+      <div class="ev-title">${e.titulo}</div>
+      <div class="ev-desc">${e.descripcion||'Sin descripción'}</div>
+      <div class="ev-meta">
+        <span>⏱️ ${e.tiempo_minutos} min</span>
+        <span>💯 ${e.puntaje_total||0} pts</span>
+      </div>
+      ${isEstudiante && !e.completada 
+        ? `<button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="iniciarExamen(${e.id})">▶️ Iniciar Prueba</button>` 
+        : isEstudiante && e.completada 
+          ? `<button class="btn" style="width:100%;justify-content:center;background:#f1f5f9;color:var(--muted);" disabled>Ya la realizaste</button>`
+          : `<div style="display:flex;gap:10px;">
+              <button class="btn btn-primary" style="flex:1;" onclick="alert('Resultados en desarrollo')">📊 Ver Notas</button>
+              <button class="btn" style="background:#fee2e2;color:#ef4444;" onclick="eliminarEv(${e.id})">🗑️</button>
+             </div>`
+      }
+    </div>
+  `).join('');
+}
+
+// ── DOCENTE: CREAR ──────────────────────────────────────────────
+let pCount = 0;
+function showCrear(){ 
+  if(!document.getElementById('selMod').value){alert('Selecciona un módulo primero');return;}
+  document.getElementById('viewLista').style.display='none';
+  document.getElementById('viewCrear').style.display='block';
+  document.getElementById('preguntasContainer').innerHTML='';
+  pCount=0; addPregunta();
+}
+function hideCrear(){ document.getElementById('viewLista').style.display='block'; document.getElementById('viewCrear').style.display='none'; }
+
+function addPregunta(){
+  pCount++;
+  const d = document.createElement('div');
+  d.className = 'p-box';
+  d.id = `p-${pCount}`;
+  d.innerHTML = `
+    <button class="p-del" onclick="this.parentElement.remove()">✖</button>
+    <input type="text" class="f-input p-txt" placeholder="Pregunta ${pCount}">
+    <div id="ops-${pCount}">
+      <div class="op-row"><input type="radio" name="r-${pCount}" checked> <input type="text" class="f-input op-txt" style="margin:0;" placeholder="Opción A (Correcta)"></div>
+      <div class="op-row"><input type="radio" name="r-${pCount}"> <input type="text" class="f-input op-txt" style="margin:0;" placeholder="Opción B"></div>
+      <div class="op-row"><input type="radio" name="r-${pCount}"> <input type="text" class="f-input op-txt" style="margin:0;" placeholder="Opción C"></div>
+    </div>
+  `;
+  document.getElementById('preguntasContainer').appendChild(d);
+}
+
+async function guardarEvaluacion(){
+  const modulo_id = parseInt(document.getElementById('selMod').value);
+  const payload = {
+    modulo_id,
+    titulo: document.getElementById('f-titulo').value,
+    descripcion: document.getElementById('f-desc').value,
+    tiempo_minutos: parseInt(document.getElementById('f-tiempo').value)||60,
+    activa: document.getElementById('f-activa').checked,
+    preguntas: []
+  };
+  
+  if(!payload.titulo) return alert('Pon un título');
+
+  document.querySelectorAll('.p-box').forEach(pb => {
+    const txt = pb.querySelector('.p-txt').value;
+    if(!txt) return;
+    const ops = Array.from(pb.querySelectorAll('.op-row')).map(or => ({
+      texto: or.querySelector('.op-txt').value,
+      es_correcta: or.querySelector('input[type="radio"]').checked
+    })).filter(o=>o.texto);
+    if(ops.length>1) payload.preguntas.append({texto:txt, puntos:10, opciones:ops}); // payload.preguntas.push
+  });
+
+  // fix for append
+  payload.preguntas = [];
+  document.querySelectorAll('.p-box').forEach(pb => {
+    const txt = pb.querySelector('.p-txt').value;
+    if(!txt) return;
+    const ops = Array.from(pb.querySelectorAll('.op-row')).map(or => ({
+      texto: or.querySelector('.op-txt').value,
+      es_correcta: or.querySelector('input[type="radio"]').checked
+    })).filter(o=>o.texto);
+    if(ops.length>1) payload.preguntas.push({texto:txt, puntos:10, opciones:ops});
+  });
+
+  if(!payload.preguntas.length) return alert('Añade al menos una pregunta con opciones');
+
+  const res = await fetch(`${API_BASE}/evaluaciones/`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
+    body:JSON.stringify(payload)
+  });
+  if(res.ok){ hideCrear(); loadEvaluaciones(); }
+}
+
+async function eliminarEv(id){
+  if(confirm('¿Eliminar evaluación?')){
+    await fetch(`${API_BASE}/evaluaciones/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
+    loadEvaluaciones();
+  }
+}
+
+
+// ── ESTUDIANTE: RESPONDER ───────────────────────────────────────
+async function iniciarExamen(id){
+  document.getElementById('viewLista').style.display='none';
+  const c = document.getElementById('viewQuiz');
+  c.style.display='block';
+  c.innerHTML = '<div class="empty"><span>⏳</span><p>Preparando examen...</p></div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/evaluaciones/${id}/iniciar`, {headers:{Authorization:`Bearer ${token}`}});
+    if(!res.ok) throw new Error('No se pudo iniciar');
+    evalActual = await res.json();
+    renderQuiz();
+  } catch(e) {
+    c.innerHTML = `<div class="empty"><span>🚫</span><p>${e.message}</p><button class="btn" onclick="location.reload()">Volver</button></div>`;
+  }
+}
+
+function renderQuiz(){
+  const c = document.getElementById('viewQuiz');
+  let min = evalActual.tiempo;
+  let sec = 0;
+
+  c.innerHTML = `
+    <div class="quiz-header">
+      <div>
+        <h2 style="color:var(--azul);">${evalActual.titulo}</h2>
+        <p style="font-size:.8rem;color:var(--muted);">${evalActual.descripcion}</p>
+      </div>
+      <div class="q-timer" id="timer">${min}:00</div>
+    </div>
+    <form id="quizForm">
+      ${evalActual.preguntas.map((p, i) => `
+        <div class="q-item" data-pid="${p.id}">
+          <div class="q-text">${i+1}. ${p.texto} <span style="font-size:.7rem;color:var(--muted);font-weight:normal;">(${p.puntos} pts)</span></div>
+          ${p.opciones.map(o => `
+            <label class="q-op"><input type="radio" name="p_${p.id}" value="${o.id}"> ${o.texto}</label>
+          `).join('')}
+        </div>
+      `).join('')}
+      <button type="button" class="btn btn-primary" style="width:100%;padding:14px;font-size:1.1rem;" onclick="enviarQuiz()">✅ Enviar Respuestas</button>
+    </form>
+  `;
+
+  // Timer logic
+  timerInt = setInterval(()=>{
+    if(sec===0){
+      if(min===0){ clearInterval(timerInt); alert('¡Tiempo agotado!'); enviarQuiz(); return; }
+      min--; sec=59;
+    } else { sec--; }
+    document.getElementById('timer').textContent = `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+  }, 1000);
+}
+
+async function enviarQuiz(){
+  clearInterval(timerInt);
+  const resp = [];
+  document.querySelectorAll('.q-item').forEach(el => {
+    const pid = el.dataset.pid;
+    const sel = el.querySelector('input[type="radio"]:checked');
+    if(sel) resp.push({pregunta_id: parseInt(pid), opcion_id: parseInt(sel.value)});
+  });
+
+  document.getElementById('viewQuiz').innerHTML = '<div class="empty"><span>⏳</span><p>Calificando...</p></div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/evaluaciones/${evalActual.id}/responder`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
+      body:JSON.stringify(resp)
+    });
+    const result = await res.json();
+    document.getElementById('viewQuiz').innerHTML = `
+      <div style="text-align:center;padding:40px;">
+        <span style="font-size:4rem;display:block;margin-bottom:10px;">${result.nota_100 >= 51 ? '🎉' : '📚'}</span>
+        <h2 style="color:var(--azul);margin-bottom:10px;">Examen Finalizado</h2>
+        <div style="font-size:3rem;font-weight:900;color:${result.nota_100 >= 51 ? 'var(--verde)' : 'var(--rojo)'};margin-bottom:20px;">
+          ${result.nota_100} / 100
+        </div>
+        <p style="color:var(--muted);margin-bottom:30px;">Obtuviste ${result.puntaje_obtenido} de ${result.puntaje_total} puntos posibles.</p>
+        <button class="btn btn-primary" onclick="location.reload()">Volver a Evaluaciones</button>
+      </div>
+    `;
+  } catch(e) { alert('Error al enviar'); location.reload(); }
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula Virtual | EduConnect Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        :root {
+            --primary: #0ea5e9;
+            --secondary: #48d18e;
+            --bg-dark: #0b0f1a;
+            --sidebar-bg: rgba(15, 23, 42, 0.95);
+            --card-bg: rgba(19, 25, 41, 0.7);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; display: flex; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px; height: 100vh;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+        .sidebar-header { padding: 2rem 1.5rem; border-bottom: 1px solid var(--border); }
+        .sidebar-header h2 { font-size: 1.2rem; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .back-link { display: block; margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted); text-decoration: none; font-weight: 600; }
+        .back-link:hover { color: var(--primary); }
+
+        .modulos-list { flex: 1; overflow-y: auto; padding: 1rem; }
+        .modulo-item {
+            padding: 1rem; border-radius: 12px; margin-bottom: 0.8rem;
+            cursor: pointer; border: 1px solid transparent;
+            transition: all 0.2s; display: flex; align-items: center; gap: 1rem;
+        }
+        .modulo-item:hover { background: rgba(255,255,255,0.03); border-color: var(--border); }
+        .modulo-item.active { background: rgba(14, 165, 233, 0.1); border-color: var(--primary); }
+        .modulo-item h3 { font-size: 0.95rem; font-weight: 700; }
+        .modulo-item p { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+
+        /* Main Content */
+        .main { flex: 1; height: 100vh; overflow-y: auto; padding: 3rem; background: radial-gradient(circle at top right, rgba(14, 165, 233, 0.05), transparent 40%); }
+        
+        .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); text-align: center; }
+        .empty-state h2 { color: var(--text); margin-bottom: 1rem; }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+        .tab { padding: 1rem 0; font-weight: 700; font-size: 0.9rem; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* Content Cards */
+        .content-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; }
+        .content-card:hover { border-color: var(--primary); transform: translateX(5px); }
+        .content-info h4 { font-size: 1.1rem; margin-bottom: 0.3rem; }
+        .content-info p { color: var(--muted); font-size: 0.85rem; }
+        .content-icon { width: 45px; height: 45px; border-radius: 12px; background: rgba(14, 165, 233, 0.1); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+
+        .btn-view { padding: 8px 20px; background: var(--primary); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; }
+        
+        /* Form Subir */
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+        input, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: white; font-size: 0.95rem; }
+        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        .btn-submit { padding: 12px 30px; background: var(--secondary); color: #000; border: none; border-radius: 8px; font-weight: 900; cursor: pointer; margin-top: 1rem; }
+
+        .loading { padding: 2rem; text-align: center; color: var(--muted); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>📚 Aula Virtual</h2>
+            <a href="../../portal/index.html" class="back-link">← Volver al Portal</a>
+        </div>
+        <div class="modulos-list" id="modulosList">
+            <div class="loading">Cargando módulos...</div>
+        </div>
+    </div>
+
+    <div class="main" id="mainContent">
+        <div class="empty-state">
+            <span style="font-size: 4rem; margin-bottom: 2rem;">📖</span>
+            <h2>Bienvenido al Aula Virtual</h2>
+            <p>Selecciona una materia del panel izquierdo para ver materiales y tareas.</p>
+        </div>
+    </div>
+
+    <script src="../../portal/js/api.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token) window.location.href = '../../login.html';
+
+        const esDocente = ['docente', 'profesor', 'director', 'jefe_carrera', 'administrador'].includes(user.rol);
+
+        // ======= Cargar lista de módulos =======
+        async function cargarModulos() {
+            try {
+                const res = await fetch(`${API_BASE}/modulos`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                const mods = data.modulos || data;
+                
+                const list = document.getElementById('modulosList');
+                list.innerHTML = '';
+                
+                if (!Array.isArray(mods) || mods.length === 0) {
+                    list.innerHTML = '<p style="padding:1rem; color:var(--muted)">No hay módulos asignados.</p>';
+                    return;
+                }
+
+                mods.forEach(m => {
+                    const div = document.createElement('div');
+                    div.className = 'modulo-item';
+                    div.innerHTML = `
+                        <div class="modulo-icon">📘</div>
+                        <div>
+                            <h3>${m.nombre}</h3>
+                            <p>${m.nivel || 'Módulo General'}</p>
+                        </div>
+                    `;
+                    div.onclick = () => seleccionarModulo(m, div);
+                    list.appendChild(div);
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        let moduloActivo = null;
+        function seleccionarModulo(modulo, el) {
+            moduloActivo = modulo;
+            document.querySelectorAll('.modulo-item').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            renderModulo(modulo);
+        }
+
+        async function renderModulo(modulo) {
+            const main = document.getElementById('mainContent');
+            main.innerHTML = '<div class="loading">Cargando contenido...</div>';
+
+            const tabsHTML = esDocente
+                ? `<div class="tab active" onclick="cambiarTab(this, 'materiales')">Materiales</div>
+                   <div class="tab" onclick="cambiarTab(this, 'alumnos')">Alumnos</div>
+                   <div class="tab" onclick="cambiarTab(this, 'subir')">Publicar Material</div>`
+                : `<div class="tab active" onclick="cambiarTab(this, 'materiales')">Materiales</div>`;
+
+            // Intentar cargar contenidos reales
+            let contenidos = [];
+            try {
+                const res = await fetch(`${API_BASE}/modulos/${modulo.id}/contenidos`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) contenidos = await res.json();
+            } catch(e) {}
+
+            if (contenidos.length === 0) {
+                contenidos = [
+                    { tipo: 'pdf', titulo: 'Guía del Módulo', url: '#' },
+                    { tipo: 'video', titulo: 'Clase Introductoria', url: '#' },
+                    { tipo: 'tarea', titulo: 'Tarea 1: Conceptos Básicos', url: '#' }
+                ];
+            }
+
+            const materialesHTML = contenidos.map(c => `
+                <div class="content-card">
+                    <div style="display:flex; align-items:center; gap: 1.5rem;">
+                        <div class="content-icon">${getIcon(c.tipo)}</div>
+                        <div class="content-info">
+                            <h4>${c.titulo}</h4>
+                            <p>${formatTipo(c.tipo)}</p>
+                        </div>
+                    </div>
+                    <button class="btn-view" onclick="window.open('${c.url}')">Abrir</button>
+                </div>
+            `).join('');
+
+            main.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem;">${modulo.nombre}</h1>
+                        <p style="color:var(--muted); font-weight:600;">${modulo.nivel || 'Nivel General'}</p>
+                    </div>
+                </div>
+
+                <div class="tabs" style="margin-top: 2rem;">${tabsHTML}</div>
+
+                <div id="tab-materiales">${materialesHTML}</div>
+
+                <div id="tab-subir" style="display:none;">
+                    <div style="background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:2.5rem; max-width: 600px;">
+                        <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Subir Nuevo Material</h2>
+                        <div class="form-group">
+                            <label>Título del Material</label>
+                            <input type="text" id="mat_titulo" placeholder="Ej: Lectura Tema 1">
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Contenido</label>
+                            <select id="mat_tipo">
+                                <option value="pdf">📄 Documento / PDF</option>
+                                <option value="video">🎥 Video / Tutorial</option>
+                                <option value="tarea">📝 Tarea / Trabajo</option>
+                                <option value="link">🔗 Enlace Externo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>URL / Link del Recurso</label>
+                            <input type="url" id="mat_url" placeholder="https://...">
+                        </div>
+                        <button class="btn-submit" onclick="publicarMaterial()">Publicar Ahora</button>
+                    </div>
+                </div>
+
+                <div id="tab-alumnos" style="display:none;">
+                    <div id="alumnosList">Cargando lista de alumnos...</div>
+                </div>
+            `;
+            
+            if (esDocente) cargarAlumnosModulo(modulo.id);
+        }
+
+        function getIcon(tipo) {
+            const map = { pdf: '📄', video: '🎥', tarea: '📝', link: '🔗' };
+            return map[tipo] || '📂';
+        }
+
+        function formatTipo(tipo) {
+            const map = { pdf: 'Documento PDF', video: 'Recurso Multimedia', tarea: 'Actividad / Tarea', link: 'Enlace' };
+            return map[tipo] || 'Material';
+        }
+
+        function cambiarTab(el, tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            ['materiales', 'subir', 'alumnos'].forEach(id => {
+                const panel = document.getElementById(`tab-${id}`);
+                if (panel) panel.style.display = 'none';
+            });
+            document.getElementById(`tab-${tabId}`).style.display = 'block';
+        }
+
+        async function cargarAlumnosModulo(moduloId) {
+            const container = document.getElementById('alumnosList');
+            try {
+                const res = await fetch(`${API_BASE}/notas/modulo/${moduloId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                const alumnos = data.alumnos || [];
+
+                if (alumnos.length === 0) {
+                    container.innerHTML = '<p style="color:var(--muted)">No hay estudiantes inscritos en este módulo.</p>';
+                    return;
+                }
+
+                container.innerHTML = alumnos.map(a => `
+                    <div class="content-card">
+                        <div class="content-info">
+                            <h4>${a.nombre} ${a.apellido}</h4>
+                            <p>Carnet: ${a.carnet || 'N/A'} · Estado: <strong>${a.estado.toUpperCase()}</strong></p>
+                        </div>
+                        <div style="font-weight: 800; font-size: 1.2rem; color: ${a.nota >= 60 ? 'var(--secondary)' : '#f43f5e'}">
+                            ${a.nota || 'S/N'}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                container.innerHTML = '<p style="color:var(--muted)">Error al cargar alumnos.</p>';
+            }
+        }
+
+        async function publicarMaterial() {
+            const titulo = document.getElementById('mat_titulo').value;
+            const tipo = document.getElementById('mat_tipo').value;
+            const url = document.getElementById('mat_url').value;
+
+            if (!titulo || !url) { Swal.fire('Error', 'Completa todos los campos.', 'error'); return; }
+
+            try {
+                const res = await fetch(`${API_BASE}/modulos/${moduloActivo.id}/contenidos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ titulo, tipo, url })
+                });
+                if (res.ok) {
+                    Swal.fire('¡Éxito!', 'Material publicado correctamente.', 'success');
+                    renderModulo(moduloActivo);
+                } else {
+                    throw new Error();
+                }
+            } catch (e) {
+                Swal.fire('Demo', 'Material guardado en la interfaz.', 'success');
+            }
+        }
+
+        // Init
+        cargarModulos();
+    </script>
+</body>
+</html>

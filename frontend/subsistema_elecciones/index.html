@@ -202,6 +202,15 @@
       transition: all 0.2s;
     }
     .magic-fix-btn:hover { background: #fff; color: var(--azul); border-style: solid; border-color: var(--azul); }
+    /* Responsividad */
+    @media (max-width: 768px) {
+      header { padding: 10px 15px; flex-direction: column; gap: 10px; text-align: center; }
+      .header-left { flex-direction: column; gap: 5px; }
+      .hero { padding: 40px 15px; }
+      .hero h1 { font-size: 1.8rem; }
+      .candidatos-publicos-grid { grid-template-columns: 1fr; }
+      .modal-overlay { padding: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -214,7 +223,7 @@
       <p>CEA Prof. Herman Ortiz Camargo</p>
     </div>
   </div>
-  <div>
+  <div id="auth-btn-container">
     <button class="header-btn" onclick="abrirModalAuth()">👤 Iniciar Sesión</button>
   </div>
 </header>
@@ -293,7 +302,7 @@
   </div>
 </div>
 
-<script src="js/api.js?v=4.3.6"></script>
+    <script src="../../portal/js/api.js"></script>
 <script>
   // MODAL FUNCIONES
   function abrirModalAuth() {
@@ -331,7 +340,29 @@
     el.className = tipo;
   }
 
-  // ─── LOGIN CON CI (votantes) ───
+  // ─── LOGIN CI ───
+  (function checkSSO() {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (token && user.rol) {
+          const container = document.getElementById('auth-btn-container');
+          if (container) {
+              container.innerHTML = `<button class="header-btn" onclick="redirigirSegunRol('${user.rol}')">🚀 Ir al Panel (${user.rol})</button>`;
+          }
+      }
+  })();
+
+  function redirigirSegunRol(rol) {
+      if (['secretaria', 'admin', 'administrador'].includes(rol)) {
+          window.location.href = 'pages/dashboard-secretaria.html';
+      } else if (rol === 'director') {
+          window.location.href = '../subsistema_academico/director/index.html';
+      } else {
+          // Estudiantes/otros
+          window.location.href = 'pages/dashboard-votante.html';
+      }
+  }
+
   async function loginConCI() {
     const ci = document.getElementById('ci-input').value.trim();
     if (!ci) { mostrarMensaje('Por favor ingresa tu número de CI.', 'error'); return; }

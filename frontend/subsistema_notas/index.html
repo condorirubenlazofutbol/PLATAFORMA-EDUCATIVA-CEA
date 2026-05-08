@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuadro de Notas CEA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+:root{--azul:#003580;--azul2:#0056b3;--dorado:#f59e0b;--verde:#10b981;--rojo:#ef4444;--amarillo:#fbbf24;--bg:#f0f4ff;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.h-brand{display:flex;align-items:center;gap:12px;}
+.h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;}
+.h-title h1{color:#fff;font-size:.95rem;font-weight:800;}
+.h-title p{color:rgba(255,255,255,.6);font-size:.7rem;}
+.h-actions{display:flex;gap:8px;}
+.btn{padding:8px 16px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;border:none;transition:.2s;display:inline-flex;align-items:center;gap:6px;text-decoration:none;}
+.btn-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;}
+.btn-back:hover{background:#fff;color:var(--azul);}
+.btn-primary{background:var(--azul2);color:#fff;}
+.btn-primary:hover{filter:brightness(1.1);}
+.btn-success{background:var(--verde);color:#fff;}
+.btn-excel{background:#217346;color:#fff;}
+.btn-print{background:var(--dorado);color:#000;}
+
+.selector-wrap{background:#fff;border-bottom:1px solid var(--border);padding:14px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.selector-wrap label{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;}
+.selector-wrap select,.selector-wrap input{padding:8px 12px;border:2px solid var(--border);border-radius:8px;font-size:.85rem;font-family:'Inter',sans-serif;background:#fafafe;min-width:200px;}
+.selector-wrap select:focus,.selector-wrap input:focus{outline:none;border-color:var(--azul);}
+
+/* CUADRO HEADER */
+.cuadro-wrap{padding:16px;overflow-x:auto;}
+.cuadro-header{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:14px;}
+.inst-info{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:8px;}
+.inst-row{font-size:.82rem;display:flex;gap:8px;}
+.inst-row span:first-child{font-weight:700;color:var(--azul);min-width:220px;}
+.inst-row span:last-child{color:var(--text);}
+.cuadro-title{font-size:1.1rem;font-weight:900;color:var(--azul);text-align:center;text-transform:uppercase;margin-bottom:12px;letter-spacing:.02em;}
+.area-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-left:10px;}
+.badge-tecnica{background:rgba(14,165,233,.15);border:1px solid rgba(14,165,233,.4);color:#0369a1;}
+.badge-humanistica{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:#065f46;}
+
+/* TABLA */
+table{width:100%;border-collapse:collapse;font-size:.78rem;background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+thead{background:var(--azul);color:#fff;}
+th{padding:7px 8px;text-align:center;font-weight:700;font-size:.7rem;border:1px solid rgba(255,255,255,.15);white-space:nowrap;}
+th.col-nom{text-align:left;min-width:180px;}
+td{padding:5px 6px;border:1px solid var(--border);text-align:center;vertical-align:middle;}
+td.col-nom{text-align:left;font-weight:600;padding-left:10px;}
+tr:nth-child(even) td{background:#f8faff;}
+tr:hover td{background:#eff6ff;}
+
+.nota-input{width:52px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;text-align:center;font-size:.8rem;font-family:'Inter',sans-serif;background:#fafafe;}
+.nota-input:focus{outline:none;border-color:var(--azul);background:#fff;}
+.nota-input.over{border-color:var(--rojo);background:#fff5f5;}
+
+.final-cell{font-weight:900;font-size:.88rem;padding:4px 8px;border-radius:6px;}
+.obs-promovido{background:#dcfce7;color:#166534;font-weight:800;font-size:.7rem;padding:3px 6px;border-radius:5px;}
+.obs-postergado{background:#fef9c3;color:#854d0e;font-weight:800;font-size:.7rem;padding:3px 6px;border-radius:5px;}
+.obs-retirado{background:#fee2e2;color:#991b1b;font-weight:800;font-size:.7rem;padding:3px 6px;border-radius:5px;}
+
+.section-header{background:linear-gradient(90deg,var(--azul),var(--azul2));color:#fff;font-size:.68rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:5px 8px;text-align:center;}
+.sub-header{background:#e0e7ff;color:var(--azul);font-size:.68rem;font-weight:700;padding:5px 8px;}
+
+.loading{text-align:center;padding:60px;color:var(--muted);}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--azul);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty{text-align:center;padding:40px;color:var(--muted);background:#fff;border-radius:12px;border:1px solid var(--border);}
+.actions-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:.85rem;font-weight:700;z-index:9999;opacity:0;transform:translateY(20px);transition:.3s;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;}
+.toast.err{background:#fee2e2;color:#991b1b;border:1px solid #fecaca;}
+@media(max-width:700px){.selector-wrap{flex-direction:column;align-items:flex-start;}.h-title p{display:none;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-brand">
+    <img class="h-logo" src="../portal/images/logo.png" alt="CEA" onerror="this.src='https://placehold.co/42x42/003580/f5a623?text=CEA'">
+    <div class="h-title">
+      <h1>📊 Cuadro de Valoración Final</h1>
+      <p>CEA Prof. Herman Ortiz Camargo · Pailón</p>
+    </div>
+  </div>
+  <div class="h-actions">
+    <a href="../portal/index.html" class="btn btn-back">← Portal</a>
+  </div>
+</header>
+
+<!-- SELECTOR -->
+<div class="selector-wrap">
+  <div>
+    <label>Módulo / Asignatura</label><br>
+    <select id="sel-modulo" onchange="cargarCuadro()">
+      <option value="">— Selecciona un módulo —</option>
+    </select>
+  </div>
+  <div>
+    <label>Gestión / Semestre</label><br>
+    <input type="text" id="inp-gestion" placeholder="Ej: I / 2026" value="I / 2026">
+  </div>
+  <div>
+    <label>Paralelo</label><br>
+    <input type="text" id="inp-paralelo" placeholder="A, B, C..." value="A">
+  </div>
+</div>
+
+<div id="cuadroWrap" class="cuadro-wrap">
+  <div class="empty">Selecciona un módulo para ver el cuadro de valoración.</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="../portal/js/api.js"></script>
+<script>
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user') || '{}');
+if (!token || !['docente','profesor','director','jefe_carrera','administrador'].includes(user.rol)) {
+  window.location.href = '../login.html';
+}
+
+let cuadroData = null;
+let rows = [];
+
+// ── CARGAR MÓDULOS DEL DOCENTE ───────────────────────────────────
+async function cargarModulos() {
+  try {
+    const res = await fetch(`${API_BASE}/cuadro/mis-modulos-docente`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    const sel = document.getElementById('sel-modulo');
+    const mods = data.modulos || [];
+    if (!mods.length) {
+      sel.innerHTML = '<option>Sin módulos asignados</option>';
+      return;
+    }
+    // Agrupar por carrera
+    const byCarrera = {};
+    mods.forEach(m => {
+      const k = m.carrera || 'General';
+      if (!byCarrera[k]) byCarrera[k] = [];
+      byCarrera[k].push(m);
+    });
+    sel.innerHTML = '<option value="">— Selecciona un módulo —</option>';
+    for (const [carrera, lista] of Object.entries(byCarrera)) {
+      const og = document.createElement('optgroup');
+      og.label = carrera;
+      lista.forEach(m => {
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = `${m.nombre} · ${m.nivel || ''} (${m.total_estudiantes} est.)`;
+        opt.dataset.area = m.carrera_area || m.area || 'Humanística';
+        og.appendChild(opt);
+      });
+      sel.appendChild(og);
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+// ── CARGAR CUADRO ────────────────────────────────────────────────
+async function cargarCuadro() {
+  const moduloId = document.getElementById('sel-modulo').value;
+  if (!moduloId) return;
+  document.getElementById('cuadroWrap').innerHTML = '<div class="loading"><div class="spinner"></div><p>Cargando cuadro...</p></div>';
+  try {
+    const res = await fetch(`${API_BASE}/cuadro/${moduloId}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    cuadroData = await res.json();
+    renderCuadro();
+  } catch(e) {
+    document.getElementById('cuadroWrap').innerHTML = '<div class="empty">Error al cargar. Verifica la conexión.</div>';
+  }
+}
+
+// ── RENDER CUADRO ────────────────────────────────────────────────
+function renderCuadro() {
+  const { modulo, area, estudiantes } = cuadroData;
+  rows = estudiantes;
+  const esTecnica = area === 'Técnica';
+  const saberMax = esTecnica ? 30 : 40;
+  const hacerMax = esTecnica ? 40 : 30;
+  const gestion = document.getElementById('inp-gestion').value || 'I / 2026';
+  const paralelo = document.getElementById('inp-paralelo').value || 'A';
+  const facilitador = `${user.nombre || ''} ${user.apellido || ''}`.trim() || 'FACILITADOR';
+  const areaBadge = esTecnica
+    ? '<span class="area-badge badge-tecnica">🔧 Área Técnica</span>'
+    : '<span class="area-badge badge-humanistica">📖 Área Humanística</span>';
+
+  // Header info según área
+  let infoRows = '';
+  if (esTecnica) {
+    infoRows = `
+      <div class="inst-row"><span>CENTRO DE EDUCACIÓN ALTERNATIVA</span><span>: PROF. "HERMAN ORTIZ CAMARGO"</span></div>
+      <div class="inst-row"><span>FACILITADOR (A)</span><span>: ${facilitador.toUpperCase()}</span></div>
+      <div class="inst-row"><span>ESPECIALIDAD</span><span>: ${modulo.carrera || 'SISTEMAS INFORMÁTICOS'}</span></div>
+      <div class="inst-row"><span>NIVEL</span><span>: ${(modulo.nivel || '').toUpperCase()}</span></div>
+      <div class="inst-row"><span>GESTIÓN</span><span>: ${gestion}</span></div>`;
+  } else {
+    infoRows = `
+      <div class="inst-row"><span>CENTRO DE EDUCACIÓN ALTERNATIVA</span><span>: PROF. HERMAN ORTIZ CAMARGO &nbsp;&nbsp; SEM./AÑO: ${gestion}</span></div>
+      <div class="inst-row"><span>NIVEL DE EDUCACIÓN</span><span>: SECUNDARIA DE ADULTOS &nbsp;&nbsp; PARALELA ${paralelo}</span></div>
+      <div class="inst-row"><span>CAMPO DE SABERES Y CONOCIMIENTOS</span><span>: ${modulo.campo_saber || 'CIENCIA, TECNOLOGÍA Y PRODUCCIÓN'} &nbsp;&nbsp; ETAPA: ${(modulo.nivel || 'A. COMPLEMENTARIA').toUpperCase()}</span></div>
+      <div class="inst-row"><span>ÁREA DE SABERES Y CONOCIMIENTOS</span><span>: ${modulo.nombre || ''}</span></div>`;
+  }
+
+  const titulo = esTecnica
+    ? `CUADRO DE VALORACIÓN FINAL — ${(modulo.nombre || '').toUpperCase()}`
+    : `CUADRO DE VALORACIÓN FINAL DEL PRIMER MÓDULO`;
+
+  // Filas de estudiantes
+  const filas = rows.map((e, i) => {
+    const ser_h = e.nota_ser ?? '';
+    const saber_h = e.nota_saber ?? '';
+    const hacer_h = e.nota_hacer ?? '';
+    const decidir_h = e.nota_decidir ?? '';
+    const auto_ser = e.auto_ser ?? '';
+    const auto_dec = e.auto_decidir ?? '';
+    const final = e.nota_final ? parseFloat(e.nota_final).toFixed(0) : '';
+    const obs = e.observacion || '';
+    const obsClass = obs === 'PROMOVIDO/A' ? 'obs-promovido' : obs === 'POSTERGADO/A' ? 'obs-postergado' : obs === 'RETIRADO/A' ? 'obs-retirado' : '';
+
+    return `<tr id="fila-${e.id}">
+      <td>${i + 1}</td>
+      <td class="col-nom">${(e.apellido || '').toUpperCase()} ${(e.nombre || '').toUpperCase()}</td>
+      <td><input class="nota-input" type="number" min="0" max="10" value="${ser_h}" data-uid="${e.id}" data-col="ser_h" oninput="recalc(this)"></td>
+      <td><input class="nota-input" type="number" min="0" max="${saberMax}" value="${saber_h}" data-uid="${e.id}" data-col="saber_h" oninput="recalc(this)"></td>
+      <td><input class="nota-input" type="number" min="0" max="${hacerMax}" value="${hacer_h}" data-uid="${e.id}" data-col="hacer_h" oninput="recalc(this)"></td>
+      <td><input class="nota-input" type="number" min="0" max="10" value="${decidir_h}" data-uid="${e.id}" data-col="decidir_h" oninput="recalc(this)"></td>
+      <td><input class="nota-input" type="number" min="0" max="5" value="${auto_ser}" data-uid="${e.id}" data-col="auto_ser" oninput="recalc(this)"></td>
+      <td><input class="nota-input" type="number" min="0" max="5" value="${auto_dec}" data-uid="${e.id}" data-col="auto_dec" oninput="recalc(this)"></td>
+      <td><span class="final-cell" id="final-${e.id}">${final}</span></td>
+      <td><span class="${obsClass}" id="obs-${e.id}">${obs}</span></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('cuadroWrap').innerHTML = `
+    <div class="cuadro-header">
+      <div class="cuadro-title">${titulo}${areaBadge}</div>
+      <div class="inst-info">${infoRows}</div>
+    </div>
+    <div class="actions-bar">
+      <button class="btn btn-success" onclick="guardarTodo()">💾 Guardar Todas las Notas</button>
+      <button class="btn btn-excel" onclick="descargarExcel()">📊 Descargar Excel</button>
+      <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+    <div style="overflow-x:auto;">
+    <table id="tablaNotas">
+      <thead>
+        <tr>
+          <th rowspan="3">N°</th>
+          <th rowspan="3" class="col-nom">NÓMINA DE PARTICIPANTES</th>
+          <th colspan="4" class="section-header">HETEROEVALUACIÓN (90)</th>
+          <th colspan="2" class="section-header">AUTOEVAL. (10)</th>
+          <th colspan="2" class="section-header">PROMEDIO FINAL</th>
+        </tr>
+        <tr>
+          <th class="sub-header">SER<br><small>(10)</small></th>
+          <th class="sub-header">SABER<br><small>(${saberMax})</small></th>
+          <th class="sub-header">HACER<br><small>(${hacerMax})</small></th>
+          <th class="sub-header">DECIDIR<br><small>(10)</small></th>
+          <th class="sub-header">SER<br><small>(5)</small></th>
+          <th class="sub-header">DECIDIR<br><small>(5)</small></th>
+          <th class="sub-header">NUMERAL</th>
+          <th class="sub-header">OBSERVACIÓN</th>
+        </tr>
+      </thead>
+      <tbody>${filas || '<tr><td colspan="10" style="text-align:center;padding:20px;color:#64748b;">Sin estudiantes inscritos en este módulo</td></tr>'}</tbody>
+    </table>
+    </div>`;
+}
+
+// ── RECALCULAR FILA ──────────────────────────────────────────────
+function recalc(input) {
+  const uid = input.dataset.uid;
+  const inputs = document.querySelectorAll(`input[data-uid="${uid}"]`);
+  let vals = {};
+  inputs.forEach(i => { vals[i.dataset.col] = parseFloat(i.value) || 0; });
+
+  const total = (vals.ser_h || 0) + (vals.saber_h || 0) + (vals.hacer_h || 0) + (vals.decidir_h || 0) + (vals.auto_ser || 0) + (vals.auto_dec || 0);
+  const finalEl = document.getElementById(`final-${uid}`);
+  const obsEl = document.getElementById(`obs-${uid}`);
+  finalEl.textContent = total.toFixed(0);
+  finalEl.style.color = total >= 51 ? '#166534' : total >= 45 ? '#854d0e' : '#991b1b';
+
+  const obs = total >= 51 ? 'PROMOVIDO/A' : total > 0 ? 'POSTERGADO/A' : '';
+  obsEl.textContent = obs;
+  obsEl.className = obs === 'PROMOVIDO/A' ? 'obs-promovido' : obs === 'POSTERGADO/A' ? 'obs-postergado' : '';
+
+  // Actualizar en rows
+  const idx = rows.findIndex(r => r.id == uid);
+  if (idx >= 0) {
+    rows[idx].nota_ser = vals.ser_h;
+    rows[idx].nota_saber = vals.saber_h;
+    rows[idx].nota_hacer = vals.hacer_h;
+    rows[idx].nota_decidir = vals.decidir_h;
+    rows[idx].auto_ser = vals.auto_ser;
+    rows[idx].auto_decidir = vals.auto_dec;
+    rows[idx].nota_final = total;
+    rows[idx].observacion = obs;
+  }
+}
+
+// ── GUARDAR TODO ─────────────────────────────────────────────────
+async function guardarTodo() {
+  const moduloId = document.getElementById('sel-modulo').value;
+  const notas = rows.map(e => ({
+    usuario_id: e.id,
+    nota_ser: e.nota_ser || 0,
+    nota_saber: e.nota_saber || 0,
+    nota_hacer: e.nota_hacer || 0,
+    nota_decidir: e.nota_decidir || 0,
+    auto_ser: e.auto_ser || 0,
+    auto_decidir: e.auto_decidir || 0,
+    observacion: e.observacion || ''
+  }));
+
+  try {
+    const res = await fetch(`${API_BASE}/cuadro/guardar-batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ modulo_id: parseInt(moduloId), notas })
+    });
+    const data = await res.json();
+    showToast(data.mensaje || '✅ Notas guardadas', res.ok ? 'ok' : 'err');
+  } catch(e) {
+    showToast('Error de conexión', 'err');
+  }
+}
+
+// ── DESCARGAR EXCEL ──────────────────────────────────────────────
+function descargarExcel() {
+  if (!cuadroData) return;
+  const { modulo, area } = cuadroData;
+  const esTecnica = area === 'Técnica';
+  const saberMax = esTecnica ? 30 : 40;
+  const hacerMax = esTecnica ? 40 : 30;
+  const gestion = document.getElementById('inp-gestion').value || 'I / 2026';
+  const paralelo = document.getElementById('inp-paralelo').value || 'A';
+  const facilitador = `${user.nombre || ''} ${user.apellido || ''}`.trim();
+
+  const wb = XLSX.utils.book_new();
+  const aoa = [];
+
+  // Título
+  const titulo = esTecnica
+    ? `CUADRO DE VALORACIÓN FINAL — ${(modulo.nombre || '').toUpperCase()}`
+    : 'CUADRO DE VALORACIÓN FINAL DEL PRIMER MÓDULO';
+  aoa.push([titulo]);
+  aoa.push([]);
+
+  // Info institucional
+  if (esTecnica) {
+    aoa.push(['CENTRO DE EDUCACIÓN ALTERNATIVA', ': PROF. "HERMAN ORTIZ CAMARGO"']);
+    aoa.push(['FACILITADOR (A)', `: ${facilitador.toUpperCase()}`]);
+    aoa.push(['ESPECIALIDAD', `: ${modulo.carrera || ''}`]);
+    aoa.push(['NIVEL', `: ${(modulo.nivel || '').toUpperCase()}`]);
+    aoa.push(['GESTIÓN', `: ${gestion}`]);
+  } else {
+    aoa.push(['CENTRO DE EDUCACIÓN ALTERNATIVA', ': PROF. HERMAN ORTIZ CAMARGO', '', `SEM./AÑO: ${gestion}`]);
+    aoa.push(['NIVEL DE EDUCACIÓN', ': SECUNDARIA DE ADULTOS', '', `PARALELA ${paralelo}`]);
+    aoa.push(['CAMPO DE SABERES Y CONOCIMIENTOS', `: ${modulo.campo_saber || 'CIENCIA, TECNOLOGÍA Y PRODUCCIÓN'}`, '', `ETAPA: ${modulo.nivel || ''}`]);
+    aoa.push(['ÁREA DE SABERES Y CONOCIMIENTOS', `: ${modulo.nombre || ''}`]);
+  }
+  aoa.push([]);
+
+  // Encabezados tabla
+  aoa.push(['', '', 'HETEROEVALUACIÓN (90)', '', '', '', 'AUTOEVALUACIÓN (10)', '', 'PROMEDIO FINAL', '']);
+  aoa.push(['N°', 'NÓMINA DE PARTICIPANTES', `SER (10)`, `SABER (${saberMax})`, `HACER (${hacerMax})`, 'DECIDIR (10)', 'SER (5)', 'DECIDIR (5)', 'NUMERAL', 'OBSERVACIÓN']);
+
+  // Datos
+  rows.forEach((e, i) => {
+    aoa.push([
+      i + 1,
+      `${(e.apellido || '').toUpperCase()} ${(e.nombre || '').toUpperCase()}`,
+      e.nota_ser || '',
+      e.nota_saber || '',
+      e.nota_hacer || '',
+      e.nota_decidir || '',
+      e.auto_ser || '',
+      e.auto_decidir || '',
+      e.nota_final ? parseFloat(e.nota_final).toFixed(0) : '',
+      e.observacion || ''
+    ]);
+  });
+
+  // Filas vacías
+  for (let i = 0; i < 5; i++) aoa.push(['', '', '', '', '', '', '', '', '', '']);
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // Anchos de columna
+  ws['!cols'] = [
+    {wch:5},{wch:30},{wch:9},{wch:9},{wch:9},{wch:9},{wch:7},{wch:7},{wch:10},{wch:14}
+  ];
+
+  // Merge título
+  ws['!merges'] = [
+    {s:{r:0,c:0}, e:{r:0,c:9}},
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Cuadro');
+  const fname = `Cuadro_${(modulo.nombre || 'notas').replace(/\s+/g,'_')}_${gestion.replace(/\//g,'-')}.xlsx`;
+  XLSX.writeFile(wb, fname);
+}
+
+function showToast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+// ── ESTILOS PRINT ────────────────────────────────────────────────
+const printCSS = `@media print{
+  header,.selector-wrap,.actions-bar,.btn,.h-actions{display:none!important;}
+  body{background:#fff;}
+  .cuadro-wrap{padding:0;}
+  table{font-size:9px;}
+  .nota-input{border:none;background:transparent;width:auto;}
+  .cuadro-header{border:none;padding:0;}
+}`;
+const style = document.createElement('style');
+style.textContent = printCSS;
+document.head.appendChild(style);
+
+cargarModulos();
+</script>
+</body>
+</html>

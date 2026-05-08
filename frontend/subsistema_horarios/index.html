@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Horarios CEA | Cuadro Semanal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#003580;--azul2:#0056b3;--dorado:#f59e0b;--verde:#10b981;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--c-lunes:#eff6ff;--c-martes:#f0fdf4;--c-miercoles:#fffbeb;--c-jueves:#faf5ff;--c-viernes:#fff1f2;--c-sabado:#f8fafc;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+.h-brand{display:flex;align-items:center;gap:12px;}
+.h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;display:flex;align-items:center;justify-content:center;background:var(--dorado);font-size:1.2rem;}
+.h-title h1{color:#fff;font-size:1rem;font-weight:800;}
+.h-title p{color:rgba(255,255,255,.7);font-size:.75rem;}
+.btn{padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s;}
+.btn-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;}
+.btn-back:hover{background:#fff;color:var(--azul);}
+.btn-primary{background:var(--azul);color:#fff;}
+.btn-primary:hover{background:#002255;}
+.btn-print{background:var(--dorado);color:#000;}
+
+.container{max-width:1200px;margin:0 auto;padding:24px 20px;}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--border);align-items:flex-end;}
+.fg{flex:1;min-width:180px;}
+.fg label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+.fg select{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:.85rem;background:#fafafe;}
+.fg select:focus{outline:none;border-color:var(--azul);}
+
+.horario-grid{display:grid;grid-template-columns:repeat(6, 1fr);gap:12px;}
+.dia-col{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.dia-header{padding:10px;text-align:center;font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);}
+.dia-header.Lunes{background:var(--c-lunes);color:#1e40af;}
+.dia-header.Martes{background:var(--c-martes);color:#166534;}
+.dia-header.Miércoles{background:var(--c-miercoles);color:#b45309;}
+.dia-header.Jueves{background:var(--c-jueves);color:#6b21a8;}
+.dia-header.Viernes{background:var(--c-viernes);color:#9f1239;}
+.dia-header.Sábado{background:var(--c-sabado);color:#334155;}
+.bloques{padding:10px;display:flex;flex-direction:column;gap:10px;min-height:300px;}
+
+.bloque-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px;box-shadow:0 2px 4px rgba(0,0,0,.02);position:relative;}
+.bloque-time{font-size:.75rem;font-weight:800;color:var(--azul);margin-bottom:4px;}
+.bloque-mod{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.2;}
+.bloque-doc{font-size:.7rem;color:var(--muted);}
+.bloque-aula{font-size:.65rem;font-weight:700;background:#f1f5f9;padding:2px 6px;border-radius:4px;display:inline-block;margin-top:6px;}
+.btn-del{position:absolute;top:6px;right:6px;background:none;border:none;color:var(--rojo);cursor:pointer;font-size:1rem;opacity:0;transition:.2s;}
+.bloque-card:hover .btn-del{opacity:1;}
+
+.empty{text-align:center;padding:50px;color:var(--muted);}
+.empty span{font-size:3rem;display:block;margin-bottom:10px;opacity:.3;}
+
+/* FORMULARIO GESTIÓN */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:999;}
+.modal{background:#fff;padding:24px;border-radius:16px;width:100%;max-width:500px;}
+.modal h2{font-size:1.1rem;color:var(--azul);margin-bottom:16px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+@media(max-width:900px){.horario-grid{grid-template-columns:repeat(3, 1fr);}}
+@media(max-width:600px){.horario-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-brand">
+    <div class="h-logo">📅</div>
+    <div class="h-title">
+      <h1>Cuadro de Horarios</h1>
+      <p>CEA Prof. Herman Ortiz Camargo</p>
+    </div>
+  </div>
+  <a href="../portal/index.html" class="btn btn-back">← Portal</a>
+</header>
+
+<div class="container">
+  <div class="toolbar" id="toolbar" style="display:none;">
+    <div class="fg">
+      <label>Carrera / Especialidad</label>
+      <select id="selCarrera" onchange="loadModulosYHorario()"><option value="">Selecciona...</option></select>
+    </div>
+    <div class="fg">
+      <label>Nivel (opcional)</label>
+      <select id="selNivel" onchange="loadHorario()"><option value="">Todos</option></select>
+    </div>
+    <div id="btnGestor" style="display:none;">
+      <button class="btn btn-primary" onclick="abrirModal()">➕ Agregar Bloque</button>
+    </div>
+    <div>
+      <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+  </div>
+
+  <div id="mainContent"><div class="empty"><span>⏳</span><p>Cargando horarios...</p></div></div>
+</div>
+
+<!-- Modal Agregar Bloque -->
+<div class="modal-overlay" id="modalGestor">
+  <div class="modal">
+    <h2>Asignar Bloque de Horario</h2>
+    <div class="grid2">
+      <div class="fg"><label>Día</label>
+        <select id="f-dia"><option>Lunes</option><option>Martes</option><option>Miércoles</option><option>Jueves</option><option>Viernes</option><option>Sábado</option></select>
+      </div>
+      <div class="fg"><label>Aula/Taller</label><input type="text" id="f-aula" placeholder="Ej: Aula 3, Lab Info..."></div>
+    </div>
+    <div class="grid2">
+      <div class="fg"><label>Hora Inicio</label><input type="time" id="f-inicio"></div>
+      <div class="fg"><label>Hora Fin</label><input type="time" id="f-fin"></div>
+    </div>
+    <div class="fg"><label>Módulo</label><select id="f-modulo"><option value="">Selecciona...</option></select></div>
+    <div class="fg"><label>Docente</label><select id="f-docente"><option value="">Selecciona...</option></select></div>
+    
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+      <button class="btn" style="background:#f1f5f9;color:var(--text);" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarBloque()">Guardar Bloque</button>
+    </div>
+  </div>
+</div>
+
+<script src="../portal/js/api.js"></script>
+<script>
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user')||'{}');
+if(!token) window.location.href='../login.html';
+const isGestor = ['director','administrador','jefe_carrera'].includes(user.rol);
+const isEstudianteDocente = ['estudiante','docente','profesor'].includes(user.rol);
+
+const dias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+async function init(){
+  if(isGestor){
+    document.getElementById('toolbar').style.display='flex';
+    document.getElementById('btnGestor').style.display='block';
+    await loadCarreras();
+    await loadDocentes();
+    document.getElementById('mainContent').innerHTML = '<div class="empty"><span>🎓</span><p>Selecciona una carrera para ver o editar su horario.</p></div>';
+  } else {
+    // Si es docente o estudiante, cargar "Mi Horario"
+    document.getElementById('toolbar').style.display='flex';
+    document.getElementById('toolbar').innerHTML = '<div><h2 style="font-size:1.1rem;color:var(--azul);">Mi Horario Semanal</h2></div><div style="margin-left:auto;"><button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button></div>';
+    await loadMiHorario();
+  }
+}
+
+async function loadCarreras(){
+  const res = await fetch(`${API_BASE}/malla/carreras`);
+  const data = await res.json();
+  const sel = document.getElementById('selCarrera');
+  (data.carreras||[]).forEach(c => {
+    sel.innerHTML += `<option value="${c.id}">${c.nombre}</option>`;
+  });
+}
+
+async function loadDocentes(){
+  try {
+    const res = await fetch(`${API_BASE}/comunicados/destinatarios`,{headers:{Authorization:`Bearer ${token}`}});
+    const data = await res.json();
+    const sel = document.getElementById('f-docente');
+    (data.usuarios||[]).filter(u=>['docente','profesor'].includes(u.rol)).forEach(u=>{
+      sel.innerHTML += `<option value="${u.id}">${u.nombre} ${u.apellido||''}</option>`;
+    });
+  } catch(e){}
+}
+
+async function loadModulosYHorario(){
+  const carreraId = document.getElementById('selCarrera').value;
+  if(!carreraId){
+    document.getElementById('mainContent').innerHTML = '<div class="empty"><span>🎓</span><p>Selecciona una carrera.</p></div>';
+    return;
+  }
+  
+  // Cargar módulos para el select del formulario
+  const resM = await fetch(`${API_BASE}/malla/${carreraId}/estructura`);
+  const dataM = await resM.json();
+  const selN = document.getElementById('selNivel');
+  const fMod = document.getElementById('f-modulo');
+  selN.innerHTML = '<option value="">Todos los niveles</option>';
+  fMod.innerHTML = '<option value="">Selecciona módulo...</option>';
+  
+  (dataM.niveles||[]).forEach(n => {
+    selN.innerHTML += `<option>${n.nivel}</option>`;
+    const og = document.createElement('optgroup');
+    og.label = n.nivel;
+    n.modulos.forEach(m => {
+      og.innerHTML += `<option value="${m.id}" data-nivel="${n.nivel}">${m.nombre}</option>`;
+    });
+    fMod.appendChild(og);
+  });
+
+  await loadHorario();
+}
+
+async function loadHorario(){
+  const carreraId = document.getElementById('selCarrera').value;
+  const nivel = document.getElementById('selNivel').value;
+  if(!carreraId) return;
+  document.getElementById('mainContent').innerHTML = '<div class="loading">⏳ Cargando...</div>';
+  const url = `${API_BASE}/horarios/carrera/${carreraId}${nivel?'?nivel='+encodeURIComponent(nivel):''}`;
+  const res = await fetch(url,{headers:{Authorization:`Bearer ${token}`}});
+  const {horario, total} = await res.json();
+  renderGrid(horario, total);
+}
+
+async function loadMiHorario(){
+  document.getElementById('mainContent').innerHTML = '<div class="loading">⏳ Cargando tu horario...</div>';
+  const res = await fetch(`${API_BASE}/horarios/mi-horario`,{headers:{Authorization:`Bearer ${token}`}});
+  const {horario, total} = await res.json();
+  renderGrid(horario, total);
+}
+
+function renderGrid(horario, total){
+  if(total === 0){
+    document.getElementById('mainContent').innerHTML = '<div class="empty"><span>📅</span><p>No hay horarios registrados para esta selección.</p></div>';
+    return;
+  }
+  let html = `<div class="horario-grid">`;
+  dias.forEach(d => {
+    const bloques = horario[d] || [];
+    html += `
+      <div class="dia-col">
+        <div class="dia-header ${d}">${d}</div>
+        <div class="bloques">
+          ${bloques.length ? bloques.map(b=>`
+            <div class="bloque-card">
+              ${isGestor ? `<button class="btn-del" onclick="eliminarBloque(${b.id})" title="Eliminar">✖</button>` : ''}
+              <div class="bloque-time">⏰ ${b.hora_inicio.substring(0,5)} - ${b.hora_fin.substring(0,5)}</div>
+              <div class="bloque-mod">${b.modulo}</div>
+              <div class="bloque-doc">👨‍🏫 ${b.docente||'Sin asignar'} ${b.docente_apellido||''}</div>
+              ${!isEstudianteDocente ? `<div style="font-size:.65rem;color:var(--dorado);margin-top:2px;">${b.nivel||''}</div>` : ''}
+              ${b.aula ? `<div class="bloque-aula">📍 ${b.aula}</div>` : ''}
+            </div>
+          `).join('') : '<p style="text-align:center;font-size:.7rem;color:#cbd5e1;padding:20px;">Libre</p>'}
+        </div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function abrirModal(){ document.getElementById('modalGestor').style.display='flex'; }
+function cerrarModal(){ document.getElementById('modalGestor').style.display='none'; }
+
+async function guardarBloque(){
+  const carrera_id = document.getElementById('selCarrera').value;
+  const modulo_id = document.getElementById('f-modulo').value;
+  const docente_id = document.getElementById('f-docente').value;
+  const dia = document.getElementById('f-dia').value;
+  const hora_inicio = document.getElementById('f-inicio').value;
+  const hora_fin = document.getElementById('f-fin').value;
+  const aula = document.getElementById('f-aula').value;
+  
+  if(!carrera_id || !modulo_id || !hora_inicio || !hora_fin){
+    alert("Completa los campos obligatorios"); return;
+  }
+  const nivel = document.querySelector(`#f-modulo option[value="${modulo_id}"]`).dataset.nivel;
+
+  const payload = {
+    carrera_id: parseInt(carrera_id),
+    nivel: nivel,
+    dia, hora_inicio, hora_fin,
+    modulo_id: parseInt(modulo_id),
+    docente_id: parseInt(docente_id)||null,
+    aula
+  };
+
+  const res = await fetch(`${API_BASE}/horarios/`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
+    body:JSON.stringify(payload)
+  });
+  if(res.ok){ cerrarModal(); loadHorario(); }
+  else { const d=await res.json(); alert(d.detail||'Error'); }
+}
+
+async function eliminarBloque(id){
+  if(!confirm("¿Eliminar este bloque de horario?")) return;
+  await fetch(`${API_BASE}/horarios/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
+  loadHorario();
+}
+
+init();
+</script>
+</body>
+</html>

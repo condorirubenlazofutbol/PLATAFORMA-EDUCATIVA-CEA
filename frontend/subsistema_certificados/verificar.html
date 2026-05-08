@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificar Certificado | CEA Pailón</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--azul:#003580;--dorado:#f59e0b;--verde:#10b981;--rojo:#ef4444;--bg:#f0f4ff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+header{background:linear-gradient(135deg,var(--azul),#001f5b);width:100%;max-width:600px;padding:16px 24px;border-radius:16px 16px 0 0;display:flex;align-items:center;gap:12px;}
+header h1{color:#fff;font-size:1rem;font-weight:700;}
+header p{color:rgba(255,255,255,.6);font-size:.72rem;}
+.main-card{background:#fff;border:1px solid var(--border);border-radius:0 0 16px 16px;width:100%;max-width:600px;padding:28px;box-shadow:0 8px 32px rgba(0,53,128,.1);}
+
+.search-box{display:flex;gap:10px;margin-bottom:24px;}
+.search-box input{flex:1;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:.9rem;font-family:'Inter',sans-serif;transition:.2s;}
+.search-box input:focus{outline:none;border-color:var(--azul);}
+.btn-buscar{padding:12px 20px;background:var(--azul);color:#fff;border:none;border-radius:10px;font-size:.88rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:.2s;}
+.btn-buscar:hover{background:#0056b3;}
+
+.result-valid{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #bbf7d0;border-radius:16px;padding:24px;text-align:center;}
+.result-invalid{background:#fef2f2;border:2px solid #fecaca;border-radius:16px;padding:24px;text-align:center;}
+.result-icon{font-size:3rem;display:block;margin-bottom:12px;}
+.result-valid h2{color:#166534;font-size:1.2rem;font-weight:800;margin-bottom:16px;}
+.result-invalid h2{color:#dc2626;font-size:1.2rem;font-weight:800;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;text-align:left;}
+.info-item label{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:block;}
+.info-item span{font-size:.88rem;font-weight:700;color:var(--text);}
+.nota-badge{background:linear-gradient(135deg,var(--verde),#059669);color:#fff;font-size:.85rem;font-weight:800;padding:6px 14px;border-radius:10px;display:inline-block;margin-top:10px;}
+.qr-code{background:var(--azul);color:white;font-family:monospace;font-size:.7rem;padding:8px 12px;border-radius:8px;margin-top:12px;word-break:break-all;}
+.inst-badge{background:linear-gradient(135deg,var(--azul),#0056b3);color:#fff;font-size:.75rem;padding:6px 14px;border-radius:8px;margin-top:14px;display:inline-block;}
+.btn-print{margin-top:16px;padding:10px 20px;background:var(--azul);color:#fff;border:none;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;}
+.empty-state{text-align:center;padding:30px 0;color:var(--muted);}
+.empty-state span{font-size:2.5rem;display:block;margin-bottom:10px;opacity:.3;}
+@media(max-width:480px){.info-grid{grid-template-columns:1fr;}.search-box{flex-direction:column;}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🔍 Verificador de Certificados</h1>
+    <p>CEA Prof. Herman Ortiz Camargo · Pailón, Bolivia</p>
+  </div>
+</header>
+<div class="main-card">
+  <div class="search-box">
+    <input type="text" id="codigoInput" placeholder="Ingresa el código QR del certificado..." maxlength="50">
+    <button class="btn-buscar" onclick="verificar()">Verificar</button>
+  </div>
+  <div id="resultado">
+    <div class="empty-state">
+      <span>🔒</span>
+      <p>Ingresa el código del certificado para verificar su autenticidad.</p>
+      <p style="font-size:.78rem;margin-top:6px;">El código tiene el formato <code>CEA-XXXXXXXXXXXXXXXX</code></p>
+    </div>
+  </div>
+</div>
+
+<script src="../portal/js/api.js"></script>
+<script>
+// Leer código de la URL si viene
+const params = new URLSearchParams(window.location.search);
+const codigoUrl = params.get('codigo');
+if (codigoUrl) {
+  document.getElementById('codigoInput').value = codigoUrl;
+  verificar();
+}
+
+document.getElementById('codigoInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') verificar();
+});
+
+async function verificar() {
+  const codigo = document.getElementById('codigoInput').value.trim();
+  if (!codigo) return;
+  document.getElementById('resultado').innerHTML = '<p style="text-align:center;color:#64748b;padding:20px;">⏳ Verificando...</p>';
+
+  try {
+    const res = await fetch(`${API_BASE}/certificados/verificar/${encodeURIComponent(codigo)}`);
+    const data = await res.json();
+
+    if (res.ok && data.valido) {
+      document.getElementById('resultado').innerHTML = `
+        <div class="result-valid">
+          <span class="result-icon">✅</span>
+          <h2>Certificado VÁLIDO</h2>
+          <p style="color:#166534;font-size:.85rem;">Este certificado ha sido verificado como auténtico</p>
+          <div class="info-grid">
+            <div class="info-item"><label>Estudiante</label><span>${data.nombre} ${data.apellido||''}</span></div>
+            <div class="info-item"><label>CI / Carnet</label><span>${data.carnet||'N/A'}</span></div>
+            <div class="info-item"><label>Módulo</label><span>${data.modulo}</span></div>
+            <div class="info-item"><label>Nivel</label><span>${data.nivel}</span></div>
+            <div class="info-item"><label>Carrera</label><span>${data.carrera||'-'}</span></div>
+            <div class="info-item"><label>Fecha de emisión</label><span>${new Date(data.fecha_emision).toLocaleDateString('es')}</span></div>
+          </div>
+          <div class="nota-badge">Nota: ${parseFloat(data.nota_final||0).toFixed(1)} / 100</div>
+          <div class="qr-code">Código: ${data.codigo_qr}</div>
+          <div class="inst-badge">🏛️ ${data.institucion}</div>
+          <br>
+          <button class="btn-print" onclick="window.print()">🖨️ Imprimir verificación</button>
+        </div>`;
+    } else {
+      document.getElementById('resultado').innerHTML = `
+        <div class="result-invalid">
+          <span class="result-icon">❌</span>
+          <h2>Certificado NO encontrado</h2>
+          <p style="color:#dc2626;margin-top:8px;">El código ingresado no corresponde a ningún certificado emitido por el CEA Prof. Herman Ortiz Camargo.</p>
+          <p style="color:#64748b;font-size:.8rem;margin-top:10px;">Verifica que el código esté completo y sin espacios adicionales.</p>
+        </div>`;
+    }
+  } catch(e) {
+    document.getElementById('resultado').innerHTML = `
+      <div class="result-invalid">
+        <span class="result-icon">🔌</span>
+        <h2>Error de conexión</h2>
+        <p style="color:#dc2626;">No se pudo conectar al servidor de verificación.</p>
+      </div>`;
+  }
+}
+</script>
+</body>
+</html>

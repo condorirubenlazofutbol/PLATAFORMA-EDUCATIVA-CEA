@@ -237,6 +237,195 @@ def init_db():
             )
         ''')
 
+        # 7. Temas por módulo (4 temas fijos con subtítulos)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS temas (
+                id SERIAL PRIMARY KEY,
+                modulo_id INT NOT NULL,
+                numero INT NOT NULL,
+                titulo VARCHAR(250) NOT NULL,
+                subtitulos JSONB DEFAULT '[]',
+                FOREIGN KEY (modulo_id) REFERENCES modulos(id) ON DELETE CASCADE,
+                UNIQUE(modulo_id, numero)
+            )
+        ''')
+
+        # 8. Planes didácticos generados por IA
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS planes_didacticos (
+                id SERIAL PRIMARY KEY,
+                docente_id INT NOT NULL,
+                carrera_id INT,
+                modulo_id INT,
+                tema_id INT,
+                tipo VARCHAR(50) NOT NULL,
+                titulo VARCHAR(300),
+                contenido_ia TEXT NOT NULL,
+                fecha_generacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (docente_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE SET NULL,
+                FOREIGN KEY (modulo_id) REFERENCES modulos(id) ON DELETE SET NULL,
+                FOREIGN KEY (tema_id) REFERENCES temas(id) ON DELETE SET NULL
+            )
+        ''')
+
+        # 9. Log de importaciones de malla desde Excel
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS malla_imports (
+                id SERIAL PRIMARY KEY,
+                usuario_id INT NOT NULL,
+                carrera_id INT NOT NULL,
+                archivo_nombre VARCHAR(200),
+                modulos_importados INT DEFAULT 0,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE CASCADE
+            )
+        ''')
+
+        # 10. Plantillas de certificados/constancias (creadas por el director)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS plantillas_certificado (
+                id SERIAL PRIMARY KEY,
+                titulo VARCHAR(300) NOT NULL,
+                nivel VARCHAR(200),
+                carrera_id INT,
+                area VARCHAR(50),
+                cuerpo_texto TEXT NOT NULL,
+                pie_texto TEXT DEFAULT '',
+                activa BOOLEAN DEFAULT TRUE,
+                creado_por INT NOT NULL,
+                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE SET NULL
+            )
+        ''')
+
+        # 11. Constancias generadas por estudiantes
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS constancias (
+                id SERIAL PRIMARY KEY,
+                estudiante_id INT NOT NULL,
+                plantilla_id INT NOT NULL,
+                codigo VARCHAR(60) UNIQUE NOT NULL,
+                fecha_generacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                datos_snapshot JSONB DEFAULT '{}',
+                FOREIGN KEY (estudiante_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (plantilla_id) REFERENCES plantillas_certificado(id) ON DELETE CASCADE
+            )
+        ''')
+
+        # 12. Asistencia por sesión
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS asistencia (
+                id SERIAL PRIMARY KEY,
+                modulo_id INT NOT NULL,
+                docente_id INT NOT NULL,
+                estudiante_id INT NOT NULL,
+                fecha DATE NOT NULL,
+                estado VARCHAR(20) DEFAULT 'presente',
+                observacion TEXT DEFAULT '',
+                FOREIGN KEY (modulo_id) REFERENCES modulos(id) ON DELETE CASCADE,
+                FOREIGN KEY (docente_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (estudiante_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                UNIQUE(modulo_id, estudiante_id, fecha)
+            )
+        ''')
+
+        # 13. Horarios semanales
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS horarios (
+                id SERIAL PRIMARY KEY,
+                carrera_id INT,
+                nivel VARCHAR(200),
+                dia VARCHAR(20) NOT NULL,
+                hora_inicio TIME NOT NULL,
+                hora_fin TIME NOT NULL,
+                modulo_id INT,
+                docente_id INT,
+                aula VARCHAR(100) DEFAULT '',
+                FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE CASCADE,
+                FOREIGN KEY (modulo_id) REFERENCES modulos(id) ON DELETE SET NULL,
+                FOREIGN KEY (docente_id) REFERENCES usuarios(id) ON DELETE SET NULL
+            )
+        ''')
+
+        # 14. Recursos/Biblioteca digital
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS recursos (
+                id SERIAL PRIMARY KEY,
+                modulo_id INT,
+                tema_id INT,
+                titulo VARCHAR(300) NOT NULL,
+                tipo VARCHAR(50) DEFAULT 'enlace',
+                url TEXT NOT NULL,
+                descripcion TEXT DEFAULT '',
+                subido_por INT NOT NULL,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (modulo_id) REFERENCES modulos(id) ON DELETE CASCADE,
+                FOREIGN KEY (tema_id) REFERENCES temas(id) ON DELETE SET NULL,
+                FOREIGN KEY (subido_por) REFERENCES usuarios(id) ON DELETE CASCADE
+            )
+        ''')
+
+        # 15. Evaluaciones online
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS evaluaciones (
+                id SERIAL PRIMARY KEY,
+                modulo_id INT,
+                docente_id INT NOT NULL,
+                titulo VARCHAR(300) NOT NULL,
+                descripcion TEXT DEFAULT '',
+                tiempo_minutos INT DEFAULT 60,
+                intentos_max INT DEFAULT 1,
+                activa BOOLEAN DEFAULT FALSE,
+                fecha_inicio TIMESTAMP,
+                fecha_fin TIMESTAMP,
+                FOREIGN KEY (modulo_id) REFERENCES modulos(id) ON DELETE CASCADE,
+                FOREIGN KEY (docente_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS preguntas (
+                id SERIAL PRIMARY KEY,
+                evaluacion_id INT NOT NULL,
+                texto TEXT NOT NULL,
+                tipo VARCHAR(30) DEFAULT 'multiple',
+                puntos INT DEFAULT 1,
+                orden INT DEFAULT 0,
+                FOREIGN KEY (evaluacion_id) REFERENCES evaluaciones(id) ON DELETE CASCADE
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS opciones_pregunta (
+                id SERIAL PRIMARY KEY,
+                pregunta_id INT NOT NULL,
+                texto TEXT NOT NULL,
+                es_correcta BOOLEAN DEFAULT FALSE,
+                FOREIGN KEY (pregunta_id) REFERENCES preguntas(id) ON DELETE CASCADE
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS respuestas_alumno (
+                id SERIAL PRIMARY KEY,
+                evaluacion_id INT NOT NULL,
+                estudiante_id INT NOT NULL,
+                pregunta_id INT NOT NULL,
+                opcion_id INT,
+                respuesta_texto TEXT DEFAULT '',
+                es_correcta BOOLEAN,
+                puntos_obtenidos DECIMAL(5,2) DEFAULT 0,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (evaluacion_id) REFERENCES evaluaciones(id) ON DELETE CASCADE,
+                FOREIGN KEY (estudiante_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                FOREIGN KEY (pregunta_id) REFERENCES preguntas(id) ON DELETE CASCADE,
+                UNIQUE(evaluacion_id, estudiante_id, pregunta_id)
+            )
+        ''')
+
         for col_sql in [
             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS subsistema_id INT",
             "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS nivel_asignado VARCHAR(100)",
@@ -245,6 +434,8 @@ def init_db():
             "ALTER TABLE modulos ADD COLUMN IF NOT EXISTS orden INT DEFAULT 0",
             "ALTER TABLE modulos ADD COLUMN IF NOT EXISTS carrera_id INT",
             "ALTER TABLE modulos ADD COLUMN IF NOT EXISTS periodo VARCHAR(100)",
+            "ALTER TABLE modulos ADD COLUMN IF NOT EXISTS descripcion TEXT",
+            "ALTER TABLE modulos ADD COLUMN IF NOT EXISTS area VARCHAR(20)",
             "ALTER TABLE contenidos ADD COLUMN IF NOT EXISTS tema_num INT DEFAULT 1",
             "ALTER TABLE contenidos ALTER COLUMN url SET DEFAULT ''",
             "ALTER TABLE progreso ADD COLUMN IF NOT EXISTS nota_ser DECIMAL(5,2) DEFAULT 0",
@@ -263,6 +454,7 @@ def init_db():
             "ALTER TABLE votos DROP CONSTRAINT IF EXISTS votos_candidato_id_fkey",
             "ALTER TABLE votos ADD CONSTRAINT votos_candidato_id_fkey FOREIGN KEY (candidato_id) REFERENCES candidatos(id) ON DELETE CASCADE"
         ]:
+
             try:
                 cursor.execute(col_sql)
             except:

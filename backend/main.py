@@ -6,7 +6,9 @@ from dotenv import load_dotenv
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from routes import auth, modulos, evaluaciones, comunicados, ai_tools, certificados, votaciones, notas, elecciones
+from routes import (auth, modulos, evaluaciones, comunicados, ai_tools, certificados,
+                    votaciones, notas, elecciones, malla, planes, notas_cuadro,
+                    constancias, estadisticas, asistencia, horarios, biblioteca, kardex)
 from database import init_db
 
 load_dotenv()
@@ -40,6 +42,15 @@ app.include_router(certificados.router, prefix="/certificados", tags=["Certifica
 app.include_router(votaciones.router,   prefix="/votaciones",   tags=["Votaciones"])
 app.include_router(notas.router,        prefix="/notas",        tags=["Notas"])
 app.include_router(elecciones.router,   tags=["Elecciones"])  # Sin prefijo: /admin/*, /votante/*, /secretaria/*, /candidatos/*
+app.include_router(malla.router,         prefix="/malla",        tags=["Malla Curricular"])
+app.include_router(planes.router,        prefix="/planes",       tags=["Planes Didácticos"])
+app.include_router(notas_cuadro.router,  prefix="/cuadro",       tags=["Cuadro de Notas"])
+app.include_router(constancias.router,   prefix="/constancias",  tags=["Constancias"])
+app.include_router(estadisticas.router,  prefix="/estadisticas", tags=["Estadísticas"])
+app.include_router(asistencia.router,    prefix="/asistencia",   tags=["Asistencia"])
+app.include_router(horarios.router,      prefix="/horarios",     tags=["Horarios"])
+app.include_router(biblioteca.router,    prefix="/recursos",     tags=["Biblioteca"])
+app.include_router(kardex.router,        prefix="/kardex",       tags=["Kardex"])
 
 @app.get("/")
 def read_root():

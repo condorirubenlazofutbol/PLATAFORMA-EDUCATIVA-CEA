@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Malla Curricular Institucional | CEA Pailón</title>
+<meta name="description" content="Malla curricular completa del CEA Prof. Herman Ortiz Camargo - Todas las carreras técnicas y humanísticas.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul: #003580; --azul-c: #0056b3; --cyan: #0ea5e9;
+    --dorado: #f59e0b; --verde: #10b981; --violeta: #8b5cf6;
+    --bg: #f0f4ff; --card: #fff; --text: #1e293b; --muted: #64748b;
+    --border: #e2e8f0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+  /* HEADER */
+  header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 24px;
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,53,128,.4);}
+  .h-left{display:flex;align-items:center;gap:14px;}
+  .h-logo{width:48px;height:48px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;}
+  .h-title h1{color:#fff;font-size:1.05rem;font-weight:700;}
+  .h-title p{color:rgba(255,255,255,.65);font-size:.72rem;margin-top:1px;}
+  .h-actions{display:flex;align-items:center;gap:10px;}
+  .btn-portal{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+    color:#fff;padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:600;
+    text-decoration:none;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px;}
+  .btn-portal:hover{background:#fff;color:var(--azul);}
+  .btn-dashboard{background:var(--dorado);color:#000;border:none;padding:8px 16px;
+    border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;
+    text-decoration:none;transition:.2s;display:none;}
+  .btn-dashboard:hover{filter:brightness(1.1);}
+  .btn-dashboard.visible{display:flex;align-items:center;gap:6px;}
+
+  /* HERO */
+  .hero{background:linear-gradient(135deg,var(--azul) 0%,#1a3a8c 50%,#001f5b 100%);
+    padding:50px 20px 70px;text-align:center;position:relative;overflow:hidden;}
+  .hero::before{content:'📚';font-size:180px;position:absolute;opacity:.04;right:-10px;top:-10px;line-height:1;}
+  .hero h2{color:var(--dorado);font-size:.8rem;font-weight:600;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
+  .hero h1{color:#fff;font-size:clamp(1.6rem,4vw,2.4rem);font-weight:800;line-height:1.2;margin-bottom:10px;}
+  .hero p{color:rgba(255,255,255,.75);font-size:.95rem;margin-bottom:20px;}
+  .hero-badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+  .badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+    color:#fff;padding:5px 13px;border-radius:20px;font-size:.78rem;backdrop-filter:blur(8px);}
+
+  /* FILTROS */
+  .filtros-bar{background:#fff;border-bottom:1px solid var(--border);padding:14px 20px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:76px;z-index:90;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .filtro-btn{padding:7px 16px;border-radius:8px;border:2px solid var(--border);background:#fff;
+    font-size:.82rem;font-weight:600;cursor:pointer;transition:.2s;color:var(--muted);}
+  .filtro-btn.active{border-color:var(--azul);background:var(--azul);color:#fff;}
+  .filtro-btn:hover:not(.active){border-color:var(--azul);color:var(--azul);}
+  .filtro-label{font-size:.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;}
+
+  /* CONTENT */
+  .container{max-width:1100px;margin:0 auto;padding:30px 20px 60px;}
+  .loading-state{text-align:center;padding:60px;color:var(--muted);}
+  .spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--azul);
+    border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* CARRERA SECTION */
+  .carrera-section{margin-bottom:40px;}
+  .carrera-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding:18px 20px;
+    background:#fff;border-radius:16px;border:1px solid var(--border);
+    box-shadow:0 2px 8px rgba(0,0,0,.04);}
+  .carrera-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;
+    justify-content:center;font-size:1.5rem;}
+  .icon-tecnica{background:linear-gradient(135deg,#dbeafe,#bfdbfe);}
+  .icon-humanistica{background:linear-gradient(135deg,#d1fae5,#a7f3d0);}
+  .carrera-info h2{font-size:1.1rem;font-weight:800;color:var(--azul);}
+  .carrera-info p{font-size:.78rem;color:var(--muted);margin-top:2px;}
+  .carrera-badge{background:var(--azul);color:#fff;font-size:.65rem;font-weight:800;
+    padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.05em;margin-left:auto;}
+
+  /* NIVELES */
+  .nivel-block{margin-bottom:20px;}
+  .nivel-title{font-size:.85rem;font-weight:800;color:var(--azul-c);text-transform:uppercase;
+    letter-spacing:.05em;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .nivel-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  /* MÓDULO CARD */
+  .modulo-card{background:#fff;border:1px solid var(--border);border-radius:12px;
+    margin-bottom:8px;overflow:hidden;transition:box-shadow .2s;}
+  .modulo-card:hover{box-shadow:0 4px 16px rgba(0,53,128,.1);}
+  .modulo-header{padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;}
+  .modulo-num{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--azul),var(--azul-c));
+    color:#fff;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .modulo-nombre{font-size:.88rem;font-weight:700;flex:1;color:var(--text);}
+  .modulo-periodo{font-size:.72rem;color:var(--muted);background:var(--bg);
+    padding:2px 8px;border-radius:6px;}
+  .modulo-arrow{color:var(--muted);transition:transform .2s;font-size:.8rem;}
+  .modulo-card.open .modulo-arrow{transform:rotate(180deg);}
+  .modulo-body{display:none;border-top:1px solid var(--border);padding:16px;}
+  .modulo-card.open .modulo-body{display:block;}
+
+  /* TEMAS */
+  .temas-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;}
+  .tema-item{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;}
+  .tema-num{font-size:.68rem;font-weight:800;color:var(--cyan);text-transform:uppercase;margin-bottom:4px;}
+  .tema-titulo{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:8px;}
+  .subtitulos-list{list-style:none;}
+  .subtitulos-list li{font-size:.72rem;color:var(--muted);padding:2px 0 2px 14px;position:relative;}
+  .subtitulos-list li::before{content:'▸';position:absolute;left:0;color:var(--cyan);}
+
+  /* EMPTY */
+  .empty-carrera{text-align:center;padding:30px;color:var(--muted);font-size:.85rem;
+    border:1px dashed var(--border);border-radius:12px;}
+
+  @media(max-width:768px){
+    header{flex-direction:column;gap:10px;padding:12px;}
+    .h-left{flex-direction:column;text-align:center;}
+    .hero{padding:35px 15px;}
+    .filtros-bar{top:0;position:relative;}
+    .temas-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-left">
+    <img src="../portal/images/logo.png" class="h-logo" alt="CEA" onerror="this.src='https://placehold.co/48x48/003580/f5a623?text=CEA'">
+    <div class="h-title">
+      <h1>Malla Curricular Institucional</h1>
+      <p>CEA Prof. Herman Ortiz Camargo — Pailón</p>
+    </div>
+  </div>
+  <div class="h-actions">
+    <a href="../portal/index.html" class="btn-portal">← Portal</a>
+    <a href="dashboard.html" class="btn-dashboard" id="btnDashboard">⚙️ Gestionar Malla</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <h2>Estructura Curricular</h2>
+  <h1>Malla Curricular Completa</h1>
+  <p>CEA Prof. Herman Ortiz Camargo · Pailón, Santa Cruz, Bolivia</p>
+  <div class="hero-badges">
+    <span class="badge">🔧 8 Carreras Técnicas</span>
+    <span class="badge">📖 Área Humanística</span>
+    <span class="badge">📋 Módulos y Temas</span>
+    <span class="badge">🎓 MESCP Bolivia</span>
+  </div>
+</section>
+
+<!-- FILTROS -->
+<div class="filtros-bar" id="filtrosBar">
+  <span class="filtro-label">Área:</span>
+  <button class="filtro-btn active" onclick="filtrar('todas', this)">Todas</button>
+  <button class="filtro-btn" onclick="filtrar('Técnica', this)">🔧 Técnica</button>
+  <button class="filtro-btn" onclick="filtrar('Humanística', this)">📖 Humanística</button>
+</div>
+
+<div class="container">
+  <div class="loading-state" id="loadingState">
+    <div class="spinner"></div>
+    <p>Cargando malla curricular...</p>
+  </div>
+  <div id="mallaContainer"></div>
+</div>
+
+<script src="../portal/js/api.js"></script>
+<script>
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  let allData = [];
+  let currentFilter = 'todas';
+
+  // Mostrar botón dashboard si tiene permisos
+  if (token && ['director','jefe_carrera','docente','administrador'].includes(user.rol)) {
+    document.getElementById('btnDashboard').classList.add('visible');
+  }
+
+  const AREA_ICONS = {
+    'Sistemas Informáticos': '💻', 'Veterinaria': '🐾', 'Parvularia': '👶',
+    'Fisioterapia': '🏥', 'Contabilidad': '📊', 'Confección': '🧵',
+    'Belleza Integral': '💅', 'Gastronomía': '🍳', 'Humanística': '📖',
+  };
+
+  function getIcon(nombre) {
+    for (const [k, v] of Object.entries(AREA_ICONS)) {
+      if (nombre.includes(k)) return v;
+    }
+    return nombre.includes('Humaníst') ? '📖' : '⚙️';
+  }
+
+  async function cargarMalla() {
+    try {
+      const res = await fetch(`${API_BASE}/malla/estructura-completa`);
+      if (!res.ok) throw new Error('API Error');
+      allData = await res.json();
+      renderMalla(allData);
+    } catch(e) {
+      document.getElementById('loadingState').innerHTML = `
+        <p style="color:#ef4444;">⚠️ No se pudo cargar la malla. Verifica la conexión con el backend.</p>
+        <p style="font-size:.8rem;color:#64748b;margin-top:8px;">${e.message}</p>`;
+    }
+  }
+
+  function filtrar(area, btn) {
+    document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = area;
+    if (area === 'todas') {
+      renderMalla(allData);
+    } else {
+      renderMalla(allData.filter(c => c.area === area));
+    }
+  }
+
+  function renderMalla(data) {
+    document.getElementById('loadingState').style.display = 'none';
+    const container = document.getElementById('mallaContainer');
+    if (!data || !data.length) {
+      container.innerHTML = `<div class="empty-carrera"><span style="font-size:2rem;display:block;margin-bottom:12px;">📋</span>No hay malla curricular cargada aún.<br><a href="dashboard.html" style="color:var(--azul);font-weight:700;">Añadir módulos →</a></div>`;
+      return;
+    }
+
+    container.innerHTML = data.map((carrera, ci) => {
+      const esTecnica = carrera.area === 'Técnica';
+      const iconClass = esTecnica ? 'icon-tecnica' : 'icon-humanistica';
+      const icon = getIcon(carrera.nombre);
+      const niveles = carrera.niveles || [];
+
+      const nivelesHTML = niveles.map(niv => {
+        const modHTML = (niv.modulos || []).map((mod, mi) => {
+          const temas = mod.temas || [];
+          const temasHTML = temas.map(t => {
+            let subs = t.subtitulos || [];
+            if (typeof subs === 'string') try { subs = JSON.parse(subs); } catch { subs = []; }
+            const subsHTML = subs.length ? `<ul class="subtitulos-list">${subs.map(s => `<li>${s}</li>`).join('')}</ul>` : '<p style="font-size:.72rem;color:#94a3b8;font-style:italic;">Sin subtítulos definidos</p>';
+            return `<div class="tema-item">
+              <div class="tema-num">Tema ${t.numero}</div>
+              <div class="tema-titulo">${t.titulo}</div>
+              ${subsHTML}
+            </div>`;
+          }).join('');
+
+          const bodyContent = temas.length
+            ? `<div class="temas-grid">${temasHTML}</div>`
+            : `<p style="color:var(--muted);font-size:.82rem;text-align:center;padding:12px;">Sin temas registrados</p>`;
+
+          return `<div class="modulo-card" id="mc-${ci}-${mi}">
+            <div class="modulo-header" onclick="toggleMod('mc-${ci}-${mi}')">
+              <div class="modulo-num">${mi+1}</div>
+              <div class="modulo-nombre">${mod.nombre}</div>
+              ${mod.periodo ? `<span class="modulo-periodo">${mod.periodo}</span>` : ''}
+              <span class="modulo-arrow">▼</span>
+            </div>
+            <div class="modulo-body">${bodyContent}</div>
+          </div>`;
+        }).join('');
+
+        return `<div class="nivel-block">
+          <div class="nivel-title">📌 ${niv.nivel}</div>
+          ${modHTML || '<div class="empty-carrera">Sin módulos en este nivel</div>'}
+        </div>`;
+      }).join('');
+
+      return `<div class="carrera-section">
+        <div class="carrera-header">
+          <div class="carrera-icon ${iconClass}">${icon}</div>
+          <div class="carrera-info">
+            <h2>${carrera.nombre}</h2>
+            <p>${carrera.descripcion || (esTecnica ? 'Educación Técnica Tecnológica (ETP)' : 'Educación Secundaria de Adultos (ESA)')}</p>
+          </div>
+          <span class="carrera-badge">${carrera.area || 'Técnica'}</span>
+        </div>
+        ${niveles.length ? nivelesHTML : `<div class="empty-carrera">Esta carrera no tiene módulos registrados aún.<br><a href="dashboard.html" style="color:var(--azul);font-weight:700;">Añadir módulos →</a></div>`}
+      </div>`;
+    }).join('');
+  }
+
+  function toggleMod(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  cargarMalla();
+</script>
+</body>
+</html>
