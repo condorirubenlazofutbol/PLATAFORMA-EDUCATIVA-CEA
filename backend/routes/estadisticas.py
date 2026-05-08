@@ -121,3 +121,46 @@ def actividad_reciente(current_user: dict = Depends(get_current_user)):
         certs = rows_to_dicts(cur, cur.fetchall())
         return {"usuarios_recientes": recientes, "certificados_recientes": certs}
     finally: cur.close(); conn.close()
+
+@router.get("/directorio-exportar")
+def directorio_exportar(current_user: dict = Depends(get_current_user)):
+    if current_user["rol"] not in ["director","administrador","secretaria"]:
+        raise HTTPException(403,"Sin permisos")
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        # Estudiantes (inferimos carrera por su último progreso o sub-consulta rápida)
+        cur.execute("""
+            SELECT u.id, u.nombre, u.apellido, u.carnet, u.email, u.estado, u.fecha_registro::date as fecha_inscripcion,
+                   COALESCE((
+                       SELECT c.nombre 
+                       FROM progreso p 
+                       JOIN modulos m ON p.modulo_id = m.id 
+                       JOIN carreras c ON m.carrera_id = c.id 
+                       WHERE p.usuario_id = u.id 
+                       ORDER BY p.id DESC LIMIT 1
+                   ), 'Sin Carrera Asignada') as carrera,
+                   COALESCE((
+                       SELECT m.nivel 
+                       FROM progreso p 
+                       JOIN modulos m ON p.modulo_id = m.id 
+                       WHERE p.usuario_id = u.id 
+                       ORDER BY p.id DESC LIMIT 1
+                   ), u.nivel_asignado) as nivel
+            FROM usuarios u
+            WHERE u.rol = 'estudiante'
+            ORDER BY carrera, nivel, u.apellido
+        """)
+        estudiantes = rows_to_dicts(cur, cur.fetchall())
+        
+        # Profesores
+        cur.execute("""
+            SELECT id, nombre, apellido, carnet, email, estado, nivel_asignado as area_especialidad, fecha_registro::date as fecha_ingreso
+            FROM usuarios 
+            WHERE rol IN ('docente','profesor')
+            ORDER BY apellido
+        """)
+        profesores = rows_to_dicts(cur, cur.fetchall())
+        
+        return {"estudiantes": estudiantes, "profesores": profesores}
+    finally: cur.close(); conn.close()

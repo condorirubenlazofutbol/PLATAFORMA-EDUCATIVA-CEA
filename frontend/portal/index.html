@@ -49,6 +49,8 @@
 
         .btn-logout { background: none; border: 1px solid var(--rose); color: var(--rose); padding: 6px 15px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
         .btn-logout:hover { background: var(--rose); color: white; }
+        .btn-pw { background: none; border: 1px solid var(--primary); color: var(--primary); padding: 6px 15px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .btn-pw:hover { background: var(--primary); color: white; }
 
         .container { max-width: 1200px; margin: 3rem auto; padding: 0 1.5rem; }
 
@@ -104,6 +106,16 @@
 
         .hidden { display: none !important; }
 
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 999; }
+        .modal { background: var(--bg-dark); border: 1px solid var(--border); padding: 2rem; border-radius: 16px; width: 100%; max-width: 400px; }
+        .modal h2 { margin-bottom: 1rem; color: white; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; }
+        .form-group input { width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; color: white; }
+        .form-group input:focus { outline: none; border-color: var(--primary); }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 1.5rem; }
+        .btn-cancel { background: transparent; color: white; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+        .btn-save { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         @media (max-width: 768px) {
             header { padding: 1rem 1.5rem; flex-direction: column; gap: 1rem; }
             .header-right { width: 100%; justify-content: space-between; }
@@ -131,6 +143,7 @@
                     <div class="user-role" id="userRole">--</div>
                 </div>
             </div>
+            <button class="btn-pw" onclick="openPwModal()">🔑 Clave</button>
             <button class="btn-logout" onclick="logout()">Salir</button>
         </div>
     </header>
@@ -367,6 +380,20 @@
 
     </div>
 
+    <div class="modal-overlay" id="pwModal">
+        <div class="modal">
+            <h2>🔑 Cambiar Contraseña</h2>
+            <div class="form-group">
+                <label>Nueva Contraseña</label>
+                <input type="password" id="newPw" placeholder="Ingresa la nueva clave">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closePwModal()">Cancelar</button>
+                <button class="btn-save" onclick="savePw()" id="btnSavePw">Guardar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/api.js"></script>
     <script>
         const token = localStorage.getItem('token');
@@ -418,6 +445,28 @@
         function logout() {
             localStorage.clear();
             window.location.href = '../login.html';
+        }
+
+        function openPwModal() { document.getElementById('pwModal').style.display = 'flex'; }
+        function closePwModal() { document.getElementById('pwModal').style.display = 'none'; document.getElementById('newPw').value = ''; }
+        
+        async function savePw() {
+            const newPw = document.getElementById('newPw').value;
+            if(!newPw || newPw.length < 4) { alert("La contraseña debe tener al menos 4 caracteres"); return; }
+            const btn = document.getElementById('btnSavePw');
+            btn.textContent = "Guardando..."; btn.disabled = true;
+            try {
+                const res = await fetch(`${API_BASE}/auth/update-password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ new_password: newPw })
+                });
+                if(res.ok) {
+                    alert("Contraseña actualizada con éxito");
+                    closePwModal();
+                } else { alert("Error al actualizar contraseña"); }
+            } catch(e) { alert("Error de red"); }
+            btn.textContent = "Guardar"; btn.disabled = false;
         }
     </script>
 </body>
