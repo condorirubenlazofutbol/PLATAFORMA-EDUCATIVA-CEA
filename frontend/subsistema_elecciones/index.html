@@ -461,7 +461,21 @@
     location.reload(true);
   }
 
+  // ─── SSO MAGIC ───
+  function checkSSO() {
+    const portalToken = localStorage.getItem('token');
+    const portalUser = JSON.parse(localStorage.getItem('user') || 'null');
+    
+    if (portalToken && portalUser) {
+        console.log("SSO: Token de portal detectado. Iniciando sesión automática...");
+        localStorage.setItem('jwt_token', portalToken);
+        localStorage.setItem('user_rol', portalUser.rol);
+        redirigirPorRol(portalUser.rol);
+    }
+  }
+
   // INIT
+  checkSSO();
   cargarCandidatosPublicos();
 </script>
 

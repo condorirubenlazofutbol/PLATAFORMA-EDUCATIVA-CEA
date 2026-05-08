@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -326,6 +326,20 @@
     <div id="toast"></div>
 
     <script>
+        // ─── SSO MAGIC ───
+        (function checkSSO() {
+            const portalToken = localStorage.getItem('token');
+            const portalUser = JSON.parse(localStorage.getItem('user') || 'null');
+            
+            if (portalToken && portalUser) {
+                console.log("SSO: Sesión detectada. Redirigiendo automáticamente...");
+                let target = 'student/dashboard.html';
+                if (portalUser.rol === 'administrador' || portalUser.rol === 'admin') target = 'admin/dashboard.html';
+                else if (portalUser.rol === 'profesor' || portalUser.rol === 'docente') target = 'profesor/dashboard.html';
+                window.location.href = target;
+            }
+        })();
+
         // Toggle password visibility
         document.getElementById('toggle-pw').addEventListener('click', () => {
             const inp = document.getElementById('password');
