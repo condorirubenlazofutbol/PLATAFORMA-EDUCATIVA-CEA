@@ -7,54 +7,64 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-:root{--azul:#003580;--azul2:#0056b3;--dorado:#f59e0b;--verde:#10b981;--rojo:#ef4444;--violet:#8b5cf6;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;}
+:root {
+  --primary: #0ea5e9; --secondary: #48d18e; --violet: #8b5cf6; --dorado: #f59e0b; --rojo: #f43f5e;
+  --bg-dark: #0b0f1a; --card-bg: rgba(19, 25, 41, 0.7); --border: rgba(255, 255, 255, 0.1);
+  --text: #f8fafc; --muted: #94a3b8;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+body{font-family:'Inter',sans-serif;background-color:var(--bg-dark);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.05), transparent 25%),
+              radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05), transparent 25%);
+  z-index: -1; pointer-events: none;
+}
+header{background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
 .h-brand{display:flex;align-items:center;gap:12px;}
 .h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;}
 .h-title h1{color:#fff;font-size:1rem;font-weight:800;}
-.h-title p{color:rgba(255,255,255,.7);font-size:.75rem;}
-.btn-back{padding:8px 16px;border-radius:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;transition:.2s;}
-.btn-back:hover{background:#fff;color:var(--azul);}
+.h-title p{color:var(--muted);font-size:.75rem;}
+.btn-back{padding:8px 16px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;transition:.2s;}
+.btn-back:hover{background:rgba(255,255,255,.1);border-color:white;}
 
 .container{max-width:1200px;margin:0 auto;padding:24px 20px;}
 
 /* KPIs */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;}
-.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);}
+.kpi-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(10px);}
 .kpi-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;}
 .kpi-info h3{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
 .kpi-info .num{font-size:1.8rem;font-weight:900;color:var(--text);line-height:1;}
-.icon-blue{background:#eff6ff;color:var(--azul2);}
-.icon-green{background:#dcfce7;color:var(--verde);}
-.icon-orange{background:#fef3c7;color:#d97706;}
-.icon-purple{background:#f3e8ff;color:var(--violet);}
+.icon-blue{background:rgba(14,165,233,0.1);color:var(--primary);}
+.icon-green{background:rgba(72,209,142,0.1);color:var(--secondary);}
+.icon-orange{background:rgba(245,158,11,0.1);color:var(--dorado);}
+.icon-purple{background:rgba(139,92,246,0.1);color:var(--violet);}
 
 /* CHARTS & TABLES */
 .layout{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
-.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);}
-.panel-title{font-size:.95rem;font-weight:800;color:var(--azul);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.panel{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:20px;backdrop-filter:blur(10px);}
+.panel-title{font-size:.95rem;font-weight:800;color:var(--primary);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
 .chart-wrap{position:relative;height:300px;width:100%;}
 
 .tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
-.tbl th{background:#f1f5f9;color:var(--muted);padding:10px;text-align:left;font-weight:700;text-transform:uppercase;font-size:.7rem;}
+.tbl th{background:rgba(255,255,255,0.02);color:var(--muted);padding:10px;text-align:left;font-weight:700;text-transform:uppercase;font-size:.7rem; border-bottom: 1px solid var(--border);}
 .tbl td{padding:12px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
 .tbl tr:last-child td{border-bottom:none;}
-.tbl tr:hover td{background:#f8fafc;}
+.tbl tr:hover td{background:rgba(255,255,255,0.02);}
 .badge{padding:4px 8px;border-radius:6px;font-size:.7rem;font-weight:700;}
-.b-ok{background:#dcfce7;color:#166534;}
-.b-err{background:#fee2e2;color:#991b1b;}
+.b-ok{background:rgba(72,209,142,0.1);color:var(--secondary);border:1px solid var(--secondary);}
+.b-err{background:rgba(244,63,94,0.1);color:var(--rojo);border:1px solid var(--rojo);}
 
 .feed-item{display:flex;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);}
 .feed-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
-.feed-icon{width:36px;height:36px;border-radius:50%;background:#f1f5f9;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.feed-icon{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;border:1px solid var(--border);}
 .feed-content strong{font-size:.85rem;color:var(--text);display:block;}
 .feed-content span{font-size:.75rem;color:var(--muted);}
 
 .loading{text-align:center;padding:60px;color:var(--muted);font-weight:600;}
-.tab-btn{padding:10px 20px;border-radius:10px 10px 0 0;background:var(--border);border:none;color:var(--muted);font-weight:700;cursor:pointer;font-size:.9rem;}
-.tab-btn.active{background:var(--card);color:var(--azul);border-bottom:3px solid var(--azul);}
+.tab-btn{padding:10px 20px;border-radius:10px 10px 0 0;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-bottom:none;color:var(--muted);font-weight:700;cursor:pointer;font-size:.9rem;}
+.tab-btn.active{background:var(--card-bg);color:var(--primary);border-top:2px solid var(--primary);}
 .btn-sm{padding:4px 8px;font-size:.7rem;border-radius:4px;border:none;cursor:pointer;font-weight:700;background:var(--rojo);color:white;}
 
 @media(max-width:900px){.layout{grid-template-columns:1fr;}}
@@ -86,22 +96,22 @@ header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;
 <div class="container" id="tab-directorio" style="display:none;">
   <div class="layout" style="grid-template-columns:1fr;margin-bottom:20px;">
     <div class="panel">
-      <div class="panel-title">Base de Datos Institucional <button class="btn-back" style="background:var(--verde);color:white;border:none;" onclick="exportarExcel()">📥 Exportar a Excel</button></div>
+      <div class="panel-title">Base de Datos Institucional <button class="btn-back" style="background:var(--secondary);color:white;border:none;" onclick="exportarExcel()">📥 Exportar a Excel</button></div>
       
-      <h3 style="margin:20px 0 10px;color:var(--azul);">Estudiantes Inscritos</h3>
+      <h3 style="margin:20px 0 10px;color:var(--primary);">Estudiantes Inscritos</h3>
       <div style="overflow-x:auto;max-height:400px;border:1px solid var(--border);border-radius:8px;">
         <table class="tbl" id="tblEstudiantes">
-          <thead style="position:sticky;top:0;background:#f1f5f9;z-index:10;">
+          <thead style="position:sticky;top:0;background:var(--card-bg);backdrop-filter:blur(10px);z-index:10;">
             <tr><th>CI</th><th>Apellidos y Nombres</th><th>Carrera / Especialidad</th><th>Nivel</th><th>Estado</th><th>Acciones</th></tr>
           </thead>
           <tbody id="tbodyEst"><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
         </table>
       </div>
 
-      <h3 style="margin:30px 0 10px;color:var(--azul);">Plantel Docente</h3>
+      <h3 style="margin:30px 0 10px;color:var(--primary);">Plantel Docente</h3>
       <div style="overflow-x:auto;max-height:300px;border:1px solid var(--border);border-radius:8px;">
         <table class="tbl" id="tblDocentes">
-          <thead style="position:sticky;top:0;background:#f1f5f9;z-index:10;">
+          <thead style="position:sticky;top:0;background:var(--card-bg);backdrop-filter:blur(10px);z-index:10;">
             <tr><th>CI</th><th>Apellidos y Nombres</th><th>Área/Especialidad</th><th>Estado</th><th>Acciones</th></tr>
           </thead>
           <tbody id="tbodyDoc"><tr><td colspan="5" class="loading">Cargando...</td></tr></tbody>

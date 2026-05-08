@@ -55,6 +55,50 @@ def get_stats():
         }
     finally: conn.close()
 
+@router.get("/reset-ingenieria")
+def reset_ingenieria():
+    """Limpia los módulos de ingeniería de la base de datos y re-siembra los módulos del CEA."""
+    from database import get_db_connection
+    from seed_cea import seed_cea_data
+    conn = get_db_connection()
+    if not conn: raise HTTPException(status_code=500, detail="Error DB")
+    try:
+        cur = conn.cursor()
+        carreras_oficiales = [
+            'Sistemas Informáticos', 'Veterinaria', 'Educación Parvularia', 
+            'Fisioterapia', 'Contabilidad General', 'Corte y Confección', 
+            'Belleza Integral', 'Gastronomía', 'Matemática', 'Lenguaje', 
+            'Ciencias Naturales', 'Ciencias Sociales'
+        ]
+        format_strings = ','.join(['%s'] * len(carreras_oficiales))
+        cur.execute(f"SELECT id FROM carreras WHERE nombre NOT IN ({format_strings})", tuple(carreras_oficiales))
+        carreras_a_borrar = cur.fetchall()
+        
+        if carreras_a_borrar:
+            carrera_ids = tuple(c[0] for c in carreras_a_borrar)
+            cur.execute(f"SELECT id FROM modulos WHERE carrera_id IN %s", (carrera_ids,))
+            modulos_a_borrar = cur.fetchall()
+            
+            if modulos_a_borrar:
+                modulo_ids = tuple(m[0] for m in modulos_a_borrar)
+                cur.execute(f"DELETE FROM temas WHERE modulo_id IN %s", (modulo_ids,))
+                cur.execute(f"DELETE FROM modulos WHERE carrera_id IN %s", (carrera_ids,))
+            
+            cur.execute(f"DELETE FROM carreras WHERE id IN %s", (carrera_ids,))
+            
+        cur.execute("DELETE FROM temas WHERE modulo_id IN (SELECT id FROM modulos WHERE nombre LIKE '%Cloud Computing%' OR nombre LIKE '%Algoritmos%' OR nombre LIKE '%Módulo Emergente%' OR nombre LIKE '%Base de Datos%')")
+        cur.execute("DELETE FROM modulos WHERE nombre LIKE '%Cloud Computing%' OR nombre LIKE '%Algoritmos%' OR nombre LIKE '%Módulo Emergente%' OR nombre LIKE '%Base de Datos%'")
+        
+        conn.commit()
+        seed_cea_data()
+        return {"msg": "Módulos de ingeniería borrados exitosamente. Se restablecieron los módulos del CEA."}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
+
 @router.get("/{modulo_id}/contenidos")
 def get_contenidos(modulo_id: int):
     conn = get_db_connection()

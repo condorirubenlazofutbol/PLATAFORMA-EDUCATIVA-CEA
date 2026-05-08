@@ -1,94 +1,68 @@
-# Arquitectura Funcional: Ecosistema CEA EduConnect Pro
+# Ecosistema CEA EduConnect Pro — Documentación Técnica
 
-El **Centro de Educación Alternativa (CEA) EduConnect Pro** está diseñado bajo una arquitectura modular y desacoplada (Frontend en HTML/JS/CSS puro + Backend en FastAPI/PostgreSQL). Esto permite que cada subsistema funcione de manera independiente pero consumiendo una base de datos centralizada.
+El **Centro de Educación Alternativa (CEA) EduConnect Pro** está diseñado bajo una arquitectura modular y desacoplada. Esto permite que cada subsistema funcione de manera independiente pero consumiendo una base de datos centralizada, garantizando una alta escalabilidad y un entorno seguro para docentes, estudiantes y administrativos.
 
-A continuación, se detalla la función completa de la plataforma y cada uno de sus subsistemas para facilitar su escalabilidad y futuras actualizaciones.
+## 👥 Arquitectura de Permisos y Roles
+La plataforma utiliza un modelo de acceso basado en roles (`RBAC - Role Based Access Control`). Cada usuario solo visualiza en su Portal (Hub) las tarjetas/cuadros de los módulos a los que tiene acceso legítimo. 
 
----
+A continuación, la matriz de acceso (`data-roles`) para cada módulo:
 
-## 1. Núcleo Central (Hub)
+| Subsistema / Módulo | Administrador | Director | Secretaria | Jefe de Carrera | Docente | Estudiante |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Dashboard Director** | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Panel Secretaría** | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **Panel Jefatura** | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
+| **Aula Virtual** | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
+| **Asistencia Diaria** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Registro de Notas** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **Malla Curricular** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Horarios y Aulas** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Planes IA** | ✅ | ✅ | ❌ | ✅ | ✅ | ❌ |
+| **Biblioteca Digital** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Evaluaciones Online** | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
+| **Kardex Académico** | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| **Certificados** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Constancias** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Votaciones CEA** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Comunicados** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
-### Portal Hub (`/frontend/portal`)
-*   **Función:** Es el punto de entrada unificado. Tras el login, evalúa el `rol` del usuario (director, secretaria, jefe_carrera, docente, estudiante) a través de un token JWT.
-*   **Escalabilidad:** Las tarjetas (`app-card`) del portal se muestran u ocultan mediante el atributo `data-roles`. Para agregar un nuevo subsistema en el futuro, solo se requiere crear una nueva tarjeta HTML e indicar qué roles pueden verla.
-
-### Sistema de Autenticación (`/backend/routes/auth.py`)
-*   **Función:** Manejo de sesiones con tokens seguros (JWT). Centraliza la creación de usuarios y la gestión de roles.
-*   **Futura actualización:** Integrar autenticación de Google (OAuth2) o restablecimiento de contraseñas por email.
-
----
-
-## 2. Subsistemas Académicos y Administrativos
-
-### 🏛️ Dashboard Director (`/frontend/subsistema_director`)
-*   **Función:** Panel de inteligencia de negocios (BI). Extrae datos estadísticos en tiempo real sobre la tasa de aprobación, abandono y crecimiento poblacional de las carreras.
-*   **Escalabilidad:** Agregar exportación de reportes PDF gerenciales y gráficos comparativos de gestiones anteriores.
-
-### 📋 Panel Secretaría (`/frontend/subsistema_academico/secretaria`)
-*   **Función:** Módulo de inscripciones (carga manual y masiva por Excel), gestión de la comunidad estudiantil, publicación de comunicados oficiales e inicio de procesos electorales.
-*   **Escalabilidad:** Integrar pasarelas de pago para el cobro de matrículas o mensualidades, y generación automática de recibos.
-
-### 📐 Panel Jefatura (`/frontend/subsistema_academico/jefe_carrera`)
-*   **Función:** Asignación de carga horaria. El Jefe de Carrera designa qué docente imparte qué módulo en cada nivel/carrera.
+> **Nota para Desarrolladores:** Para dar o quitar acceso a un rol sobre un módulo, simplemente edita el atributo `data-roles` en `frontend/portal/index.html`. El backend en FastAPI valida el token JWT para prevenir accesos no autorizados mediante inyección de rutas.
 
 ---
 
-## 3. Subsistemas de Desarrollo Curricular
+## 🏗️ Especificación Técnica por Subsistema
 
-### 🧩 Malla Curricular (`/frontend/subsistema_malla`)
-*   **Función:** Define la estructura académica del CEA. (Carreras → Niveles → Módulos → Temas). Permite carga masiva vía Excel.
-*   **Escalabilidad:** Vincular los temas directamente con repositorios del Ministerio de Educación.
+### 1. Núcleo Central (Hub)
+- **Frontend:** `/frontend/portal/index.html`
+- **Backend:** `/backend/routes/auth.py`
+- **Responsabilidad:** Punto de entrada. Evalúa el token JWT y renderiza las tarjetas dinámicamente según el rol.
+- **Escalabilidad:** Se puede agregar OAuth2 (Google Login) expandiendo el endpoint de `auth.py`.
 
-### 🤖 Generador de Planes IA (`/frontend/subsistema_planes`)
-*   **Función:** Integración directa con Google Gemini AI. Lee automáticamente la Malla Curricular y redacta Planes Semestrales y de Aula-Taller adaptados al modelo MESCP boliviano.
-*   **Escalabilidad:** Incorporar IA para la generación de rúbricas de evaluación dinámicas basadas en el plan generado.
+### 2. Gestión Administrativa
+- **Dashboard Director:** Inteligencia de Negocios (BI) para tasas de retención y egresos.
+- **Panel Secretaría:** Sistema de matriculación de estudiantes (por Excel/manual) y reportes.
+- **Panel Jefatura:** Asignación de carga horaria (quién dicta qué y cuándo).
 
----
+### 3. Desarrollo Curricular y Aula
+- **Malla Curricular:** Define la estructura de carreras (Sistemas Informáticos, Veterinaria, Belleza Integral) y sus módulos respectivos.
+- **Planes IA:** Genera rúbricas y PDCs (Plan de Desarrollo Curricular) conectándose a Gemini AI para los módulos del CEA.
+- **Aula Virtual & Notas:** Módulos para subir recursos y llenar el cuadro de valoración basado en el modelo boliviano (Ser, Saber, Hacer, Decidir).
+- **Asistencia & Horarios:** Cruce de datos para control diario y asignación de aulas físicas o laboratorios.
 
-## 4. Subsistemas de Seguimiento en Aula
+### 4. Herramientas del Estudiante
+- **Kardex Académico:** Concentra el avance histórico, descargas de boletines y registro biométrico/fotográfico del estudiante.
+- **Evaluaciones Online:** Sistema de pruebas en tiempo real con límite de tiempo y calificación automatizada.
+- **Biblioteca Digital:** Repositorio de recursos (videos, PDFs) filtrados inteligentemente por la carrera del estudiante.
 
-### ✅ Control de Asistencia (`/frontend/subsistema_asistencia`)
-*   **Función:** Registro diario por sesión. El docente marca Presente, Ausente, Tardanza o Permiso. El estudiante visualiza una barra de rendimiento porcentual.
-*   **Escalabilidad:** Integrar notificaciones Push (vía Web Push API) al teléfono del estudiante cuando acumule más de 3 faltas.
-
-### 📅 Horarios y Aulas (`/frontend/subsistema_horarios`)
-*   **Función:** Asignación de bloques de tiempo y espacios físicos.
-*   **Escalabilidad:** Detectar cruces de horarios de forma automática antes de que el Director guarde el bloque.
-
-### 📊 Cuadro de Valoración (Notas) (`/frontend/subsistema_notas`)
-*   **Función:** Registro de calificaciones segmentadas (Ser, Saber, Hacer, Decidir) según el reglamento del CEA. Diferencia entre área Humanística y Técnica. Genera el acta en formato Excel oficial.
-
----
-
-## 5. Subsistemas del Estudiante y Recursos
-
-### 📁 Kardex Académico (`/frontend/subsistema_kardex`)
-*   **Función:** El expediente central de cada estudiante. Consolida: notas, asistencia, constancias y estado académico.
-*   **Escalabilidad:** Digitalización de documentos (subir fotos del CI, Certificado de Nacimiento y Título de Bachiller anterior).
-
-### 📚 Biblioteca Digital (`/frontend/subsistema_biblioteca`)
-*   **Función:** Repositorio de links, PDFs y videos catalogados por módulo.
-*   **Escalabilidad:** Integrar previsualizadores de documentos directamente en el navegador (para que no tengan que descargar archivos pesados).
-
-### 📝 Evaluaciones Online (`/frontend/subsistema_evaluaciones`)
-*   **Función:** Creación de exámenes contra reloj con calificación automática vinculada directamente al progreso del estudiante.
-*   **Escalabilidad:** Soporte para preguntas abiertas calificadas con IA o integradas con subida de imágenes/archivos.
+### 5. Servicios Institucionales
+- **Certificados & Constancias:** Generación de diplomas finales con validación por código QR y sistema de plantillas dinámicas (con variables como `[NOMBRE]`).
+- **Elecciones (Votaciones CEA):** Módulo aislado para elecciones del centro de estudiantes garantizando el voto secreto de cada CI empadronado.
 
 ---
 
-## 6. Subsistemas Institucionales Especiales
+## 🛠️ Escalabilidad y Limpieza de Datos
+El proyecto ha sido limpiado de módulos experimentales (como Ingenierías o Módulos Universitarios) para reflejar exclusivamente el ámbito del **Centro de Educación Alternativa (CEA)**.
 
-### 📜 Certificaciones (`/frontend/subsistema_certificados`) y Constancias (`/frontend/subsistema_constancias`)
-*   **Función:** Generación de documentos oficiales. Las certificaciones se generan al aprobar con nota ≥51 (con Código QR). Las constancias se generan a partir de plantillas dinámicas redactadas por el Director con variables (ej. `[NOMBRE]`).
-*   **Escalabilidad:** Firmas digitales oficiales encriptadas o validación blockchain para evitar falsificaciones.
-
-### 🗳️ Votación Institucional (`/frontend/subsistema_elecciones`)
-*   **Función:** Automatiza las elecciones del centro de estudiantes. Valida que el votante esté inscrito, garantiza el voto secreto y genera escrutinios en tiempo real.
-
----
-
-## 🚀 Resumen para Escalabilidad Futura
-
-1.  **Frontend Desacoplado:** Si quieres cambiar el diseño, solo debes tocar los archivos CSS y HTML dentro de las carpetas de `/frontend/`. No afectará a la base de datos ni a la lógica.
-2.  **API Restful (FastAPI):** Cada subsistema tiene su propio archivo en `/backend/routes/`. Si deseas crear una App móvil en el futuro (React Native o Flutter), puedes consumir las *mismas rutas* sin modificar ni una línea de código del servidor.
-3.  **Base de Datos Relacional:** El uso de PostgreSQL garantiza integridad. Cualquier módulo nuevo debe relacionarse con la tabla `usuarios` o `modulos` para mantener el ecosistema conectado.
+- **Frontend Desacoplado:** Si quieres cambiar el diseño, solo debes tocar los archivos CSS y HTML dentro de las carpetas de `/frontend/`. No afectará a la base de datos ni a la lógica.
+- **API Restful (FastAPI):** Cada subsistema tiene su propio archivo en `/backend/routes/`. Si deseas crear una App móvil en el futuro (React Native o Flutter), puedes consumir las *mismas rutas* sin modificar ni una línea de código del servidor.
+- **Base de Datos (PostgreSQL):** Las tablas principales (`usuarios`, `carreras`, `modulos`, `notas`) operan bajo estricta integridad referencial. Para migrar o resembrar los datos del CEA, puedes usar los scripts `seed.py` (para usuarios) y `seed_cea.py` (para malla curricular).

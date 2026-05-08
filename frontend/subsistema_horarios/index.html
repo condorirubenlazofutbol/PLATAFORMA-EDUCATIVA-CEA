@@ -6,45 +6,58 @@
 <title>Horarios CEA | Cuadro Semanal</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{--azul:#003580;--azul2:#0056b3;--dorado:#f59e0b;--verde:#10b981;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--c-lunes:#eff6ff;--c-martes:#f0fdf4;--c-miercoles:#fffbeb;--c-jueves:#faf5ff;--c-viernes:#fff1f2;--c-sabado:#f8fafc;}
+:root {
+  --primary: #0ea5e9; --secondary: #48d18e; --violet: #8b5cf6; --dorado: #f59e0b; --rojo: #f43f5e;
+  --bg-dark: #0b0f1a; --card-bg: rgba(19, 25, 41, 0.7); --border: rgba(255, 255, 255, 0.1);
+  --text: #f8fafc; --muted: #94a3b8;
+  --c-lunes: rgba(14, 165, 233, 0.15); --c-martes: rgba(72, 209, 142, 0.15); --c-miercoles: rgba(245, 158, 11, 0.15);
+  --c-jueves: rgba(139, 92, 246, 0.15); --c-viernes: rgba(244, 63, 94, 0.15); --c-sabado: rgba(255, 255, 255, 0.05);
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+body{font-family:'Inter',sans-serif;background-color:var(--bg-dark);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.05), transparent 25%),
+              radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05), transparent 25%);
+  z-index: -1; pointer-events: none;
+}
+header{background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
 .h-brand{display:flex;align-items:center;gap:12px;}
 .h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;display:flex;align-items:center;justify-content:center;background:var(--dorado);font-size:1.2rem;}
 .h-title h1{color:#fff;font-size:1rem;font-weight:800;}
-.h-title p{color:rgba(255,255,255,.7);font-size:.75rem;}
+.h-title p{color:var(--muted);font-size:.75rem;}
 .btn{padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s;}
-.btn-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;}
-.btn-back:hover{background:#fff;color:var(--azul);}
-.btn-primary{background:var(--azul);color:#fff;}
-.btn-primary:hover{background:#002255;}
+.btn-back{background:rgba(255,255,255,.05);border:1px solid var(--border);color:#fff;}
+.btn-back:hover{background:rgba(255,255,255,.1);border-color:white;}
+.btn-primary{background:var(--primary);color:#000;}
+.btn-primary:hover{filter:brightness(1.1);}
 .btn-print{background:var(--dorado);color:#000;}
 
 .container{max-width:1200px;margin:0 auto;padding:24px 20px;}
 
-.toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--border);align-items:flex-end;}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;background:var(--card-bg);backdrop-filter:blur(10px);padding:16px;border-radius:12px;border:1px solid var(--border);align-items:flex-end;}
 .fg{flex:1;min-width:180px;}
-.fg label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
-.fg select{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:.85rem;background:#fafafe;}
-.fg select:focus{outline:none;border-color:var(--azul);}
+.fg label{display:block;font-size:.72rem;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:6px;}
+.fg select, .fg input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:rgba(255,255,255,0.05);color:var(--text);}
+.fg select option { background: var(--bg-dark); color: var(--text); }
+.fg select:focus, .fg input:focus{outline:none;border-color:var(--primary);background:rgba(255,255,255,0.1);}
 
 .horario-grid{display:grid;grid-template-columns:repeat(6, 1fr);gap:12px;}
-.dia-col{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.dia-col{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;overflow:hidden;backdrop-filter:blur(10px);}
 .dia-header{padding:10px;text-align:center;font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);}
-.dia-header.Lunes{background:var(--c-lunes);color:#1e40af;}
-.dia-header.Martes{background:var(--c-martes);color:#166534;}
-.dia-header.Miércoles{background:var(--c-miercoles);color:#b45309;}
-.dia-header.Jueves{background:var(--c-jueves);color:#6b21a8;}
-.dia-header.Viernes{background:var(--c-viernes);color:#9f1239;}
-.dia-header.Sábado{background:var(--c-sabado);color:#334155;}
+.dia-header.Lunes{background:var(--c-lunes);color:var(--primary);}
+.dia-header.Martes{background:var(--c-martes);color:var(--secondary);}
+.dia-header.Miércoles{background:var(--c-miercoles);color:var(--dorado);}
+.dia-header.Jueves{background:var(--c-jueves);color:var(--violet);}
+.dia-header.Viernes{background:var(--c-viernes);color:var(--rojo);}
+.dia-header.Sábado{background:var(--c-sabado);color:var(--text);}
 .bloques{padding:10px;display:flex;flex-direction:column;gap:10px;min-height:300px;}
 
-.bloque-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px;box-shadow:0 2px 4px rgba(0,0,0,.02);position:relative;}
-.bloque-time{font-size:.75rem;font-weight:800;color:var(--azul);margin-bottom:4px;}
+.bloque-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:12px;position:relative;}
+.bloque-time{font-size:.75rem;font-weight:800;color:var(--primary);margin-bottom:4px;}
 .bloque-mod{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:4px;line-height:1.2;}
 .bloque-doc{font-size:.7rem;color:var(--muted);}
-.bloque-aula{font-size:.65rem;font-weight:700;background:#f1f5f9;padding:2px 6px;border-radius:4px;display:inline-block;margin-top:6px;}
+.bloque-aula{font-size:.65rem;font-weight:700;background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;display:inline-block;margin-top:6px;border:1px solid var(--border);}
 .btn-del{position:absolute;top:6px;right:6px;background:none;border:none;color:var(--rojo);cursor:pointer;font-size:1rem;opacity:0;transition:.2s;}
 .bloque-card:hover .btn-del{opacity:1;}
 
@@ -52,9 +65,9 @@ header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;
 .empty span{font-size:3rem;display:block;margin-bottom:10px;opacity:.3;}
 
 /* FORMULARIO GESTIÓN */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:999;}
-.modal{background:#fff;padding:24px;border-radius:16px;width:100%;max-width:500px;}
-.modal h2{font-size:1.1rem;color:var(--azul);margin-bottom:16px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:999;}
+.modal{background:var(--card-bg);border:1px solid var(--border);backdrop-filter:blur(15px);padding:24px;border-radius:16px;width:100%;max-width:500px;}
+.modal h2{font-size:1.1rem;color:var(--primary);margin-bottom:16px;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
 @media(max-width:900px){.horario-grid{grid-template-columns:repeat(3, 1fr);}}
@@ -138,7 +151,7 @@ async function init(){
   } else {
     // Si es docente o estudiante, cargar "Mi Horario"
     document.getElementById('toolbar').style.display='flex';
-    document.getElementById('toolbar').innerHTML = '<div><h2 style="font-size:1.1rem;color:var(--azul);">Mi Horario Semanal</h2></div><div style="margin-left:auto;"><button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button></div>';
+    document.getElementById('toolbar').innerHTML = '<div><h2 style="font-size:1.1rem;color:var(--primary);">Mi Horario Semanal</h2></div><div style="margin-left:auto;"><button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button></div>';
     await loadMiHorario();
   }
 }

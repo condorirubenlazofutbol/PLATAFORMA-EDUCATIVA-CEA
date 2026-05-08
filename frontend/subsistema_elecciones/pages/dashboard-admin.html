@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -599,9 +599,9 @@
   // Protección de ruta "Nivel Pro"
   (function() {
     const rol = localStorage.getItem('user_rol');
-    if (rol !== 'admin') {
+    if (rol !== 'admin' && rol !== 'administrador' && rol !== 'director') {
         console.warn("Acceso denegado. Rol:", rol);
-        window.location.href = window.location.origin + '/index.html';
+        window.location.href = '../../portal/index.html';
     }
   })();
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -222,10 +222,10 @@
 
         // Protección de ruta + carga de info del jurado
         (async function() {
-            const rol = localStorage.getItem('user_rol');
-            if(rol !== 'jefe' && rol !== 'admin') {
+            const rol = localStorage.getItem('user_rol') || JSON.parse(localStorage.getItem('user') || '{}').rol;
+            if(!['jefe', 'jefe_carrera', 'admin', 'administrador', 'director'].includes(rol)) {
                 console.warn("Acceso denegado. Rol:", rol);
-                window.location.href = window.location.origin + '/index.html';
+                window.location.href = '../../portal/index.html';
                 return;
             }
 

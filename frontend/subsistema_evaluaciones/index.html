@@ -6,57 +6,71 @@
 <title>Evaluaciones Online CEA</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{--azul:#003580;--azul2:#0056b3;--dorado:#f59e0b;--verde:#10b981;--rojo:#ef4444;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;}
+:root {
+  --primary: #0ea5e9; --secondary: #48d18e; --violet: #8b5cf6; --dorado: #f59e0b; --rojo: #f43f5e;
+  --bg-dark: #0b0f1a; --card-bg: rgba(19, 25, 41, 0.7); --border: rgba(255, 255, 255, 0.1);
+  --text: #f8fafc; --muted: #94a3b8;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+body{font-family:'Inter',sans-serif;background-color:var(--bg-dark);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.05), transparent 25%),
+              radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05), transparent 25%);
+  z-index: -1; pointer-events: none;
+}
+header{background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
 .h-brand{display:flex;align-items:center;gap:12px;}
 .h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;display:flex;align-items:center;justify-content:center;background:var(--dorado);font-size:1.2rem;}
 .h-title h1{color:#fff;font-size:1rem;font-weight:800;}
-.h-title p{color:rgba(255,255,255,.7);font-size:.75rem;}
+.h-title p{color:var(--muted);font-size:.75rem;}
 .btn{padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s;}
-.btn-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;}
-.btn-back:hover{background:#fff;color:var(--azul);}
-.btn-primary{background:var(--azul);color:#fff;}
-.btn-primary:hover{background:#002255;}
-.btn-outline{border:2px solid var(--azul);color:var(--azul);background:transparent;}
+.btn-back{background:rgba(255,255,255,.05);border:1px solid var(--border);color:#fff;}
+.btn-back:hover{background:rgba(255,255,255,.1);border-color:white;}
+.btn-primary{background:var(--primary);color:#000;}
+.btn-primary:hover{filter:brightness(1.1);}
+.btn-outline{border:1px solid var(--primary);color:var(--primary);background:rgba(14,165,233,0.1);}
 
 .container{max-width:1000px;margin:24px auto;padding:0 20px;}
 
-.toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--border);align-items:flex-end;justify-content:space-between;}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;background:var(--card-bg);backdrop-filter:blur(10px);padding:16px;border-radius:12px;border:1px solid var(--border);align-items:flex-end;justify-content:space-between;}
 .fg{flex:1;min-width:200px;}
-.fg label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
-.fg select{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;}
+.fg label{display:block;font-size:.72rem;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:6px;}
+.fg select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:.9rem;background:rgba(255,255,255,0.05);color:var(--text);}
+.fg select option { background: var(--bg-dark); color: var(--text); }
+.fg select:focus { outline:none; border-color:var(--primary); background:rgba(255,255,255,0.1); }
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:16px;}
-.ev-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;position:relative;}
-.ev-title{font-size:1.1rem;font-weight:800;color:var(--azul);margin-bottom:8px;}
+.ev-card{background:var(--card-bg);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;position:relative;transition:0.2s;}
+.ev-card:hover{box-shadow:0 10px 15px -3px rgba(14, 165, 233, 0.1);transform:translateY(-2px);border-color:var(--primary);}
+.ev-title{font-size:1.1rem;font-weight:800;color:var(--primary);margin-bottom:8px;}
 .ev-desc{font-size:.85rem;color:var(--muted);margin-bottom:16px;flex:1;}
-.ev-meta{font-size:.75rem;font-weight:600;display:flex;gap:12px;color:var(--muted);margin-bottom:16px;background:#f8fafc;padding:8px;border-radius:6px;}
+.ev-meta{font-size:.75rem;font-weight:600;display:flex;gap:12px;color:var(--text);margin-bottom:16px;background:rgba(255,255,255,0.05);padding:8px;border-radius:6px;border:1px solid var(--border);}
 .ev-meta span{display:flex;align-items:center;gap:4px;}
 
 .badge{padding:4px 8px;border-radius:6px;font-size:.65rem;font-weight:800;text-transform:uppercase;position:absolute;top:20px;right:20px;}
-.b-act{background:#dcfce7;color:#166534;}
-.b-inact{background:#f1f5f9;color:#64748b;}
-.b-hecha{background:#e0f2fe;color:#0369a1;top:5px;right:5px;}
+.b-act{background:rgba(72,209,142,0.15);color:var(--secondary);border:1px solid var(--secondary);}
+.b-inact{background:rgba(255,255,255,0.05);color:var(--muted);border:1px solid var(--border);}
+.b-hecha{background:rgba(14,165,233,0.15);color:var(--primary);border:1px solid var(--primary);top:5px;right:5px;}
 
 /* CREAR EVALUACION (DOCENTE) */
-.c-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;display:none;}
-.c-box h2{color:var(--azul);margin-bottom:16px;}
-.f-input{width:100%;padding:10px;border:2px solid var(--border);border-radius:8px;margin-bottom:12px;}
-.p-box{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;position:relative;}
-.p-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--rojo);cursor:pointer;}
+.c-box{background:var(--card-bg);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;display:none;}
+.c-box h2{color:var(--primary);margin-bottom:16px;}
+.f-input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;background:rgba(255,255,255,0.05);color:var(--text);}
+.f-input:focus{outline:none;border-color:var(--primary);background:rgba(255,255,255,0.1);}
+.p-box{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:12px;position:relative;}
+.p-del{position:absolute;top:10px;right:10px;background:rgba(244,63,94,0.15);border:1px solid var(--rojo);color:var(--rojo);cursor:pointer;border-radius:4px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;}
 .op-row{display:flex;align-items:center;gap:8px;margin-top:8px;}
 
 /* TOMAR EVALUACION (ESTUDIANTE) */
-.quiz-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:30px;display:none;}
+.quiz-box{background:var(--card-bg);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;padding:30px;display:none;}
 .quiz-header{display:flex;justify-content:space-between;border-bottom:2px solid var(--border);padding-bottom:16px;margin-bottom:24px;}
-.q-timer{font-size:1.2rem;font-weight:800;color:var(--rojo);background:#fee2e2;padding:6px 16px;border-radius:20px;}
+.q-timer{font-size:1.2rem;font-weight:800;color:var(--rojo);background:rgba(244,63,94,0.15);border:1px solid var(--rojo);padding:6px 16px;border-radius:20px;}
 .q-item{margin-bottom:30px;}
 .q-text{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:16px;}
-.q-op{display:block;padding:12px 16px;background:#f8fafc;border:2px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:.2s;}
-.q-op:hover{border-color:var(--azul);}
-.q-op input{margin-right:10px;accent-color:var(--azul);transform:scale(1.2);}
+.q-op{display:block;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;transition:.2s;}
+.q-op:hover{border-color:var(--primary);background:rgba(255,255,255,0.1);}
+.q-op input{margin-right:10px;accent-color:var(--primary);transform:scale(1.2);}
 
 .empty{text-align:center;padding:50px;color:var(--muted);grid-column:1/-1;}
 </style>
@@ -283,7 +297,7 @@ function renderQuiz(){
   c.innerHTML = `
     <div class="quiz-header">
       <div>
-        <h2 style="color:var(--azul);">${evalActual.titulo}</h2>
+        <h2 style="color:var(--primary);">${evalActual.titulo}</h2>
         <p style="font-size:.8rem;color:var(--muted);">${evalActual.descripcion}</p>
       </div>
       <div class="q-timer" id="timer">${min}:00</div>
@@ -332,8 +346,8 @@ async function enviarQuiz(){
     document.getElementById('viewQuiz').innerHTML = `
       <div style="text-align:center;padding:40px;">
         <span style="font-size:4rem;display:block;margin-bottom:10px;">${result.nota_100 >= 51 ? '🎉' : '📚'}</span>
-        <h2 style="color:var(--azul);margin-bottom:10px;">Examen Finalizado</h2>
-        <div style="font-size:3rem;font-weight:900;color:${result.nota_100 >= 51 ? 'var(--verde)' : 'var(--rojo)'};margin-bottom:20px;">
+        <h2 style="color:var(--primary);margin-bottom:10px;">Examen Finalizado</h2>
+        <div style="font-size:3rem;font-weight:900;color:${result.nota_100 >= 51 ? 'var(--secondary)' : 'var(--rojo)'};margin-bottom:20px;">
           ${result.nota_100} / 100
         </div>
         <p style="color:var(--muted);margin-bottom:30px;">Obtuviste ${result.puntaje_obtenido} de ${result.puntaje_total} puntos posibles.</p>

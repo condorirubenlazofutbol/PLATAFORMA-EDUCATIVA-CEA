@@ -6,54 +6,66 @@
 <title>Kardex Institucional | Expediente CEA</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{--azul:#003580;--azul2:#0056b3;--dorado:#f59e0b;--verde:#10b981;--rojo:#ef4444;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;}
+:root {
+  --primary: #0ea5e9; --secondary: #48d18e; --violet: #8b5cf6; --dorado: #f59e0b; --rojo: #f43f5e;
+  --bg-dark: #0b0f1a; --card-bg: rgba(19, 25, 41, 0.7); --border: rgba(255, 255, 255, 0.1);
+  --text: #f8fafc; --muted: #94a3b8;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;}
+body{font-family:'Inter',sans-serif;background-color:var(--bg-dark);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.05), transparent 25%),
+              radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05), transparent 25%);
+  z-index: -1; pointer-events: none;
+}
+header{background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;}
 .h-brand{display:flex;align-items:center;gap:12px;}
 .h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;display:flex;align-items:center;justify-content:center;background:var(--dorado);font-size:1.2rem;}
 .h-title h1{color:#fff;font-size:1rem;font-weight:800;}
-.h-title p{color:rgba(255,255,255,.7);font-size:.75rem;}
+.h-title p{color:var(--muted);font-size:.75rem;}
 .btn{padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s;}
-.btn-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;}
-.btn-back:hover{background:#fff;color:var(--azul);}
+.btn-back{background:rgba(255,255,255,.05);border:1px solid var(--border);color:#fff;}
+.btn-back:hover{background:rgba(255,255,255,.1);border-color:white;}
 
 .container{max-width:1100px;margin:24px auto;padding:0 20px;}
 
-.toolbar{display:flex;justify-content:space-between;align-items:center;background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;}
+.toolbar{display:flex;justify-content:space-between;align-items:center;background:var(--card-bg);backdrop-filter:blur(10px);padding:16px;border-radius:12px;border:1px solid var(--border);margin-bottom:20px;}
 .search-box{display:flex;gap:10px;flex:1;max-width:400px;}
-.search-box input{flex:1;padding:10px 14px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;}
-.search-box input:focus{outline:none;border-color:var(--azul);}
-.btn-primary{background:var(--azul);color:#fff;}
+.search-box input{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:.9rem;background:rgba(255,255,255,0.05);color:var(--text);}
+.search-box input:focus{outline:none;border-color:var(--primary);background:rgba(255,255,255,0.1);}
+.btn-primary{background:var(--primary);color:#000;}
+.btn-primary:hover{filter:brightness(1.1);}
 .btn-print{background:var(--dorado);color:#000;}
+.btn-print:hover{filter:brightness(1.1);}
 
 /* VISTA KARDEX (IMPRIMIBLE) */
-.kardex-page{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;box-shadow:0 10px 15px -3px rgba(0,0,0,.05);}
-.k-header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--azul);padding-bottom:16px;margin-bottom:24px;}
-.k-header-left h2{font-size:1.5rem;font-weight:900;color:var(--azul);text-transform:uppercase;letter-spacing:.05em;}
+.kardex-page{background:var(--card-bg);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:16px;padding:40px;box-shadow:0 10px 15px -3px rgba(0,0,0,.05);}
+.k-header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--primary);padding-bottom:16px;margin-bottom:24px;}
+.k-header-left h2{font-size:1.5rem;font-weight:900;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;}
 .k-header-left p{color:var(--muted);font-size:.85rem;margin-top:4px;}
 .k-header-right{text-align:right;}
 .k-header-right img{height:60px;}
 
 .k-section{margin-bottom:30px;}
-.k-section-title{font-size:1rem;font-weight:800;color:var(--azul);background:#f1f5f9;padding:8px 12px;border-radius:6px;margin-bottom:16px;display:inline-block;}
+.k-section-title{font-size:1rem;font-weight:800;color:var(--primary);background:rgba(14,165,233,0.1);padding:8px 12px;border-radius:6px;margin-bottom:16px;display:inline-block;border:1px solid var(--primary);}
 
 .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
-.info-item{background:#f8fafc;padding:12px;border-radius:8px;border:1px solid var(--border);}
-.info-item label{display:block;font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+.info-item{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;border:1px solid var(--border);}
+.info-item label{display:block;font-size:.7rem;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:4px;}
 .info-item div{font-size:.95rem;font-weight:800;color:var(--text);}
 
-.tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
-.tbl th{background:var(--azul);color:#fff;padding:10px;text-align:left;font-weight:700;}
+.tbl{width:100%;border-collapse:collapse;font-size:.82rem;background:transparent;}
+.tbl th{background:rgba(255,255,255,0.05);color:var(--text);padding:10px;text-align:left;font-weight:700;border-bottom:1px solid var(--border);}
 .tbl td{padding:10px;border-bottom:1px solid var(--border);}
-.tbl tr:hover td{background:#f8fafc;}
+.tbl tr:hover td{background:rgba(255,255,255,0.05);}
 .tbl .center{text-align:center;}
 
-.b-ok{color:#166534;font-weight:800;background:#dcfce7;padding:2px 8px;border-radius:4px;}
-.b-err{color:#991b1b;font-weight:800;background:#fee2e2;padding:2px 8px;border-radius:4px;}
+.b-ok{color:var(--secondary);font-weight:800;background:rgba(72,209,142,0.15);padding:2px 8px;border-radius:4px;}
+.b-err{color:var(--rojo);font-weight:800;background:rgba(244,63,94,0.15);padding:2px 8px;border-radius:4px;}
 
-.kpi-row{display:flex;gap:16px;margin-bottom:20px;}
-.kpi{flex:1;background:#fff;border:1px solid var(--border);border-left:4px solid var(--azul);padding:16px;border-radius:8px;}
+.kpi-row{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+.kpi{flex:1;min-width:150px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-left:4px solid var(--primary);padding:16px;border-radius:8px;}
 .kpi .num{font-size:1.6rem;font-weight:900;color:var(--text);}
 .kpi label{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;}
 
@@ -61,11 +73,19 @@ header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;
 .empty span{font-size:3rem;display:block;margin-bottom:10px;opacity:.3;}
 
 @media print{
-  body{background:#fff;}
+  body{background:#fff;color:#000;}
   header, .toolbar, .btn{display:none !important;}
   .container{margin:0;padding:0;max-width:100%;}
-  .kardex-page{border:none;box-shadow:none;padding:0;}
+  .kardex-page{border:none;box-shadow:none;padding:0;background:transparent;backdrop-filter:none;}
+  .k-header-left h2 { color:#000; }
+  .k-section-title { background:#e2e8f0; color:#000; border:none; }
+  .info-item { background:transparent; border:none; border-bottom:1px solid #ccc; }
+  .info-item label { color:#555; }
+  .info-item div { color:#000; }
   .tbl th{color:#000 !important;background:#e2e8f0 !important;border-bottom:2px solid #000;}
+  .tbl td { border-bottom:1px solid #ddd; color:#000; }
+  .kpi { border-left-color:#000; background:transparent; }
+  .kpi .num { color:#000; }
 }
 </style>
 </head>
@@ -90,7 +110,7 @@ header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;
     <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir Kardex</button>
   </div>
   <div class="toolbar" id="toolbarEstudiante" style="display:none;">
-    <h2 style="font-size:1.1rem;color:var(--azul);">Tu Expediente Académico</h2>
+    <h2 style="font-size:1.1rem;color:var(--primary);">Tu Expediente Académico</h2>
     <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir Kardex</button>
   </div>
 
@@ -248,7 +268,7 @@ function renderKardex(data){
             `).join('')}
             ${co.map(cons=>`
               <tr>
-                <td><strong style="color:var(--azul);">Constancia Institucional</strong></td>
+                <td><strong style="color:var(--primary);">Constancia Institucional</strong></td>
                 <td>${cons.titulo}</td>
                 <td class="center">${new Date(cons.fecha_generacion).toLocaleDateString()}</td>
                 <td style="font-family:monospace;font-size:.7rem;">${cons.codigo}</td>

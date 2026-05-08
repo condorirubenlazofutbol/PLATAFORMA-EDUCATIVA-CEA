@@ -6,47 +6,58 @@
 <title>Asistencia CEA | Control por Sesión</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--azul:#003580;--dorado:#f59e0b;--verde:#10b981;--rojo:#ef4444;--amarillo:#fbbf24;--bg:#f8fafc;--card:#fff;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;}
+:root {
+  --primary: #0ea5e9; --secondary: #48d18e; --violet: #8b5cf6; --dorado: #f59e0b; --rojo: #f43f5e;
+  --bg-dark: #0b0f1a; --card-bg: rgba(19, 25, 41, 0.7); --border: rgba(255, 255, 255, 0.1);
+  --text: #f8fafc; --muted: #94a3b8;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+body{font-family:'Inter',sans-serif;background-color:var(--bg-dark);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.05), transparent 25%),
+              radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05), transparent 25%);
+  z-index: -1; pointer-events: none;
+}
+header{background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
 .h-brand{display:flex;align-items:center;gap:12px;}
 .h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;display:flex;align-items:center;justify-content:center;background:var(--dorado);font-size:1.2rem;}
 .h-title h1{color:#fff;font-size:1rem;font-weight:800;}
-.h-title p{color:rgba(255,255,255,.7);font-size:.75rem;}
+.h-title p{color:var(--muted);font-size:.75rem;}
 .btn{padding:8px 16px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:.2s;}
-.btn-back{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;}
-.btn-back:hover{background:#fff;color:var(--azul);}
-.btn-primary{background:var(--azul);color:#fff;}
-.btn-primary:hover{background:#002255;}
+.btn-back{background:rgba(255,255,255,.05);border:1px solid var(--border);color:#fff;}
+.btn-back:hover{background:rgba(255,255,255,.1);border-color:white;}
+.btn-primary{background:var(--primary);color:#000;}
+.btn-primary:hover{filter:brightness(1.1);}
 
 .container{max-width:1100px;margin:0 auto;padding:24px 20px;}
-.toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;background:var(--card);padding:16px;border-radius:12px;border:1px solid var(--border);align-items:flex-end;}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px;background:var(--card-bg);backdrop-filter:blur(10px);padding:16px;border-radius:12px;border:1px solid var(--border);align-items:flex-end;}
 .fg{flex:1;min-width:200px;}
-.fg label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
-.fg select,.fg input{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:8px;font-size:.88rem;background:#fafafe;}
-.fg select:focus,.fg input:focus{outline:none;border-color:var(--azul);}
+.fg label{display:block;font-size:.72rem;font-weight:700;color:var(--primary);text-transform:uppercase;margin-bottom:6px;}
+.fg select,.fg input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:.88rem;background:rgba(255,255,255,0.05);color:var(--text);}
+.fg select option { background: var(--bg-dark); color: var(--text); }
+.fg select:focus,.fg input:focus{outline:none;border-color:var(--primary);background:rgba(255,255,255,0.1);}
 
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
-.tbl{width:100%;border-collapse:collapse;font-size:.85rem;}
-.tbl th{background:#f1f5f9;color:var(--muted);padding:12px 14px;text-align:left;font-weight:700;text-transform:uppercase;font-size:.75rem;border-bottom:2px solid var(--border);}
-.tbl td{padding:14px;border-bottom:1px solid var(--border);vertical-align:middle;}
-.tbl tr:hover td{background:#f8fafc;}
+.card{background:var(--card-bg);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
+.tbl{width:100%;border-collapse:collapse;font-size:.85rem;background:transparent;}
+.tbl th{background:rgba(255,255,255,0.05);color:var(--text);padding:12px 14px;text-align:left;font-weight:700;text-transform:uppercase;font-size:.75rem;border-bottom:1px solid var(--border);}
+.tbl td{padding:14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text);}
+.tbl tr:hover td{background:rgba(255,255,255,0.05);}
 
 .radio-group{display:flex;gap:16px;}
 .radio-lbl{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.8rem;font-weight:600;}
-.radio-lbl input{accent-color:var(--azul);width:16px;height:16px;cursor:pointer;}
-.c-presente{color:#166534;}
-.c-ausente{color:#991b1b;}
-.c-tardanza{color:#854d0e;}
-.c-justificado{color:#1e40af;}
+.radio-lbl input{accent-color:var(--primary);width:16px;height:16px;cursor:pointer;}
+.c-presente{color:var(--secondary);}
+.c-ausente{color:var(--rojo);}
+.c-tardanza{color:var(--dorado);}
+.c-justificado{color:var(--primary);}
 
-.obs-input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.75rem;background:transparent;}
-.obs-input:focus{outline:none;border-color:var(--azul);background:#fff;}
+.obs-input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.75rem;background:rgba(0,0,0,0.2);color:var(--text);}
+.obs-input:focus{outline:none;border-color:var(--primary);background:rgba(0,0,0,0.5);}
 
 .msg{padding:12px 16px;border-radius:8px;font-size:.82rem;font-weight:600;margin-bottom:16px;display:none;}
-.msg.ok{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;display:block;}
-.msg.err{background:#fee2e2;color:#991b1b;border:1px solid #fecaca;display:block;}
+.msg.ok{background:rgba(72,209,142,0.1);color:var(--secondary);border:1px solid var(--secondary);display:block;}
+.msg.err{background:rgba(244,63,94,0.1);color:var(--rojo);border:1px solid var(--rojo);display:block;}
 
 .loading{text-align:center;padding:50px;color:var(--muted);font-weight:600;}
 .empty{text-align:center;padding:50px;color:var(--muted);}
@@ -54,9 +65,9 @@ header{background:linear-gradient(135deg,var(--azul),#001f5b);padding:14px 22px;
 
 /* VIEW ESTUDIANTE */
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
-.k-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;}
-.k-num{font-size:1.8rem;font-weight:800;color:var(--azul);margin-bottom:4px;}
-.k-lbl{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;}
+.k-box{background:var(--card-bg);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;}
+.k-num{font-size:1.8rem;font-weight:800;color:var(--primary);margin-bottom:4px;}
+.k-lbl{font-size:.7rem;font-weight:700;color:var(--text);text-transform:uppercase;}
 
 @media(max-width:768px){.radio-group{flex-direction:column;gap:8px;}}
 </style>
@@ -217,10 +228,10 @@ async function renderEstudiante(){
     const pct = tSesiones>0 ? Math.round((tPresentes*100)/tSesiones) : 0;
 
     c.innerHTML = `
-      <h2 style="font-size:1.1rem;color:var(--azul);margin-bottom:16px;">📊 Tu Reporte de Asistencia</h2>
+      <h2 style="font-size:1.1rem;color:var(--primary);margin-bottom:16px;">📊 Tu Reporte de Asistencia</h2>
       <div class="kpi-row">
         <div class="k-box"><div class="k-num">${pct}%</div><div class="k-lbl">Asistencia General</div></div>
-        <div class="k-box"><div class="k-num" style="color:var(--verde);">${tPresentes}</div><div class="k-lbl">Clases Presentes</div></div>
+        <div class="k-box"><div class="k-num" style="color:var(--secondary);">${tPresentes}</div><div class="k-lbl">Clases Presentes</div></div>
         <div class="k-box"><div class="k-num" style="color:var(--rojo);">${tAusentes}</div><div class="k-lbl">Faltas</div></div>
       </div>
       <div class="card" style="padding:0;">
@@ -233,17 +244,17 @@ async function renderEstudiante(){
                 <td>${m.nivel}</td>
                 <td>
                   <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:100%;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;">
-                      <div style="width:${m.porcentaje}%;height:100%;background:${m.porcentaje>=80?'var(--verde)':m.porcentaje>=60?'var(--dorado)':'var(--rojo)'};"></div>
+                    <div style="width:100%;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;">
+                      <div style="width:${m.porcentaje}%;height:100%;background:${m.porcentaje>=80?'var(--secondary)':m.porcentaje>=60?'var(--dorado)':'var(--rojo)'};"></div>
                     </div>
-                    <strong style="color:${m.porcentaje>=80?'var(--verde)':m.porcentaje>=60?'var(--dorado)':'var(--rojo)'};">${m.porcentaje}%</strong>
+                    <strong style="color:${m.porcentaje>=80?'var(--secondary)':m.porcentaje>=60?'var(--dorado)':'var(--rojo)'};">${m.porcentaje}%</strong>
                   </div>
                 </td>
                 <td style="font-size:.75rem;color:var(--muted);">
-                  <span style="color:var(--verde);font-weight:bold;">${m.presentes}</span> / 
+                  <span style="color:var(--secondary);font-weight:bold;">${m.presentes}</span> / 
                   <span style="color:var(--rojo);font-weight:bold;">${m.ausentes}</span> / 
-                  <span style="color:#854d0e;font-weight:bold;">${m.tardanzas}</span> / 
-                  <span style="color:var(--azul);font-weight:bold;">${m.justificados}</span>
+                  <span style="color:var(--dorado);font-weight:bold;">${m.tardanzas}</span> / 
+                  <span style="color:var(--primary);font-weight:bold;">${m.justificados}</span>
                 </td>
               </tr>
             `).join('')}

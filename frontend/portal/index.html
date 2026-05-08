@@ -169,214 +169,109 @@
             </div>
         </div>
 
-        <div class="section-label">Tus Aplicaciones</div>
-
-        <div class="apps-grid" id="appsGrid">
-
-            <!-- Notas: todos los roles académicos -->
-            <a href="../subsistema_academico/notas/index.html" class="app-card c-notas" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
-                <div class="app-icon-wrap">📊</div>
-                <div>
-                    <div class="app-title">Notas y Certificados</div>
-                    <div class="app-desc">Revisa calificaciones, registra avances y emite certificados digitales con código QR.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Aula Virtual: roles académicos (no secretaria) -->
-            <a href="../subsistema_academico/modulos/index.html" class="app-card c-modulos" data-roles="director,docente,estudiante,jefe_carrera,administrador">
-                <div class="app-icon-wrap">📖</div>
-                <div>
-                    <div class="app-title">Aula Virtual</div>
-                    <div class="app-desc">Materiales de estudio, evaluaciones, tareas y seguimiento de progreso por módulo.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Malla: todos -->
-            <a href="../subsistema_academico/malla_curricular/index.html" class="app-card c-malla" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
-                <div class="app-icon-wrap">🗺️</div>
-                <div>
-                    <div class="app-title">Malla Curricular</div>
-                    <div class="app-desc">Visualiza el programa de estudios completo organizado por semestres y niveles.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Votaciones: estudiantes, jefes, docentes y secretaria (no director, tiene su panel) -->
-            <a href="../subsistema_elecciones/votacion/index.html" class="app-card c-votacion" data-roles="estudiante,jefe_carrera,docente,administrador">
-                <div class="app-icon-wrap">🗳️</div>
-                <div>
-                    <div class="app-title">Votaciones</div>
-                    <div class="app-desc">Participa en elecciones estudiantiles e institucionales. Tu voto es anónimo y seguro.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Planes IA: docentes y jefes -->
-            <a href="../subsistema_academico/planes/index.html" class="app-card c-planes" data-roles="docente,jefe_carrera,director,administrador">
-                <div class="app-icon-wrap">🤖</div>
-                <div>
-                    <div class="app-title">Planes IA</div>
-                    <div class="app-desc">Genera planes de clase completos con Inteligencia Artificial y descárgalos en PDF.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Comunicados: todos -->
-            <a href="../subsistema_academico/comunicados/index.html" class="app-card c-comunicados" data-roles="director,secretaria,docente,estudiante,jefe_carrera,administrador">
-                <div class="app-icon-wrap">📢</div>
-                <div>
-                    <div class="app-title">Comunicados</div>
-                    <div class="app-desc">Tablón de avisos institucionales. Los directivos pueden publicar y gestionar comunicados.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Panel Secretaría: SOLO secretaria y admin -->
-            <a href="../subsistema_academico/secretaria/index.html" class="app-card c-secretaria" data-roles="secretaria,administrador">
-                <div class="app-icon-wrap">📋</div>
-                <div>
-                    <div class="app-title">Panel Secretaría</div>
-                    <div class="app-desc">Inscribir estudiantes, gestionar usuarios, publicar comunicados y crear votaciones.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Asistencia: todos -->
-            <a href="../subsistema_asistencia/index.html" class="app-card c-planes" data-roles="docente,jefe_carrera,director,administrador,estudiante">
-                <div class="app-icon-wrap">✅</div>
-                <div>
-                    <div class="app-title">Control de Asistencia</div>
-                    <div class="app-desc">Docentes registran asistencia por sesión. Estudiantes revisan su porcentaje de asistencia.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Horarios: todos -->
-            <a href="../subsistema_horarios/index.html" class="app-card c-malla" data-roles="docente,jefe_carrera,director,administrador,estudiante,secretaria">
-                <div class="app-icon-wrap">📅</div>
-                <div>
-                    <div class="app-title">Horarios y Aulas</div>
-                    <div class="app-desc">Consulta el cuadro de horarios semanales. Director y Jefatura asignan los bloques de tiempo.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Kardex: estudiante y admin -->
-            <a href="../subsistema_kardex/index.html" class="app-card c-notas" data-roles="estudiante,director,administrador,secretaria,jefe_carrera">
-                <div class="app-icon-wrap">📁</div>
-                <div>
-                    <div class="app-title">Kardex Académico</div>
-                    <div class="app-desc">Expediente completo del estudiante: notas, asistencia y certificaciones en un solo documento.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Biblioteca Digital: todos -->
-            <a href="../subsistema_biblioteca/index.html" class="app-card c-comunicados" data-roles="estudiante,docente,jefe_carrera,director,administrador,secretaria">
-                <div class="app-icon-wrap">📚</div>
-                <div>
-                    <div class="app-title">Biblioteca Digital</div>
-                    <div class="app-desc">Repositorio de recursos educativos. Docentes suben materiales, estudiantes descargan.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Evaluaciones Online: estudiantes y docentes -->
-            <a href="../subsistema_evaluaciones/index.html" class="app-card c-malla" data-roles="estudiante,docente,jefe_carrera,director,administrador">
-                <div class="app-icon-wrap">📝</div>
-                <div>
-                    <div class="app-title">Evaluaciones Online</div>
-                    <div class="app-desc">Exámenes con control de tiempo y calificación automática. Docentes crean las pruebas.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-
-
-
-
-
-            <!-- Panel Director: SOLO director y admin -->
-            <a href="../subsistema_director/index.html" class="app-card c-director" data-roles="director,administrador">
+        <div class="section-label">Tu        <div class="apps-grid" id="appsGrid">
+            
+            <!-- ADMINISTRATIVOS -->
+            <a href="../subsistema_director/index.html" class="app-card" style="border-top:3px solid #f59e0b;" data-roles="director,administrador">
                 <div class="app-icon-wrap">🏛️</div>
-                <div>
-                    <div class="app-title">Dashboard Director</div>
-                    <div class="app-desc">Estadísticas institucionales en tiempo real con gráficos de rendimiento y reportes.</div>
-                </div>
+                <div><div class="app-title">Dashboard Director</div><div class="app-desc">Estadísticas y administración institucional global.</div></div>
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
-            <!-- Panel Jefatura: SOLO jefe_carrera y admin -->
-            <a href="../subsistema_academico/jefe_carrera/index.html" class="app-card c-jefatura" data-roles="jefe_carrera,administrador">
+            <a href="../subsistema_academico/secretaria/index.html" class="app-card" style="border-top:3px solid #8b5cf6;" data-roles="secretaria,administrador">
+                <div class="app-icon-wrap">📋</div>
+                <div><div class="app-title">Panel Secretaría</div><div class="app-desc">Gestión de inscripciones, comunicados y elecciones.</div></div>
+                <div class="app-arrow">Acceder <span>→</span></div>
+            </a>
+
+            <a href="../subsistema_academico/jefe_carrera/index.html" class="app-card" style="border-top:3px solid #10b981;" data-roles="jefe_carrera,administrador">
                 <div class="app-icon-wrap">📐</div>
-                <div>
-                    <div class="app-title">Panel Jefatura</div>
-                    <div class="app-desc">Asigna docentes a módulos, gestiona la malla curricular y supervisa el avance.</div>
-                </div>
+                <div><div class="app-title">Panel Jefatura</div><div class="app-desc">Asignación de carga horaria y supervisión docente.</div></div>
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
-            <!-- Elecciones CEA: secretaria gestiona, estudiantes votan (acceso diferenciado por subsistema) -->
-            <a href="../subsistema_elecciones/index.html" class="app-card c-votacion" data-roles="secretaria,administrador,director">
-                <div class="app-icon-wrap">🗳️</div>
-                <div>
-                    <div class="app-title">Sistema Electoral CEA</div>
-                    <div class="app-desc">Administra elecciones, candidatos y padrón de votantes del CEA.</div>
-                </div>
+            <!-- ACADÉMICOS Y AULA -->
+            <a href="../subsistema_academico/modulos/index.html" class="app-card" style="border-top:3px solid #0ea5e9;" data-roles="director,jefe_carrera,docente,estudiante,administrador">
+                <div class="app-icon-wrap">📖</div>
+                <div><div class="app-title">Aula Virtual</div><div class="app-desc">Materiales, tareas y seguimiento por módulo.</div></div>
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
-            <!-- Malla Curricular Institucional: directivos y docentes pueden gestionar -->
-            <a href="../subsistema_malla/index.html" class="app-card c-malla" data-roles="director,jefe_carrera,docente,secretaria,estudiante,administrador">
-                <div class="app-icon-wrap">🗺️</div>
-                <div>
-                    <div class="app-title">Malla Curricular</div>
-                    <div class="app-desc">Estructura curricular institucional: niveles, módulos y 4 temas por módulo con subtítulos.</div>
-                </div>
+            <a href="../subsistema_asistencia/index.html" class="app-card" style="border-top:3px solid #10b981;" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
+                <div class="app-icon-wrap">✅</div>
+                <div><div class="app-title">Asistencia Diaria</div><div class="app-desc">Control de asistencia por sesión y porcentaje de faltas.</div></div>
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
-            <!-- Planes Didácticos IA: facilitadores y jefes -->
-            <a href="../subsistema_planes/index.html" class="app-card c-planes" data-roles="docente,jefe_carrera,director,administrador">
-                <div class="app-icon-wrap">🤖</div>
-                <div>
-                    <div class="app-title">Planes IA</div>
-                    <div class="app-desc">Genera planes semestral, aula-taller y de tema con Inteligencia Artificial usando la malla curricular.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Certificados: todos los roles -->
-            <a href="../subsistema_certificados/index.html" class="app-card c-notas" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
-                <div class="app-icon-wrap">🎓</div>
-                <div>
-                    <div class="app-title">Certificados Digitales</div>
-                    <div class="app-desc">Emite y verifica certificados de aprobación de módulos con código QR institucional.</div>
-                </div>
-                <div class="app-arrow">Acceder <span>→</span></div>
-            </a>
-
-            <!-- Cuadro de Notas: docentes y directivos -->
-            <a href="../subsistema_notas/index.html" class="app-card c-secretaria" data-roles="docente,jefe_carrera,director,administrador">
+            <a href="../subsistema_notas/index.html" class="app-card" style="border-top:3px solid #f43f5e;" data-roles="director,secretaria,jefe_carrera,docente,administrador">
                 <div class="app-icon-wrap">📊</div>
-                <div>
-                    <div class="app-title">Cuadro de Valoración</div>
-                    <div class="app-desc">Registra notas por dimensiones (Ser/Saber/Hacer/Decidir) con formato institucional CEA. Descarga en Excel.</div>
-                </div>
+                <div><div class="app-title">Registro de Notas</div><div class="app-desc">Calificaciones (Ser, Saber, Hacer, Decidir) oficiales.</div></div>
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
 
-            <!-- Constancias: director crea plantillas, estudiantes generan -->
-            <a href="../subsistema_constancias/index.html" class="app-card c-comunicados" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
-                <div class="app-icon-wrap">📜</div>
-                <div>
-                    <div class="app-title">Constancias y Certificaciones</div>
-                    <div class="app-desc">El director crea plantillas personalizadas. Los estudiantes generan e imprimen su constancia según su nivel/carrera.</div>
-                </div>
+            <!-- HERRAMIENTAS Y RECURSOS -->
+            <a href="../subsistema_malla/index.html" class="app-card" style="border-top:3px solid #8b5cf6;" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
+                <div class="app-icon-wrap">🗺️</div>
+                <div><div class="app-title">Malla Curricular</div><div class="app-desc">Estructura oficial de niveles, módulos y temas del CEA.</div></div>
                 <div class="app-arrow">Acceder <span>→</span></div>
             </a>
+
+            <a href="../subsistema_horarios/index.html" class="app-card" style="border-top:3px solid #f59e0b;" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
+                <div class="app-icon-wrap">📅</div>
+                <div><div class="app-title">Horarios y Aulas</div><div class="app-desc">Grilla semanal de clases, aulas y horarios asignados.</div></div>
+                <div class="app-arrow">Acceder <span>→</span></div>
+            </a>
+
+            <a href="../subsistema_planes/index.html" class="app-card" style="border-top:3px solid #0ea5e9;" data-roles="director,jefe_carrera,docente,administrador">
+                <div class="app-icon-wrap">🤖</div>
+                <div><div class="app-title">Planes IA</div><div class="app-desc">Generador de planes semestrales y de aula con Gemini IA.</div></div>
+                <div class="app-arrow">Acceder <span>→</span></div>
+            </a>
+
+            <a href="../subsistema_biblioteca/index.html" class="app-card" style="border-top:3px solid #10b981;" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
+                <div class="app-icon-wrap">📚</div>
+                <div><div class="app-title">Biblioteca Digital</div><div class="app-desc">Repositorio de PDFs, videos y enlaces educativos.</div></div>
+                <div class="app-arrow">Acceder <span>→</span></div>
+            </a>
+
+            <a href="../subsistema_evaluaciones/index.html" class="app-card" style="border-top:3px solid #f43f5e;" data-roles="director,jefe_carrera,docente,estudiante,administrador">
+                <div class="app-icon-wrap">📝</div>
+                <div><div class="app-title">Evaluaciones Online</div><div class="app-desc">Exámenes con tiempo límite y calificación automática.</div></div>
+                <div class="app-arrow">Acceder <span>→</span></div>
+            </a>
+
+            <!-- INSTITUCIONALES -->
+            <a href="../subsistema_kardex/index.html" class="app-card" style="border-top:3px solid #8b5cf6;" data-roles="director,secretaria,jefe_carrera,estudiante,administrador">
+                <div class="app-icon-wrap">📁</div>
+                <div><div class="app-title">Kardex Académico</div><div class="app-desc">Expediente integral del estudiante (notas y asistencia).</div></div>
+                <div class="app-arrow">Acceder <span>→</span></div>
+            </a>
+
+            <a href="../subsistema_certificados/index.html" class="app-card" style="border-top:3px solid #f59e0b;" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
+                <div class="app-icon-wrap">🎓</div>
+                <div><div class="app-title">Certificados</div><div class="app-desc">Emisión y validación de diplomas de aprobación por QR.</div></div>
+                <div class="app-arrow">Acceder <span>→</span></div>
+            </a>
+
+            <a href="../subsistema_constancias/index.html" class="app-card" style="border-top:3px solid #0ea5e9;" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
+                <div class="app-icon-wrap">📜</div>
+                <div><div class="app-title">Constancias</div><div class="app-desc">Generación de constancias de estudio con plantillas.</div></div>
+                <div class="app-arrow">Acceder <span>→</span></div>
+            </a>
+
+            <a href="../subsistema_elecciones/index.html" class="app-card" style="border-top:3px solid #10b981;" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
+                <div class="app-icon-wrap">🗳️</div>
+                <div><div class="app-title">Votaciones CEA</div><div class="app-desc">Elecciones del centro de estudiantes. Voto anónimo y seguro.</div></div>
+                <div class="app-arrow">Acceder <span>→</span></div>
+            </a>
+
+            <a href="../subsistema_academico/comunicados/index.html" class="app-card" style="border-top:3px solid #f43f5e;" data-roles="director,secretaria,jefe_carrera,docente,estudiante,administrador">
+                <div class="app-icon-wrap">📢</div>
+                <div><div class="app-title">Comunicados</div><div class="app-desc">Tablón oficial de avisos y noticias institucionales.</div></div>
+                <div class="app-arrow">Acceder <span>→</span></div>
+            </a>
+
+        </div>
 
     </div>
 
