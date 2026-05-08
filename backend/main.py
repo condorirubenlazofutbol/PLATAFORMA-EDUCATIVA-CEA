@@ -66,15 +66,15 @@ def instalar_datos_iniciales():
     try:
         import importlib
         import seed
-        import seed_modulos
+        import seed_cea
         import database
         importlib.reload(database)
         importlib.reload(seed)
-        importlib.reload(seed_modulos)
+        importlib.reload(seed_cea)
 
         database.init_db()
         seed.seed_users()
-        reparados = seed_modulos.seed_data()
+        reparados = seed_cea.seed_cea_data()
 
         from database import get_db_connection
         conn = get_db_connection()

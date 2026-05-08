@@ -103,9 +103,46 @@ def register_usuario(data: RegistroUsuario):
         )
         new_id = cur.fetchone()[0]
         
+        # --- Lógica de Inscripción Inteligente Pro ---
+        if data.rol == "estudiante" and data.nivel_asignado:
+            nivel_str = data.nivel_asignado
+            
+            # Área Técnica (formato: "Carrera - Nivel")
+            if " - " in nivel_str:
+                parts = nivel_str.split(" - ")
+                carrera_nombre = parts[0].strip()
+                nivel_nombre = parts[1].strip()
+                
+                cur.execute("SELECT id FROM carreras WHERE nombre = %s AND area = 'Técnica'", (carrera_nombre,))
+                c_row = cur.fetchone()
+                if c_row:
+                    c_id = c_row[0]
+                    cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING", (new_id, c_id, nivel_nombre))
+                    
+                    # Matricular automáticamente en sus 5 módulos
+                    cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
+                    modulos = cur.fetchall()
+                    for mod in modulos:
+                        cur.execute("INSERT INTO progreso (usuario_id, modulo_id, estado) VALUES (%s, %s, 'cursando') ON CONFLICT DO NOTHING", (new_id, mod[0]))
+            
+            # Área Humanística (formato: "Nivel")
+            else:
+                nivel_nombre = nivel_str.strip()
+                cur.execute("SELECT id FROM carreras WHERE area = 'Humanística'")
+                carreras_hum = cur.fetchall()
+                for c_row in carreras_hum:
+                    c_id = c_row[0]
+                    cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING", (new_id, c_id, nivel_nombre))
+                    
+                    # Matricular automáticamente en sus 2 módulos por materia
+                    cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
+                    modulos = cur.fetchall()
+                    for mod in modulos:
+                        cur.execute("INSERT INTO progreso (usuario_id, modulo_id, estado) VALUES (%s, %s, 'cursando') ON CONFLICT DO NOTHING", (new_id, mod[0]))
+
         if data.carrera_id:
             cur.execute(
-                "INSERT INTO inscripciones (usuario_id, carrera_id, nivel) VALUES (%s, %s, %s)",
+                "INSERT INTO inscripciones (usuario_id, carrera_id, nivel) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
                 (new_id, data.carrera_id, data.nivel_asignado)
             )
             
