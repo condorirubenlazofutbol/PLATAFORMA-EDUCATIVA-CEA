@@ -95,30 +95,60 @@
             <h1>Gestión de Programa</h1>
             <p style="color: var(--muted);">Añade nuevos módulos curriculares al plan de estudios institucional.</p>
             
+            <div style="display:flex; gap:10px; margin-bottom: 1.5rem; margin-top: 1.5rem;">
+                <button class="btn-add" id="btn-area-humanistica" onclick="setMallaArea('humanistica')" type="button" style="background: var(--primary);">Humanística</button>
+                <button class="btn-add" id="btn-area-tecnica" onclick="setMallaArea('tecnica')" type="button" style="background: rgba(255,255,255,0.1); color: var(--muted);">Técnica</button>
+            </div>
+
             <form id="formMalla" class="form-row">
-                <div class="input-group">
-                    <label>Nombre de la Materia</label>
-                    <input type="text" id="nombre_materia" required placeholder="Ej: Programación Avanzada">
-                </div>
-                <div class="input-group">
-                    <label>Semestre / Nivel</label>
-                    <select id="nivel" required>
-                        <option value="Primer Semestre">Primer Semestre</option>
-                        <option value="Segundo Semestre">Segundo Semestre</option>
-                        <option value="Tercer Semestre">Tercer Semestre</option>
-                        <option value="Cuarto Semestre">Cuarto Semestre</option>
-                        <option value="Quinto Semestre">Quinto Semestre</option>
-                        <option value="Sexto Semestre">Sexto Semestre</option>
+                <!-- Humanística: Materia + Nivel -->
+                <div class="input-group" id="group-materia">
+                    <label id="label-materia">Materia (Humanística)</label>
+                    <select id="nombre_materia" required>
+                        <option value="Matemática">Matemática</option>
+                        <option value="Lenguaje">Lenguaje</option>
+                        <option value="Ciencias Naturales">Ciencias Naturales</option>
+                        <option value="Ciencias Sociales">Ciencias Sociales</option>
                     </select>
                 </div>
+
+                <!-- Técnica: Carrera (hidden by default) -->
+                <div class="input-group" id="group-carrera" style="display:none">
+                    <label>Carrera Técnica</label>
+                    <select id="carrera_tecnica">
+                        <option value="Sistemas Informáticos">Sistemas Informáticos</option>
+                        <option value="Veterinaria">Veterinaria</option>
+                        <option value="Educación Parvularia">Educación Parvularia</option>
+                        <option value="Fisioterapia">Fisioterapia</option>
+                        <option value="Contabilidad General">Contabilidad General</option>
+                        <option value="Corte y Confección">Corte y Confección</option>
+                        <option value="Belleza Integral">Belleza Integral</option>
+                        <option value="Gastronomía">Gastronomía</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label id="label-nivel">Ciclo / Nivel</label>
+                    <select id="nivel" required>
+                        <option value="Aplicados (Primer Año)">Aplicados (Primer Año)</option>
+                        <option value="Complementarios (Segundo Año)">Complementarios (Segundo Año)</option>
+                        <option value="Especializados (Tercer Año)">Especializados (Tercer Año)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Nombre del Módulo</label>
+                    <input type="text" id="nombre_modulo" required placeholder="Ej: Módulo 1 - Álgebra Básica">
+                </div>
+
                 <button type="submit" class="btn-add">Añadir Módulo</button>
             </form>
         </div>
 
         <!-- Vista Malla -->
         <div class="card">
-            <h1>Estructura Curricular</h1>
-            <p style="color: var(--muted); margin-bottom: 2.5rem;">Explora los contenidos organizados por periodos académicos.</p>
+            <h1>Estructura Curricular CEA</h1>
+            <p style="color: var(--muted); margin-bottom: 2.5rem;">Malla académica organizada por Área, Carrera y Ciclo de Aprendizaje.</p>
             
             <div id="mallaContainer">
                 <div class="loading">Cargando mapa curricular...</div>
@@ -134,52 +164,100 @@
 
         if (!token) window.location.href = '../login.html';
 
-        if (['director', 'jefe_carrera', 'administrador'].includes(user.rol)) {
+        const userRol = user.rol || user.role || '';
+        if (['director', 'jefe_carrera', 'administrador', 'secretaria'].includes(userRol)) {
             document.getElementById('adminPanel').style.display = 'block';
+        }
+
+        // ─── CEA Config ───
+        const CEA_CONFIG = {
+            humanistica: {
+                materias: ['Matemática', 'Lenguaje', 'Ciencias Naturales', 'Ciencias Sociales'],
+                niveles: ['Aplicados (Primer Año)', 'Complementarios (Segundo Año)', 'Especializados (Tercer Año)']
+            },
+            tecnica: {
+                carreras: ['Sistemas Informáticos','Veterinaria','Educación Parvularia','Fisioterapia','Contabilidad General','Corte y Confección','Belleza Integral','Gastronomía'],
+                niveles: ['Nivel Básico', 'Nivel Auxiliar', 'Nivel Medio I', 'Nivel Medio II']
+            }
+        };
+
+        let currentMallaArea = 'humanistica';
+
+        function setMallaArea(area) {
+            currentMallaArea = area;
+            const isHum = area === 'humanistica';
+
+            document.getElementById('btn-area-humanistica').style.background = isHum ? 'var(--primary)' : 'rgba(255,255,255,0.1)';
+            document.getElementById('btn-area-humanistica').style.color    = isHum ? 'white' : 'var(--muted)';
+            document.getElementById('btn-area-tecnica').style.background   = !isHum ? 'var(--violet)' : 'rgba(255,255,255,0.1)';
+            document.getElementById('btn-area-tecnica').style.color        = !isHum ? 'white' : 'var(--muted)';
+
+            document.getElementById('group-materia').style.display = isHum ? '' : 'none';
+            document.getElementById('group-carrera').style.display = isHum ? 'none' : '';
+
+            const nivelSel = document.getElementById('nivel');
+            const cfg = isHum ? CEA_CONFIG.humanistica : CEA_CONFIG.tecnica;
+            nivelSel.innerHTML = cfg.niveles.map(n => `<option value="${n}">${n}</option>`).join('');
+
+            document.getElementById('label-materia').textContent = isHum ? 'Materia (Humanística)' : 'Nombre del Módulo';
+            document.getElementById('label-nivel').textContent   = isHum ? 'Ciclo Humanístico' : 'Nivel Técnico';
         }
 
         async function cargarMalla() {
             const container = document.getElementById('mallaContainer');
             try {
-                const res = await fetch(`${API_BASE}/modulos`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const res = await fetch(`${API_URL}/modulos`, { headers: { 'Authorization': `Bearer ${token}` } });
                 const data = await res.json();
                 const materias = data.modulos || data;
 
                 if (!Array.isArray(materias) || materias.length === 0) {
-                    container.innerHTML = '<div class="loading">No hay materias registradas aún.</div>';
+                    container.innerHTML = '<div class="loading">⚠️ No hay módulos registrados. Visita <code>/cargar-datos</code> para inicializar el catálogo CEA.</div>';
                     return;
                 }
 
-                const agrupado = materias.reduce((acc, obj) => {
-                    let key = obj.nivel || 'Módulos Generales';
-                    if (!acc[key]) acc[key] = [];
-                    acc[key].push(obj);
-                    return acc;
-                }, {});
+                // Group by nivel
+                const agrupado = {};
+                materias.forEach(m => {
+                    const key = m.nivel || 'General';
+                    if (!agrupado[key]) agrupado[key] = [];
+                    agrupado[key].push(m);
+                });
 
-                container.innerHTML = '';
-                const nivelesOrdenados = [
-                    'Primer Semestre', 'Segundo Semestre', 'Tercer Semestre', 
-                    'Cuarto Semestre', 'Quinto Semestre', 'Sexto Semestre', 'Módulos Generales'
+                // CEA ordered levels
+                const ordenCEA = [
+                    'Aplicados (Primer Año)', 'Complementarios (Segundo Año)', 'Especializados (Tercer Año)',
+                    'Nivel Básico', 'Nivel Auxiliar', 'Nivel Medio I', 'Nivel Medio II', 'General'
                 ];
 
-                nivelesOrdenados.forEach(nivel => {
-                    if (agrupado[nivel]) {
-                        const divNivel = document.createElement('div');
-                        divNivel.className = 'nivel-section';
-                        divNivel.innerHTML = `
-                            <div class="nivel-title">📍 ${nivel}</div>
-                            <div class="malla-grid">
-                                ${agrupado[nivel].map(m => `
-                                    <div class="materia-card">
-                                        <div class="materia-title">${m.nombre}</div>
-                                        <div class="materia-sub">Módulo Institucional</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        `;
-                        container.appendChild(divNivel);
-                    }
+                const coloresPorNivel = {
+                    'Aplicados (Primer Año)': '#0ea5e9',
+                    'Complementarios (Segundo Año)': '#22c55e',
+                    'Especializados (Tercer Año)': '#f59e0b',
+                    'Nivel Básico': '#8b5cf6',
+                    'Nivel Auxiliar': '#ec4899',
+                    'Nivel Medio I': '#06b6d4',
+                    'Nivel Medio II': '#f43f5e',
+                };
+
+                container.innerHTML = '';
+                const toRender = [...ordenCEA, ...Object.keys(agrupado).filter(k => !ordenCEA.includes(k))];
+                
+                toRender.forEach(nivel => {
+                    if (!agrupado[nivel]) return;
+                    const color = coloresPorNivel[nivel] || 'var(--violet)';
+                    const divNivel = document.createElement('div');
+                    divNivel.className = 'nivel-section';
+                    divNivel.innerHTML = `
+                        <div class="nivel-title" style="color:${color}">📍 ${nivel}</div>
+                        <div class="malla-grid">
+                            ${agrupado[nivel].map(m => `
+                                <div class="materia-card" style="border-left-color:${color}">
+                                    <div class="materia-title">${m.nombre}</div>
+                                    <div class="materia-sub">${m.nivel || 'Módulo CEA'}</div>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                    container.appendChild(divNivel);
                 });
             } catch (e) {
                 container.innerHTML = '<div class="loading">Error al conectar con la base de datos curricular.</div>';
@@ -188,22 +266,32 @@
 
         document.getElementById('formMalla').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const nombre = document.getElementById('nombre_materia').value;
-            const nivel = document.getElementById('nivel').value;
+            let nombre, nivel;
+
+            if (currentMallaArea === 'humanistica') {
+                nombre = document.getElementById('nombre_modulo').value || document.getElementById('nombre_materia').value;
+                nivel  = document.getElementById('nivel').value;
+            } else {
+                const carrera = document.getElementById('carrera_tecnica').value;
+                nombre = document.getElementById('nombre_modulo').value || `Módulo - ${carrera}`;
+                nivel  = document.getElementById('nivel').value;
+            }
 
             try {
-                const res = await fetch(`${API_BASE}/modulos`, {
+                const res = await fetch(`${API_URL}/modulos`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify({ nombre, nivel })
                 });
 
                 if (res.ok) {
-                    Swal.fire('¡Añadido!', 'La materia se integró correctamente.', 'success');
+                    Swal.fire('¡Añadido!', 'El módulo se integró correctamente al plan CEA.', 'success');
                     document.getElementById('formMalla').reset();
+                    setMallaArea(currentMallaArea);
                     cargarMalla();
                 } else {
-                    Swal.fire('Error', 'No se pudo añadir la materia.', 'error');
+                    const err = await res.json();
+                    Swal.fire('Error', err.detail || 'No se pudo añadir.', 'error');
                 }
             } catch (e) {
                 Swal.fire('Error', 'Fallo de conexión.', 'error');
@@ -211,6 +299,7 @@
         });
 
         // Init
+        setMallaArea('humanistica');
         cargarMalla();
     </script>
 </body>
