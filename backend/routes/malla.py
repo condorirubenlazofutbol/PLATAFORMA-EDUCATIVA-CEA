@@ -78,19 +78,40 @@ class ModuloUpdate(BaseModel):
 # ─── ENDPOINTS PÚBLICOS ───────────────────────────────────────────────────────
 
 @router.get("/carreras")
-def get_carreras():
-    """Lista todas las carreras con conteo de módulos."""
+def get_carreras(current_user: dict = Depends(get_current_user)):
+    """Lista carreras filtradas por rol."""
     conn = get_db_connection()
     try:
         cur = conn.cursor()
-        cur.execute("""
-            SELECT c.id, c.nombre, c.area, c.descripcion,
-                   COUNT(m.id) as total_modulos
-            FROM carreras c
-            LEFT JOIN modulos m ON m.carrera_id = c.id
-            GROUP BY c.id, c.nombre, c.area, c.descripcion
-            ORDER BY c.area, c.nombre
-        """)
+        
+        if current_user["rol"] == "estudiante":
+            # Estudiante: Solo su carrera
+            cur.execute("""
+                SELECT c.id, c.nombre, c.area, c.descripcion, COUNT(m.id) as total_modulos
+                FROM carreras c
+                JOIN inscripciones i ON i.carrera_id = c.id
+                LEFT JOIN modulos m ON m.carrera_id = c.id
+                WHERE i.usuario_id = %s
+                GROUP BY c.id, c.nombre, c.area, c.descripcion
+            """, (current_user["id"],))
+        elif current_user["rol"] in ["docente", "profesor"] and current_user.get("nivel_asignado"):
+             # Docente: Podríamos filtrar, pero usualmente necesitan ver la carrera para gestionar
+             cur.execute("""
+                SELECT c.id, c.nombre, c.area, c.descripcion, COUNT(m.id) as total_modulos
+                FROM carreras c
+                LEFT JOIN modulos m ON m.carrera_id = c.id
+                GROUP BY c.id, c.nombre, c.area, c.descripcion
+                ORDER BY c.area, c.nombre
+            """)
+        else:
+            cur.execute("""
+                SELECT c.id, c.nombre, c.area, c.descripcion, COUNT(m.id) as total_modulos
+                FROM carreras c
+                LEFT JOIN modulos m ON m.carrera_id = c.id
+                GROUP BY c.id, c.nombre, c.area, c.descripcion
+                ORDER BY c.area, c.nombre
+            """)
+            
         return {"carreras": rows_to_dicts(cur, cur.fetchall())}
     finally:
         cur.close(); conn.close()

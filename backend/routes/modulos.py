@@ -17,18 +17,54 @@ def rows_to_dicts(cursor, rows):
     return [dict(zip(cols, r)) for r in rows]
 
 @router.get("/")
-def get_modulos():
+def get_modulos(current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     if not conn: raise HTTPException(status_code=500, detail="Error DB")
     try:
         cur = conn.cursor()
-        cur.execute("""
-            SELECT m.id, m.nombre, m.nivel, m.subnivel, m.orden, 
-                   m.carrera_id, m.periodo, c.nombre as carrera_nombre 
-            FROM modulos m
-            LEFT JOIN carreras c ON m.carrera_id = c.id
-            ORDER BY m.orden, m.id
-        """)
+        
+        # Filtro Nivel Pro: Mostrar solo lo que corresponde al usuario
+        if current_user["rol"] == "estudiante":
+            # Estudiante: Solo módulos de su carrera e inscripciones
+            cur.execute("""
+                SELECT m.id, m.nombre, m.nivel, m.subnivel, m.orden, 
+                       m.carrera_id, m.periodo, c.nombre as carrera_nombre 
+                FROM modulos m
+                JOIN carreras c ON m.carrera_id = c.id
+                JOIN inscripciones i ON i.carrera_id = c.id
+                WHERE i.usuario_id = %s
+                ORDER BY m.orden, m.id
+            """, (current_user["id"],))
+        elif current_user["rol"] in ["docente", "profesor"]:
+            # Docente: Filtrar por nivel asignado si lo tiene
+            nivel = current_user.get("nivel_asignado")
+            if nivel:
+                cur.execute("""
+                    SELECT m.id, m.nombre, m.nivel, m.subnivel, m.orden, 
+                           m.carrera_id, m.periodo, c.nombre as carrera_nombre 
+                    FROM modulos m
+                    LEFT JOIN carreras c ON m.carrera_id = c.id
+                    WHERE m.nivel = %s
+                    ORDER BY m.orden, m.id
+                """, (nivel,))
+            else:
+                cur.execute("""
+                    SELECT m.id, m.nombre, m.nivel, m.subnivel, m.orden, 
+                           m.carrera_id, m.periodo, c.nombre as carrera_nombre 
+                    FROM modulos m
+                    LEFT JOIN carreras c ON m.carrera_id = c.id
+                    ORDER BY m.orden, m.id
+                """)
+        else:
+            # Admin/Director: Ver todo el CEA
+            cur.execute("""
+                SELECT m.id, m.nombre, m.nivel, m.subnivel, m.orden, 
+                       m.carrera_id, m.periodo, c.nombre as carrera_nombre 
+                FROM modulos m
+                LEFT JOIN carreras c ON m.carrera_id = c.id
+                ORDER BY m.orden, m.id
+            """)
+            
         return {"modulos": rows_to_dicts(cur, cur.fetchall())}
     finally: conn.close()
 
