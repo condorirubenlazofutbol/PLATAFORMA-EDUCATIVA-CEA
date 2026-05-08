@@ -40,6 +40,11 @@ function cerrarSesion() {
   window.location.href = base + "/index.html";
 }
 
+function volverPortal() {
+  // Redirigir al portal principal sin cerrar sesión
+  window.location.href = "../../portal/index.html";
+}
+
 function redirigirPorRol(rol) {
   const base = window.location.origin +
     window.location.pathname.replace(/\/[^/]*$/, "").replace(/\/pages$/, "");

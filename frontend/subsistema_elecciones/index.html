@@ -223,7 +223,8 @@
       <p>CEA Prof. Herman Ortiz Camargo</p>
     </div>
   </div>
-  <div id="auth-btn-container">
+  <div id="auth-btn-container" style="display:flex; gap:10px; align-items:center;">
+    <a href="../portal/index.html" class="header-btn" style="text-decoration:none;">🏠 Portal</a>
     <button class="header-btn" onclick="abrirModalAuth()">👤 Iniciar Sesión</button>
   </div>
 </header>
@@ -347,7 +348,10 @@
       if (token && user.rol) {
           const container = document.getElementById('auth-btn-container');
           if (container) {
-              container.innerHTML = `<button class="header-btn" onclick="redirigirSegunRol('${user.rol}')">🚀 Ir al Panel (${user.rol})</button>`;
+              container.innerHTML = `
+                <a href="../portal/index.html" class="header-btn" style="text-decoration:none;">🏠 Portal</a>
+                <button class="header-btn" onclick="redirigirSegunRol('${user.rol}')">🚀 Ir al Panel (${user.rol})</button>
+              `;
           }
       }
   })();

@@ -172,7 +172,7 @@
             <div class="mesa-badge-header" id="header-mesa-badge" style="display:none;">
                 🪑 Mesa <span id="header-mesa-num">—</span>
             </div>
-            <button class="btn-salir" onclick="cerrarSesion()">Salir 🚪</button>
+            <button class="btn-salir" onclick="volverPortal()">Volver al Portal 🏠</button>
         </div>
     </header>
 
@@ -376,9 +376,8 @@
             }
         }
 
-        function cerrarSesion() {
-            localStorage.clear();
-            window.location.href = '../index.html';
+        function volverPortal() {
+            window.location.href = '../../portal/index.html';
         }
 
         document.getElementById('ci-votante')?.addEventListener('keydown', e => { if(e.key==='Enter') consultar(); });
