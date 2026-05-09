@@ -164,3 +164,192 @@ def directorio_exportar(current_user: dict = Depends(get_current_user)):
         
         return {"estudiantes": estudiantes, "profesores": profesores}
     finally: cur.close(); conn.close()
+
+
+@router.get("/directorio-agrupado")
+def directorio_agrupado(current_user: dict = Depends(get_current_user)):
+    """Devuelve estudiantes agrupados por área > carrera/especialidad > nivel con conteo."""
+    if current_user["rol"] not in ["director", "administrador", "secretaria"]:
+        raise HTTPException(403, "Sin permisos")
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        # Estudiantes con su carrera y nivel (por inscripción o por nivel_asignado)
+        cur.execute("""
+            SELECT 
+                u.id,
+                u.nombre,
+                u.apellido,
+                u.carnet,
+                u.email,
+                u.estado,
+                u.fecha_registro::date as fecha_inscripcion,
+                COALESCE(c.nombre, 'Sin Carrera Asignada') as carrera,
+                COALESCE(c.area, 'humanistica') as area,
+                COALESCE(
+                    (SELECT m.nivel FROM progreso p JOIN modulos m ON p.modulo_id=m.id WHERE p.usuario_id=u.id ORDER BY p.id DESC LIMIT 1),
+                    u.nivel_asignado, 'Sin Nivel'
+                ) as nivel
+            FROM usuarios u
+            LEFT JOIN (
+                SELECT DISTINCT ON (p.usuario_id) p.usuario_id, c.nombre, c.area
+                FROM progreso p
+                JOIN modulos m ON p.modulo_id = m.id
+                JOIN carreras c ON m.carrera_id = c.id
+                ORDER BY p.usuario_id, p.id DESC
+            ) c ON c.usuario_id = u.id
+            WHERE u.rol = 'estudiante'
+            ORDER BY area, carrera, nivel, u.apellido
+        """)
+        rows = rows_to_dicts(cur, cur.fetchall())
+
+        # Organizar en estructura agrupada
+        from collections import defaultdict
+        grupos = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+        conteos = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+
+        for r in rows:
+            area = (r["area"] or "humanistica").lower()
+            carrera = r["carrera"] or "Sin Carrera Asignada"
+            nivel = r["nivel"] or "Sin Nivel"
+            grupos[area][carrera][nivel].append(r)
+            conteos[area][carrera][nivel] += 1
+
+        # Docentes también
+        cur.execute("""
+            SELECT id, nombre, apellido, carnet, email, estado,
+                   COALESCE(nivel_asignado, 'Sin Especialidad') as especialidad,
+                   fecha_registro::date as fecha_ingreso
+            FROM usuarios 
+            WHERE rol IN ('docente','profesor')
+            ORDER BY especialidad, apellido
+        """)
+        docentes = rows_to_dicts(cur, cur.fetchall())
+
+        # Conteo por carrera (resumen)
+        cur.execute("""
+            SELECT COALESCE(c.nombre,'Sin Carrera') as carrera, COALESCE(c.area,'humanistica') as area,
+                   COUNT(DISTINCT u.id) as total
+            FROM usuarios u
+            LEFT JOIN (
+                SELECT DISTINCT ON (p.usuario_id) p.usuario_id, c.nombre, c.area
+                FROM progreso p JOIN modulos m ON p.modulo_id=m.id JOIN carreras c ON m.carrera_id=c.id
+                ORDER BY p.usuario_id, p.id DESC
+            ) c ON c.usuario_id=u.id
+            WHERE u.rol='estudiante'
+            GROUP BY carrera, area ORDER BY area, carrera
+        """)
+        resumen_carreras = rows_to_dicts(cur, cur.fetchall())
+
+        return {
+            "estudiantes": rows,
+            "grupos": {
+                area: {
+                    carrera: {
+                        nivel: {
+                            "alumnos": alumnos,
+                            "total": len(alumnos)
+                        }
+                        for nivel, alumnos in niveles.items()
+                    }
+                    for carrera, niveles in carreras.items()
+                }
+                for area, carreras in grupos.items()
+            },
+            "docentes": docentes,
+            "resumen_carreras": resumen_carreras
+        }
+    finally: cur.close(); conn.close()
+
+
+from pydantic import BaseModel
+from typing import Optional as Opt
+
+class EliminarBody(BaseModel):
+    tipo: str  # "individual" | "carrera" | "nivel" | "area" | "todos"
+    usuario_id: Opt[int] = None
+    carrera: Opt[str] = None
+    nivel: Opt[str] = None
+    area: Opt[str] = None
+    rol: Opt[str] = "estudiante"  # "estudiante" | "docente" | "todos"
+
+@router.delete("/eliminar-inscripciones")
+def eliminar_inscripciones(data: EliminarBody, current_user: dict = Depends(get_current_user)):
+    """Elimina inscripciones de estudiantes/docentes por tipo (individual, carrera, nivel, área, todos)."""
+    if current_user["rol"] not in ["director", "administrador"]:
+        raise HTTPException(403, "Solo el Director o Administrador puede realizar esta acción")
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        eliminados = 0
+
+        roles_objetivo = []
+        if data.rol == "todos":
+            roles_objetivo = ['estudiante', 'docente', 'profesor']
+        elif data.rol == "docente":
+            roles_objetivo = ['docente', 'profesor']
+        else:
+            roles_objetivo = ['estudiante']
+
+        if data.tipo == "individual":
+            if not data.usuario_id:
+                raise HTTPException(400, "Se requiere usuario_id para eliminación individual")
+            cur.execute("DELETE FROM usuarios WHERE id = %s AND rol = ANY(%s) RETURNING id", 
+                       (data.usuario_id, roles_objetivo))
+            eliminados = cur.rowcount
+
+        elif data.tipo == "carrera":
+            if not data.carrera:
+                raise HTTPException(400, "Se requiere el nombre de la carrera")
+            # Buscar usuarios que tengan progreso en módulos de esa carrera
+            cur.execute("""
+                DELETE FROM usuarios WHERE id IN (
+                    SELECT DISTINCT p.usuario_id FROM progreso p
+                    JOIN modulos m ON p.modulo_id = m.id
+                    JOIN carreras c ON m.carrera_id = c.id
+                    WHERE c.nombre = %s
+                ) AND rol = ANY(%s) RETURNING id
+            """, (data.carrera, roles_objetivo))
+            eliminados = cur.rowcount
+
+        elif data.tipo == "nivel":
+            if not data.nivel:
+                raise HTTPException(400, "Se requiere el nivel")
+            cur.execute("""
+                DELETE FROM usuarios WHERE id IN (
+                    SELECT DISTINCT p.usuario_id FROM progreso p
+                    JOIN modulos m ON p.modulo_id = m.id
+                    WHERE m.nivel = %s
+                ) AND rol = ANY(%s) RETURNING id
+            """, (data.nivel, roles_objetivo))
+            eliminados = cur.rowcount
+
+        elif data.tipo == "area":
+            if not data.area:
+                raise HTTPException(400, "Se requiere el área")
+            cur.execute("""
+                DELETE FROM usuarios WHERE id IN (
+                    SELECT DISTINCT p.usuario_id FROM progreso p
+                    JOIN modulos m ON p.modulo_id = m.id
+                    JOIN carreras c ON m.carrera_id = c.id
+                    WHERE LOWER(c.area) = LOWER(%s)
+                ) AND rol = ANY(%s) RETURNING id
+            """, (data.area, roles_objetivo))
+            eliminados = cur.rowcount
+
+        elif data.tipo == "todos":
+            cur.execute("DELETE FROM usuarios WHERE rol = ANY(%s) RETURNING id", (roles_objetivo,))
+            eliminados = cur.rowcount
+
+        else:
+            raise HTTPException(400, f"Tipo de eliminación no válido: {data.tipo}")
+
+        conn.commit()
+        return {"eliminados": eliminados, "mensaje": f"Se eliminaron {eliminados} registros correctamente."}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(500, f"Error al eliminar: {str(e)}")
+    finally:
+        cur.close(); conn.close()

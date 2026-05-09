@@ -68,6 +68,56 @@ header{background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(12px);border-bottom
 .btn-sm{padding:4px 8px;font-size:.7rem;border-radius:4px;border:none;cursor:pointer;font-weight:700;background:var(--rojo);color:white;}
 
 @media(max-width:900px){.layout{grid-template-columns:1fr;}}
+@media(max-width:700px){
+  header{flex-wrap:wrap;gap:8px;padding:10px 14px;}
+  .h-brand{flex-wrap:wrap;}
+  .btn-back{font-size:.75rem;padding:6px 12px;}
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .container{padding:14px 10px;}
+  .tabs{flex-wrap:wrap;gap:6px;padding:10px 10px 0;}
+  .tab-btn{padding:8px 14px;font-size:.8rem;}
+}
+@media(max-width:420px){
+  .kpi-grid{grid-template-columns:1fr;}
+}
+.tbl-wrap{overflow-x:auto;width:100%;}
+/* Accordion Directorio */
+.dir-area{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;margin-bottom:16px;overflow:hidden;}
+.dir-area-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);}
+.dir-area-header:hover{background:rgba(255,255,255,0.06);}
+.dir-area-title{font-size:1rem;font-weight:800;display:flex;align-items:center;gap:10px;}
+.area-badge{padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:800;text-transform:uppercase;}
+.area-tec{background:rgba(14,165,233,0.15);color:var(--primary);border:1px solid var(--primary);}
+.area-hum{background:rgba(139,92,246,0.15);color:var(--violet);border:1px solid var(--violet);}
+.dir-area-body{padding:16px 20px;display:none;}
+.dir-area-body.open{display:block;}
+.dir-carrera{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;}
+.dir-carrera-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--border);}
+.dir-carrera-title{font-size:.9rem;font-weight:700;color:var(--text);}
+.dir-carrera-badge{background:rgba(245,158,11,0.15);color:var(--dorado);border:1px solid var(--dorado);padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800;}
+.dir-carrera-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.dir-nivel{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.dir-nivel:last-child{border-bottom:none;}
+.dir-nivel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;}
+.dir-nivel-title{font-size:.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.dir-nivel-count{background:rgba(72,209,142,0.15);color:var(--secondary);border:1px solid var(--secondary);padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:800;}
+.btn-del{padding:5px 10px;font-size:.7rem;border-radius:6px;border:none;cursor:pointer;font-weight:700;transition:.2s;}
+.btn-del-ind{background:rgba(244,63,94,0.1);color:#f43f5e;border:1px solid #f43f5e;}
+.btn-del-ind:hover{background:#f43f5e;color:white;}
+.btn-del-grp{background:rgba(245,158,11,0.1);color:var(--dorado);border:1px solid var(--dorado);}
+.btn-del-grp:hover{background:var(--dorado);color:#111;}
+.btn-del-area{background:rgba(139,92,246,0.1);color:var(--violet);border:1px solid var(--violet);}
+.btn-del-area:hover{background:var(--violet);color:white;}
+.btn-del-all{background:rgba(244,63,94,0.1);color:#f43f5e;border:1px solid #f43f5e;}
+.btn-del-all:hover{background:#f43f5e;color:white;}
+.search-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.search-bar input{flex:1;min-width:180px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:white;font-family:'Inter',sans-serif;font-size:.88rem;}
+.search-bar select{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:white;font-family:'Inter',sans-serif;font-size:.88rem;}
+.dir-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.dir-tab-btn{padding:9px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-weight:700;font-size:.85rem;cursor:pointer;transition:.2s;}
+.dir-tab-btn.active{background:var(--primary);color:white;border-color:var(--primary);}
+.acciones-globales{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding:14px 16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;align-items:center;}
+.acciones-globales span{font-size:.82rem;font-weight:700;color:var(--muted);margin-right:4px;}
 </style>
 </head>
 <body>
@@ -94,30 +144,39 @@ header{background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(12px);border-bottom
 </div>
 
 <div class="container" id="tab-directorio" style="display:none;">
-  <div class="layout" style="grid-template-columns:1fr;margin-bottom:20px;">
-    <div class="panel">
-      <div class="panel-title">Base de Datos Institucional <button class="btn-back" style="background:var(--secondary);color:white;border:none;" onclick="exportarExcel()">📥 Exportar a Excel</button></div>
-      
-      <h3 style="margin:20px 0 10px;color:var(--primary);">Estudiantes Inscritos</h3>
-      <div style="overflow-x:auto;max-height:400px;border:1px solid var(--border);border-radius:8px;">
-        <table class="tbl" id="tblEstudiantes">
-          <thead style="position:sticky;top:0;background:var(--card-bg);backdrop-filter:blur(10px);z-index:10;">
-            <tr><th>CI</th><th>Apellidos y Nombres</th><th>Carrera / Especialidad</th><th>Nivel</th><th>Estado</th><th>Acciones</th></tr>
-          </thead>
-          <tbody id="tbodyEst"><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
-        </table>
-      </div>
+  <!-- Acciones Globales -->
+  <div class="acciones-globales">
+    <span>Acciones:</span>
+    <button class="btn-back" style="background:var(--secondary);color:#111;border:none;font-size:.8rem;padding:8px 14px;" onclick="exportarExcelPro()">📥 Exportar Excel</button>
+    <button class="btn-del btn-del-all" style="font-size:.8rem;padding:8px 14px;" onclick="eliminarTodos('estudiante')">&#x1F5D1; Eliminar TODOS Estudiantes</button>
+    <button class="btn-del btn-del-grp" style="font-size:.8rem;padding:8px 14px;" onclick="eliminarTodos('docente')">&#x1F5D1; Eliminar TODOS Docentes</button>
+  </div>
 
-      <h3 style="margin:30px 0 10px;color:var(--primary);">Plantel Docente</h3>
-      <div style="overflow-x:auto;max-height:300px;border:1px solid var(--border);border-radius:8px;">
-        <table class="tbl" id="tblDocentes">
-          <thead style="position:sticky;top:0;background:var(--card-bg);backdrop-filter:blur(10px);z-index:10;">
-            <tr><th>CI</th><th>Apellidos y Nombres</th><th>Área/Especialidad</th><th>Estado</th><th>Acciones</th></tr>
-          </thead>
-          <tbody id="tbodyDoc"><tr><td colspan="5" class="loading">Cargando...</td></tr></tbody>
-        </table>
-      </div>
+  <!-- Tabs Estudiantes / Docentes -->
+  <div class="dir-tabs">
+    <button class="dir-tab-btn active" id="dTab-est" onclick="switchDirTab('est')">👨‍🎓 Estudiantes</button>
+    <button class="dir-tab-btn" id="dTab-doc" onclick="switchDirTab('doc')">👨‍🏫 Docentes</button>
+  </div>
+
+  <!-- Panel Estudiantes -->
+  <div id="dirEst">
+    <div class="search-bar">
+      <input type="text" id="searchEst" placeholder="Buscar por nombre o CI..." oninput="renderDirectorio()">
+      <select id="filtroArea" onchange="renderDirectorio()">
+        <option value="">Todas las Áreas</option>
+        <option value="tecnica">🔵 Área Técnica</option>
+        <option value="humanistica">🟣 Área Humanística</option>
+      </select>
     </div>
+    <div id="dirEstContent"><div class="loading">⏳ Cargando directorio...</div></div>
+  </div>
+
+  <!-- Panel Docentes -->
+  <div id="dirDoc" style="display:none;">
+    <div class="search-bar">
+      <input type="text" id="searchDoc" placeholder="Buscar docente..." oninput="renderDocentes()">
+    </div>
+    <div id="dirDocContent"><div class="loading">⏳ Cargando plantel docente...</div></div>
   </div>
 </div>
 
@@ -301,40 +360,238 @@ function switchTab(tabId) {
   if(tabId === 'directorio' && !document.directorioLoaded) loadDirectorio();
 }
 
+// ══ DIRECTORIO PRO ══════════════════════════════════
+let dirData = null;
+
 async function loadDirectorio() {
+  const estEl = document.getElementById('dirEstContent');
+  const docEl = document.getElementById('dirDocContent');
+  estEl.innerHTML = '<div class="loading">⏳ Cargando directorio institucional...</div>';
+
   try {
-    const res = await fetch(`${API_BASE}/estadisticas/directorio-exportar`, {headers:{Authorization:`Bearer ${token}`}});
-    if(!res.ok) throw new Error('Error al cargar directorio');
-    const data = await res.json();
-    window.dbExportData = data; // Guardar para el excel
-    
-    document.getElementById('tbodyEst').innerHTML = data.estudiantes.map(e => `
-      <tr>
-        <td><strong>${e.carnet||'S/N'}</strong></td>
-        <td>${e.apellido} ${e.nombre}</td>
-        <td>${e.carrera}</td>
-        <td>${e.nivel}</td>
-        <td><span class="badge ${e.estado==='activo'?'b-ok':'b-err'}">${e.estado}</span></td>
-        <td><button class="btn-sm" onclick="resetPassword(${e.id}, '${e.carnet}')">Reset Clave (CI)</button></td>
-      </tr>
-    `).join('');
-
-    document.getElementById('tbodyDoc').innerHTML = data.profesores.map(p => `
-      <tr>
-        <td><strong>${p.carnet||'S/N'}</strong></td>
-        <td>${p.apellido} ${p.nombre}</td>
-        <td>${p.area_especialidad||'General'}</td>
-        <td><span class="badge ${p.estado==='activo'?'b-ok':'b-err'}">${p.estado}</span></td>
-        <td><button class="btn-sm" onclick="resetPassword(${p.id}, '${p.carnet}')">Reset Clave (CI)</button></td>
-      </tr>
-    `).join('');
-
+    const res = await fetch(`${API_BASE}/estadisticas/directorio-agrupado`, {headers:{Authorization:`Bearer ${token}`}});
+    if(!res.ok) throw new Error(`Error ${res.status}`);
+    dirData = await res.json();
     document.directorioLoaded = true;
+    renderDirectorio();
+    renderDocentes();
   } catch(e) {
-    document.getElementById('tbodyEst').innerHTML = `<tr><td colspan="6" style="color:red;text-align:center;">${e.message}</td></tr>`;
+    estEl.innerHTML = `<div class="loading" style="color:var(--rojo);">❌ ${e.message} — <button onclick="loadDirectorio()" style="background:var(--primary);border:none;color:white;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:700;">Reintentar</button></div>`;
   }
 }
 
+function switchDirTab(tab) {
+  document.getElementById('dirEst').style.display = tab === 'est' ? '' : 'none';
+  document.getElementById('dirDoc').style.display = tab === 'doc' ? '' : 'none';
+  document.getElementById('dTab-est').classList.toggle('active', tab === 'est');
+  document.getElementById('dTab-doc').classList.toggle('active', tab === 'doc');
+}
+
+function renderDirectorio() {
+  if (!dirData) return;
+  const query = (document.getElementById('searchEst').value || '').toLowerCase();
+  const areaFiltro = document.getElementById('filtroArea').value.toLowerCase();
+  const container = document.getElementById('dirEstContent');
+
+  const grupos = dirData.grupos || {};
+  let html = '';
+
+  const areaLabels = { tecnica: { label: '🔵 Área Técnica', cls: 'area-tec' }, humanistica: { label: '🟣 Área Humanística', cls: 'area-hum' } };
+  const orderedAreas = Object.keys(grupos).sort();
+
+  for (const area of orderedAreas) {
+    if (areaFiltro && area !== areaFiltro) continue;
+    const aInfo = areaLabels[area] || { label: `📂 ${area}`, cls: 'area-tec' };
+    const carreras = grupos[area];
+    let totalArea = 0;
+
+    let carrerasHtml = '';
+    for (const [carrera, niveles] of Object.entries(carreras).sort()) {
+      let totalCarrera = 0;
+      let nivelesHtml = '';
+
+      for (const [nivel, data] of Object.entries(niveles).sort()) {
+        const alumnos = data.alumnos.filter(a => {
+          if (!query) return true;
+          return `${a.nombre} ${a.apellido} ${a.carnet}`.toLowerCase().includes(query);
+        });
+        if (alumnos.length === 0) continue;
+        totalCarrera += alumnos.length;
+
+        const alumnosRows = alumnos.map(a => `
+          <tr>
+            <td><strong>${a.carnet || 'S/N'}</strong></td>
+            <td>${a.apellido} ${a.nombre}</td>
+            <td><span class="badge ${a.estado==='activo'?'b-ok':'b-err'}">${a.estado}</span></td>
+            <td>${a.fecha_inscripcion || '—'}</td>
+            <td style="white-space:nowrap;">
+              <button class="btn-del btn-del-ind" onclick="eliminarIndividual(${a.id},'${(a.apellido+' '+a.nombre).replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+              <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${a.id},'${a.carnet}')">🔑 Clave</button>
+            </td>
+          </tr>`).join('');
+
+        nivelesHtml += `
+          <div class="dir-nivel">
+            <div class="dir-nivel-header">
+              <span class="dir-nivel-title">${nivel}</span>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <span class="dir-nivel-count">${alumnos.length} alumnos</span>
+                <button class="btn-del btn-del-grp" onclick="eliminarPorNivel('${nivel.replace(/'/g,"\\'")}','${carrera.replace(/'/g,"\\'")}')">🗑 Eliminar Nivel</button>
+              </div>
+            </div>
+            <div class="tbl-wrap">
+              <table class="tbl">
+                <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Estado</th><th>Inscrito</th><th>Acciones</th></tr></thead>
+                <tbody>${alumnosRows}</tbody>
+              </table>
+            </div>
+          </div>`;
+      }
+
+      if (!nivelesHtml) continue;
+      totalArea += totalCarrera;
+
+      carrerasHtml += `
+        <div class="dir-carrera">
+          <div class="dir-carrera-header">
+            <div>
+              <div class="dir-carrera-title">${carrera}</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span class="dir-carrera-badge">${totalCarrera} estudiantes</span>
+              <button class="btn-del btn-del-grp" onclick="eliminarPorCarrera('${carrera.replace(/'/g,"\\'")}')">🗑 Eliminar Carrera</button>
+            </div>
+          </div>
+          ${nivelesHtml}
+        </div>`;
+    }
+
+    if (!carrerasHtml) continue;
+
+    html += `
+      <div class="dir-area">
+        <div class="dir-area-header" onclick="toggleArea(this)">
+          <div class="dir-area-title">
+            <span class="area-badge ${aInfo.cls}">${aInfo.label}</span>
+            <span style="font-size:.85rem;color:var(--muted);font-weight:600;">${totalArea} estudiantes en total</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-del btn-del-area" onclick="event.stopPropagation();eliminarPorArea('${area}')">🗑 Eliminar Área</button>
+            <span style="color:var(--muted);font-size:1.2rem;">▼</span>
+          </div>
+        </div>
+        <div class="dir-area-body open">${carrerasHtml}</div>
+      </div>`;
+  }
+
+  container.innerHTML = html || '<div class="loading">No se encontraron estudiantes que coincidan.</div>';
+}
+
+function toggleArea(header) {
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function renderDocentes() {
+  if (!dirData || !dirData.docentes) return;
+  const query = (document.getElementById('searchDoc').value || '').toLowerCase();
+  const docentes = dirData.docentes.filter(d =>
+    !query || `${d.nombre} ${d.apellido} ${d.carnet} ${d.especialidad}`.toLowerCase().includes(query)
+  );
+
+  const container = document.getElementById('dirDocContent');
+  if (!docentes.length) { container.innerHTML = '<div class="loading">Sin docentes registrados.</div>'; return; }
+
+  // Agrupar por especialidad
+  const grupos = {};
+  docentes.forEach(d => {
+    const esp = d.especialidad || 'Sin Especialidad';
+    if (!grupos[esp]) grupos[esp] = [];
+    grupos[esp].push(d);
+  });
+
+  let html = '';
+  for (const [esp, docs] of Object.entries(grupos).sort()) {
+    html += `
+      <div class="dir-carrera" style="margin-bottom:12px;">
+        <div class="dir-carrera-header">
+          <div class="dir-carrera-title">👨‍🏫 ${esp}</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="dir-carrera-badge">${docs.length} docentes</span>
+            <button class="btn-del btn-del-grp" onclick="eliminarDocentesPorEsp('${esp.replace(/'/g,"\\'")}')">🗑 Eliminar Especialidad</button>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Email</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>${docs.map(d => `
+              <tr>
+                <td><strong>${d.carnet||'S/N'}</strong></td>
+                <td>${d.apellido} ${d.nombre}</td>
+                <td style="font-size:.78rem;color:var(--muted);">${d.email}</td>
+                <td><span class="badge ${d.estado==='activo'?'b-ok':'b-err'}">${d.estado}</span></td>
+                <td style="white-space:nowrap;">
+                  <button class="btn-del btn-del-ind" onclick="eliminarIndividual(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')" >🗑 Eliminar</button>
+                  <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">🔑 Clave</button>
+                </td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+  container.innerHTML = html;
+}
+
+// ── Funciones de Eliminación ─────────────────────
+async function apiEliminar(body, confirm_msg) {
+  if (!confirm(confirm_msg + '\n\n⚠️ Esta acción es IRREVERSIBLE.')) return;
+  const r2 = confirm('¿Estás COMPLETAMENTE SEGURO? Confirma una segunda vez.');
+  if (!r2) return;
+  try {
+    const res = await fetch(`${API_BASE}/estadisticas/eliminar-inscripciones`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert(`✅ ${data.mensaje}`);
+      document.directorioLoaded = false;
+      loadDirectorio();
+    } else {
+      alert(`❌ Error: ${data.detail}`);
+    }
+  } catch(e) { alert(`❌ Error de red: ${e.message}`); }
+}
+
+function eliminarIndividual(id, nombre) {
+  apiEliminar({ tipo: 'individual', usuario_id: id }, `¿Eliminar a "${nombre}" del sistema?`);
+}
+
+function eliminarPorCarrera(carrera) {
+  apiEliminar({ tipo: 'carrera', carrera }, `¿Eliminar TODOS los estudiantes de la carrera "${carrera}"?`);
+}
+
+function eliminarPorNivel(nivel, carrera) {
+  apiEliminar({ tipo: 'nivel', nivel }, `¿Eliminar todos los estudiantes del nivel "${nivel}" (${carrera})?`);
+}
+
+function eliminarPorArea(area) {
+  const label = area === 'tecnica' ? 'Técnica' : 'Humanística';
+  apiEliminar({ tipo: 'area', area }, `¿Eliminar TODOS los estudiantes del Área ${label}?`);
+}
+
+function eliminarDocentesPorEsp(especialidad) {
+  apiEliminar({ tipo: 'carrera', carrera: especialidad, rol: 'docente' }, `¿Eliminar TODOS los docentes de la especialidad "${especialidad}"?`);
+}
+
+function eliminarTodos(rol) {
+  const label = rol === 'docente' ? 'DOCENTES' : 'ESTUDIANTES';
+  apiEliminar({ tipo: 'todos', rol }, `¿Eliminar ABSOLUTAMENTE TODOS LOS ${label} del sistema?`);
+}
+
+// ── Reset Clave ──────────────────────────────────
 async function resetPassword(id, carnet) {
   if(!carnet || carnet === 'null' || carnet === 'S/N') return alert("El usuario no tiene carnet registrado para restablecer.");
   if(!confirm(`¿Restablecer la contraseña a ${carnet} (su CI)?`)) return;
@@ -344,27 +601,42 @@ async function resetPassword(id, carnet) {
       headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ new_password: carnet.trim() })
     });
-    if(res.ok) alert("Contraseña restablecida correctamente al CI del usuario.");
-    else alert("Error al restablecer contraseña.");
+    if(res.ok) alert("✅ Contraseña restablecida correctamente al CI del usuario.");
+    else alert("❌ Error al restablecer contraseña.");
   } catch(e) { alert("Error de red"); }
 }
 
-function exportarExcel() {
-  if(!window.dbExportData) return alert("Espera a que carguen los datos");
+// ── Exportar Excel Pro ───────────────────────────
+function exportarExcelPro() {
+  if(!dirData) return alert("Espera a que carguen los datos del directorio.");
   const wb = XLSX.utils.book_new();
-  
-  // Hoja Estudiantes
-  const wsEst = XLSX.utils.json_to_sheet(window.dbExportData.estudiantes);
-  XLSX.utils.book_append_sheet(wb, wsEst, "Estudiantes");
-  
-  // Hoja Profesores
-  const wsDoc = XLSX.utils.json_to_sheet(window.dbExportData.profesores);
-  XLSX.utils.book_append_sheet(wb, wsDoc, "Plantel Docente");
-  
-  XLSX.writeFile(wb, "Base_de_Datos_CEA_Pailon.xlsx");
+
+  // Hoja resumen por carrera
+  const resumen = (dirData.resumen_carreras || []).map(r => ({
+    'Área': r.area, 'Carrera/Especialidad': r.carrera, 'Total Estudiantes': r.total
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumen), "Resumen por Carrera");
+
+  // Hoja estudiantes completa
+  const ests = (dirData.estudiantes || []).map(e => ({
+    'CI': e.carnet, 'Apellidos': e.apellido, 'Nombres': e.nombre, 'Email': e.email,
+    'Área': e.area, 'Carrera': e.carrera, 'Nivel': e.nivel,
+    'Estado': e.estado, 'Fecha Inscripción': e.fecha_inscripcion
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ests), "Estudiantes");
+
+  // Hoja docentes
+  const docs = (dirData.docentes || []).map(d => ({
+    'CI': d.carnet, 'Apellidos': d.apellido, 'Nombres': d.nombre, 'Email': d.email,
+    'Especialidad': d.especialidad, 'Estado': d.estado, 'Fecha Ingreso': d.fecha_ingreso
+  }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docs), "Plantel Docente");
+
+  XLSX.writeFile(wb, `Directorio_CEA_Pailon_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
 }
 
 init();
+
 </script>
 </body>
 </html>
