@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Planes con IA | CEA EduConnect Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0ea5e9; --violet: #8b5cf6; --green: #22c55e;
+            --amber: #f59e0b; --rose: #f43f5e;
+            --bg: #070c18; --card: rgba(15,23,42,0.85); --border: rgba(255,255,255,0.08);
+            --text: #f1f5f9; --muted: #64748b;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+        body { background:var(--bg); color:var(--text); min-height:100vh; }
+        body::before { content:''; position:fixed; inset:0; z-index:-1;
+            background: radial-gradient(ellipse at 20% 20%, rgba(139,92,246,.07) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 80%, rgba(14,165,233,.07) 0%, transparent 50%); }
+
+        /* Header */
+        .header { padding:1.2rem 2rem; display:flex; align-items:center; justify-content:space-between;
+            border-bottom:1px solid var(--border); background:rgba(7,12,24,.9); backdrop-filter:blur(12px);
+            position:sticky; top:0; z-index:100; }
+        .header a { color:var(--primary); text-decoration:none; font-weight:700; font-size:.9rem; }
+        .header h1 { font-size:1.1rem; font-weight:900; background:linear-gradient(135deg,var(--primary),var(--violet));
+            -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+        /* Layout */
+        .layout { display:grid; grid-template-columns:340px 1fr; height:calc(100vh - 58px); }
+
+        /* Sidebar Panel */
+        .sidebar { background:var(--card); border-right:1px solid var(--border); overflow-y:auto; padding:1.5rem; }
+        .sidebar h2 { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em;
+            color:var(--muted); margin-bottom:1rem; }
+
+        /* Plan Type Selector */
+        .plan-types { display:flex; flex-direction:column; gap:.6rem; margin-bottom:1.5rem; }
+        .plan-btn { padding:1rem 1.2rem; border-radius:14px; border:1px solid var(--border);
+            background:rgba(255,255,255,.03); cursor:pointer; text-align:left; color:var(--text);
+            transition:.2s; display:flex; align-items:center; gap:12px; }
+        .plan-btn:hover { background:rgba(255,255,255,.07); border-color:rgba(255,255,255,.15); }
+        .plan-btn.active.semestral { background:rgba(14,165,233,.12); border-color:rgba(14,165,233,.4); }
+        .plan-btn.active.modular   { background:rgba(139,92,246,.12); border-color:rgba(139,92,246,.4); }
+        .plan-btn.active.aula      { background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.4); }
+        .plan-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center;
+            justify-content:center; font-size:1.2rem; flex-shrink:0; }
+        .plan-icon.s { background:rgba(14,165,233,.15); }
+        .plan-icon.m { background:rgba(139,92,246,.15); }
+        .plan-icon.a { background:rgba(34,197,94,.15); }
+        .plan-label { font-weight:800; font-size:.95rem; }
+        .plan-desc  { font-size:.75rem; color:var(--muted); margin-top:2px; }
+
+        /* Selectors */
+        .sel-group { margin-bottom:1.1rem; }
+        .sel-group label { display:block; font-size:.73rem; font-weight:700; text-transform:uppercase;
+            letter-spacing:.08em; color:var(--muted); margin-bottom:6px; }
+        .sel-group select, .sel-group input, .sel-group textarea {
+            width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border);
+            background:rgba(0,0,0,.35); color:var(--text); font-size:.88rem; outline:none; transition:.2s; }
+        .sel-group select:focus, .sel-group input:focus { border-color:var(--primary); }
+        .sel-group textarea { resize:vertical; min-height:70px; }
+
+        /* Module Pills */
+        .pill-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+        .pill { padding:5px 12px; border-radius:20px; border:1px solid var(--border); font-size:.8rem;
+            font-weight:700; cursor:pointer; transition:.2s; background:rgba(255,255,255,.04); color:var(--muted); }
+        .pill:hover { background:rgba(255,255,255,.08); color:var(--text); }
+        .pill.active { background:rgba(139,92,246,.2); border-color:rgba(139,92,246,.5); color:#c4b5fd; }
+        .pill.active.t { background:rgba(14,165,233,.2); border-color:rgba(14,165,233,.4); color:#7dd3fc; }
+
+        /* Generate Button */
+        .btn-generate { width:100%; padding:13px; border-radius:12px; border:none; cursor:pointer;
+            font-weight:900; font-size:1rem; transition:.25s; margin-top:.5rem;
+            background:linear-gradient(135deg,var(--violet),var(--primary));
+            color:white; display:flex; align-items:center; justify-content:center; gap:8px; }
+        .btn-generate:hover { transform:translateY(-2px); box-shadow:0 12px 28px rgba(139,92,246,.35); }
+        .btn-generate:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+        /* Output */
+        .output { display:flex; flex-direction:column; overflow:hidden; }
+        .output-header { padding:1.2rem 1.8rem; border-bottom:1px solid var(--border);
+            display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+        .output-header h3 { font-size:1rem; font-weight:800; }
+        .output-actions { display:flex; gap:8px; }
+        .btn-sm { padding:7px 14px; border-radius:8px; border:1px solid var(--border); font-size:.8rem;
+            font-weight:700; cursor:pointer; transition:.2s; }
+        .btn-sm.copy  { background:rgba(14,165,233,.12); color:var(--primary); border-color:rgba(14,165,233,.3); }
+        .btn-sm.print { background:rgba(34,197,94,.12); color:var(--green); border-color:rgba(34,197,94,.3); }
+        .btn-sm.hist  { background:rgba(245,158,11,.12); color:var(--amber); border-color:rgba(245,158,11,.3); }
+        .btn-sm:hover { filter:brightness(1.2); }
+
+        .output-body { flex:1; overflow-y:auto; padding:2rem; }
+
+        /* Result area */
+        .result-empty { display:flex; flex-direction:column; align-items:center; justify-content:center;
+            height:100%; color:var(--muted); text-align:center; gap:1rem; }
+        .result-empty .icon { font-size:4rem; opacity:.3; }
+        .result-empty h4 { font-size:1.2rem; font-weight:700; }
+        .result-empty p { font-size:.85rem; max-width:320px; line-height:1.6; }
+
+        #planContent { display:none; }
+        .plan-meta { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1.5rem; }
+        .meta-badge { padding:4px 12px; border-radius:20px; font-size:.75rem; font-weight:700; }
+        .plan-text { white-space:pre-wrap; line-height:1.8; font-size:.9rem; color:#e2e8f0;
+            background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:14px;
+            padding:2rem; font-family:'Inter',sans-serif; }
+
+        /* Spinner */
+        .spinner { display:none; align-items:center; justify-content:center; gap:1rem; flex-direction:column;
+            height:100%; }
+        .spinner.show { display:flex; }
+        .spin-ring { width:60px; height:60px; border:3px solid var(--border);
+            border-top-color:var(--violet); border-radius:50%; animation:spin .9s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .spin-text { color:var(--muted); font-size:.9rem; }
+
+        @media(max-width:768px) {
+            .layout { grid-template-columns:1fr; height:auto; }
+            .sidebar { border-right:none; border-bottom:1px solid var(--border); }
+        }
+
+        @media print {
+            .header,.sidebar,.output-header { display:none; }
+            .output-body { padding:.5rem; }
+            .plan-text { border:none; background:white; color:black; font-size:.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="../subsistema_academico/malla_curricular/index.html">← Malla Curricular</a>
+    <h1>🤖 Generador de Planes con IA — CEA</h1>
+    <a href="../portal/index.html">🏠 Portal</a>
+</div>
+
+<div class="layout">
+
+    <!-- SIDEBAR: Controles -->
+    <aside class="sidebar">
+
+        <!-- 1. Tipo de Plan -->
+        <h2>① Tipo de Plan</h2>
+        <div class="plan-types">
+            <button class="plan-btn active semestral" onclick="selectTipo('semestral',this)">
+                <div class="plan-icon s">📅</div>
+                <div><div class="plan-label">Plan Semestral</div><div class="plan-desc">Visión completa del módulo por semestre</div></div>
+            </button>
+            <button class="plan-btn modular" onclick="selectTipo('modular',this)">
+                <div class="plan-icon m">📋</div>
+                <div><div class="plan-label">Plan Modular</div><div class="plan-desc">Desarrollo completo de un módulo</div></div>
+            </button>
+            <button class="plan-btn aula" onclick="selectTipo('aula_taller',this)">
+                <div class="plan-icon a">🏫</div>
+                <div><div class="plan-label">Plan de Aula/Taller</div><div class="plan-desc">Sesión específica por tema</div></div>
+            </button>
+        </div>
+
+        <!-- 2. Carrera y Nivel -->
+        <h2>② Selección Curricular</h2>
+        <div class="sel-group">
+            <label>Área</label>
+            <select id="sel-area" onchange="onAreaChange()">
+                <option value="humanistica">Humanística</option>
+                <option value="tecnica">Técnica</option>
+            </select>
+        </div>
+        <div class="sel-group">
+            <label>Carrera / Materia</label>
+            <select id="sel-carrera" onchange="onCarreraChange()">
+                <option>Cargando...</option>
+            </select>
+        </div>
+        <div class="sel-group">
+            <label>Nivel</label>
+            <select id="sel-nivel" onchange="onNivelChange()">
+                <option>Cargando...</option>
+            </select>
+        </div>
+
+        <!-- 3. Módulo -->
+        <h2 id="lbl-modulo" style="margin-top:1rem;">③ Módulo</h2>
+        <div class="pill-row" id="modulos-pills"><span style="color:var(--muted);font-size:.8rem;">Selecciona nivel primero</span></div>
+
+        <!-- 4. Tema (solo para aula/taller y modular por tema) -->
+        <div id="tema-section" style="display:none; margin-top:1rem;">
+            <h2>④ Tema</h2>
+            <div class="pill-row" id="temas-pills"></div>
+        </div>
+
+        <!-- 5. Opciones adicionales -->
+        <div style="margin-top:1.2rem;">
+            <div class="sel-group" id="horas-group" style="display:none;">
+                <label>Duración de Sesión (horas)</label>
+                <select id="sel-horas">
+                    <option value="2">2 horas</option>
+                    <option value="4" selected>4 horas (periodo doble)</option>
+                    <option value="6">6 horas (día completo)</option>
+                </select>
+            </div>
+            <div class="sel-group">
+                <label>Observaciones del Facilitador (opcional)</label>
+                <textarea id="observaciones" placeholder="Ej: incluir actividad práctica con materiales reciclados..."></textarea>
+            </div>
+        </div>
+
+        <button class="btn-generate" id="btn-gen" onclick="generarPlan()">
+            ✨ Generar Plan con IA
+        </button>
+
+    </aside>
+
+    <!-- OUTPUT -->
+    <div class="output">
+        <div class="output-header">
+            <h3 id="output-title">Resultado del Plan</h3>
+            <div class="output-actions">
+                <button class="btn-sm hist" onclick="verHistorial()">📂 Historial</button>
+                <button class="btn-sm copy" onclick="copiarPlan()">📋 Copiar</button>
+                <button class="btn-sm print" onclick="window.print()">🖨️ Imprimir</button>
+            </div>
+        </div>
+        <div class="output-body">
+            <div class="result-empty" id="emptyState">
+                <div class="icon">🤖</div>
+                <h4>Listo para Generar</h4>
+                <p>Selecciona el tipo de plan, elige tu módulo y haz clic en <b>Generar Plan con IA</b>.</p>
+            </div>
+            <div class="spinner" id="spinner">
+                <div class="spin-ring"></div>
+                <div class="spin-text">Generando plan con Gemini AI...</div>
+            </div>
+            <div id="planContent">
+                <div class="plan-meta" id="planMeta"></div>
+                <div class="plan-text" id="planText"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../portal/js/api.js"></script>
+<script>
+    const token = localStorage.getItem('token');
+    const user  = JSON.parse(localStorage.getItem('user') || '{}');
+    if (!token) window.location.href = '../login.html';
+
+    const ROLES_PERMITIDOS = ['profesor','docente','jefe_carrera','director','administrador','admin'];
+    if (!ROLES_PERMITIDOS.includes((user.rol||'').toLowerCase())) {
+        window.location.href = '../portal/index.html';
+    }
+
+    // State
+    let tipoPlan = 'semestral';
+    let carrerasDB = [];
+    let modulosDB  = [];
+    let selectedCarreraId = null;
+    let selectedModuloId  = null;
+    let selectedTemaId    = null;
+    let ultimoPlanText    = '';
+
+    // ── Tipo de Plan ──────────────────────────────────────────────
+    function selectTipo(tipo, el) {
+        tipoPlan = tipo;
+        document.querySelectorAll('.plan-btn').forEach(b => b.classList.remove('active','semestral','modular','aula'));
+        el.classList.add('active', tipo === 'semestral' ? 'semestral' : tipo === 'modular' ? 'modular' : 'aula');
+
+        document.getElementById('tema-section').style.display = (tipo === 'aula_taller') ? '' : 'none';
+        document.getElementById('horas-group').style.display  = (tipo === 'aula_taller') ? '' : 'none';
+    }
+
+    // ── Carga inicial de carreras ─────────────────────────────────
+    async function cargarCarreras() {
+        try {
+            const r = await fetch(`${API_URL}/malla/carreras`, { headers:{ Authorization:`Bearer ${token}` } });
+            const d = await r.json();
+            carrerasDB = d.carreras || [];
+            onAreaChange();
+        } catch(e) { console.error(e); }
+    }
+
+    function onAreaChange() {
+        const area = document.getElementById('sel-area').value;
+        const label = area === 'humanistica' ? 'Humanística' : 'Técnica';
+        const filtered = carrerasDB.filter(c => c.area && c.area.includes(label));
+        const sel = document.getElementById('sel-carrera');
+        sel.innerHTML = filtered.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('') || '<option>Sin carreras</option>';
+
+        const niveles = area === 'humanistica'
+            ? ['Aplicados (Primer Año)','Complementarios (Segundo Año)','Especializados (Tercer Año)']
+            : ['Nivel Básico','Nivel Auxiliar','Nivel Medio I','Nivel Medio II'];
+        document.getElementById('sel-nivel').innerHTML = niveles.map(n => `<option>${n}</option>`).join('');
+
+        onCarreraChange();
+    }
+
+    function onCarreraChange() {
+        selectedCarreraId = parseInt(document.getElementById('sel-carrera').value);
+        onNivelChange();
+    }
+
+    async function onNivelChange() {
+        if (!selectedCarreraId) return;
+        const nivel = document.getElementById('sel-nivel').value;
+        const pills = document.getElementById('modulos-pills');
+        pills.innerHTML = '<span style="color:var(--muted);font-size:.8rem;">⏳ Cargando módulos...</span>';
+        selectedModuloId = null; selectedTemaId = null;
+        document.getElementById('temas-pills').innerHTML = '';
+
+        try {
+            const r = await fetch(`${API_URL}/modulos`, { headers:{ Authorization:`Bearer ${token}` } });
+            const d = await r.json();
+            modulosDB = (d.modulos || []).filter(m =>
+                m.carrera_id == selectedCarreraId &&
+                (m.nivel || '').toLowerCase().includes((nivel || '').toLowerCase().substring(0,6))
+            );
+            if (!modulosDB.length) {
+                pills.innerHTML = '<span style="color:var(--muted);font-size:.8rem;">Sin módulos en este nivel</span>';
+                return;
+            }
+            pills.innerHTML = modulosDB.map((m,i) => `
+                <span class="pill" data-id="${m.id}" onclick="selectModulo(${m.id}, this)">
+                    Módulo ${i+1}
+                </span>
+            `).join('') + `<span class="pill" data-id="all" onclick="selectModulo('all', this)">📦 Módulo Completo</span>`;
+        } catch(e) {
+            pills.innerHTML = '<span style="color:var(--rose);font-size:.8rem;">Error cargando módulos</span>';
+        }
+    }
+
+    async function selectModulo(id, el) {
+        document.querySelectorAll('#modulos-pills .pill').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        selectedModuloId = id === 'all' ? null : id;
+        selectedTemaId   = null;
+        document.getElementById('temas-pills').innerHTML = '';
+
+        // Si es aula/taller, cargar temas del módulo
+        if (tipoPlan === 'aula_taller' && selectedModuloId) {
+            await cargarTemas(selectedModuloId);
+        }
+    }
+
+    async function cargarTemas(moduloId) {
+        const pills = document.getElementById('temas-pills');
+        pills.innerHTML = '<span style="color:var(--muted);font-size:.8rem;">⏳</span>';
+        try {
+            const r = await fetch(`${API_URL}/malla/${selectedCarreraId}/estructura`, { headers:{ Authorization:`Bearer ${token}` } });
+            const data = await r.json();
+            let temas = [];
+            (data.niveles || []).forEach(n => {
+                (n.modulos||[]).forEach(m => { if (m.id == moduloId) temas = m.temas || []; });
+            });
+            if (!temas.length) {
+                temas = [{id:1,numero:1,titulo:'Tema 1'},{id:2,numero:2,titulo:'Tema 2'},{id:3,numero:3,titulo:'Tema 3'},{id:4,numero:4,titulo:'Tema 4'}];
+            }
+            pills.innerHTML = temas.map(t => `
+                <span class="pill t" data-id="${t.id}" onclick="selectTema(${t.id}, '${(t.titulo||'').replace(/'/g,"\\'")}', this)">
+                    T${t.numero}: ${(t.titulo||'').substring(0,18)}
+                </span>
+            `).join('');
+        } catch(e) {
+            pills.innerHTML = '<span style="color:var(--muted);font-size:.8rem;">Temas no disponibles</span>';
+        }
+    }
+
+
+    function selectTema(id, titulo, el) {
+        document.querySelectorAll('#temas-pills .pill').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        selectedTemaId = id;
+    }
+
+    // ── Generar Plan ──────────────────────────────────────────────
+    async function generarPlan() {
+        if (!selectedCarreraId) return Swal.fire('⚠️','Selecciona una carrera primero','warning');
+        if (!selectedModuloId && tipoPlan === 'aula_taller') return Swal.fire('⚠️','Selecciona un módulo primero','warning');
+
+        // Si modulo completo, pasar null (el backend usa todos los módulos de la carrera)
+        const moduloId = selectedModuloId || null;
+        const nivel    = document.getElementById('sel-nivel').value;
+        const horas    = parseInt(document.getElementById('sel-horas').value)||4;
+        const obs      = document.getElementById('observaciones').value;
+
+        document.getElementById('emptyState').style.display  = 'none';
+        document.getElementById('planContent').style.display = 'none';
+        document.getElementById('spinner').classList.add('show');
+
+        try {
+            const res = await fetch(`${API_URL}/planes/generar`, {
+                method:'POST',
+                headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
+                body: JSON.stringify({
+                    tipo: tipoPlan,
+                    carrera_id: selectedCarreraId,
+                    modulo_id: moduloId,
+                    tema_id: selectedTemaId || null,
+                    nivel: nivel,
+                    horas_sesion: horas,
+                    observaciones: obs
+                })
+            });
+            const data = await res.json();
+            document.getElementById('spinner').classList.remove('show');
+
+            if (!res.ok) {
+                Swal.fire('Error IA', data.detail || 'No se pudo generar el plan','error');
+                document.getElementById('emptyState').style.display = '';
+                return;
+            }
+
+            ultimoPlanText = data.contenido;
+            mostrarResultado(data);
+        } catch(e) {
+            document.getElementById('spinner').classList.remove('show');
+            document.getElementById('emptyState').style.display = '';
+            Swal.fire('Error de Conexión','No se pudo conectar con el backend','error');
+        }
+    }
+
+    function mostrarResultado(data) {
+        const tipoColors = { semestral:'#0ea5e9', modular:'#8b5cf6', aula_taller:'#22c55e' };
+        const tipoLabel  = { semestral:'Plan Semestral', modular:'Plan Modular', aula_taller:'Plan de Aula/Taller' };
+        const color = tipoColors[data.tipo] || '#8b5cf6';
+
+        document.getElementById('output-title').textContent = data.titulo || 'Plan Generado';
+        document.getElementById('planMeta').innerHTML = `
+            <span class="meta-badge" style="background:${color}22;color:${color};border:1px solid ${color}44;">${tipoLabel[data.tipo]||data.tipo}</span>
+            <span class="meta-badge" style="background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border);">📌 ID #${data.id}</span>
+            <span class="meta-badge" style="background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.3);">✅ Guardado</span>
+        `;
+        document.getElementById('planText').textContent = data.contenido;
+        document.getElementById('planContent').style.display = '';
+    }
+
+    function copiarPlan() {
+        if (!ultimoPlanText) return;
+        navigator.clipboard.writeText(ultimoPlanText).then(() =>
+            Swal.fire({ icon:'success', title:'¡Copiado!', timer:1500, showConfirmButton:false })
+        );
+    }
+
+    async function verHistorial() {
+        Swal.fire({ title:'Cargando historial...', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+        try {
+            const r = await fetch(`${API_URL}/planes/historial`, { headers:{ Authorization:`Bearer ${token}` } });
+            const d = await r.json();
+            const planes = d.planes || [];
+            Swal.fire({
+                title: '📂 Mis Planes Generados',
+                width: '700px',
+                html: planes.length ? `<div style="text-align:left;max-height:400px;overflow-y:auto;">
+                    ${planes.map(p => `
+                        <div style="padding:10px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer;" onclick="cargarPlan(${p.id})">
+                            <b>${p.titulo}</b><br>
+                            <small style="color:#94a3b8;">${p.carrera||''} · ${p.tipo} · ${new Date(p.fecha_generacion).toLocaleDateString('es')}</small>
+                        </div>`).join('')}
+                </div>` : '<p style="color:#64748b;">Sin planes generados aún.</p>',
+                showConfirmButton: false, showCloseButton: true
+            });
+        } catch(e) { Swal.fire('Error','No se pudo cargar el historial','error'); }
+    }
+
+    async function cargarPlan(id) {
+        Swal.close();
+        try {
+            const r = await fetch(`${API_URL}/planes/${id}`, { headers:{ Authorization:`Bearer ${token}` } });
+            const data = await r.json();
+            ultimoPlanText = data.contenido_ia;
+            mostrarResultado({ id:data.id, titulo:data.titulo, tipo:data.tipo, contenido:data.contenido_ia });
+        } catch(e) {}
+    }
+
+    // ── Init ──────────────────────────────────────────────────────
+    cargarCarreras();
+</script>
+</body>
+</html>

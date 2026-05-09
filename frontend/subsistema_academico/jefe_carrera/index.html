@@ -129,7 +129,8 @@
     <button class="tab-btn active" onclick="cambiarTab('resumen',this)">📊 Resumen</button>
     <button class="tab-btn" onclick="cambiarTab('docentes',this)">👨‍🏫 Docentes</button>
     <button class="tab-btn" onclick="cambiarTab('malla',this)">🗺️ Malla</button>
-    <button class="tab-btn" onclick="cambiarTab('notas',this)">📋 Notas (Read)</button>
+    <button class="tab-btn" onclick="cambiarTab('planes',this)">🤖 Planes & IA</button>
+    <button class="tab-btn" onclick="cambiarTab('notas',this)">📋 Notas</button>
 </div>
 
 <div class="container">
@@ -208,6 +209,100 @@
         </div>
     </div>
 
+    <!-- PLANES & IA -->
+    <div class="tab-panel" id="tab-planes">
+
+        <!-- PASO 1: Tipo de Plan -->
+        <div class="card">
+            <div class="card-title">🤖 Generador de Planes y Módulos con IA</div>
+            <div class="card-sub">Selecciona el tipo de documento a generar. La IA usará la malla curricular real como contexto.</div>
+
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+                <button class="plan-type-btn" id="ptb-semestral" onclick="selectPlanType('semestral')">
+                    <div style="font-size:2rem;">📅</div>
+                    <div style="font-weight:800; margin-top:6px;">Plan Semestral</div>
+                    <div style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Distribución de módulos en 18 semanas con tabla general</div>
+                </button>
+                <button class="plan-type-btn" id="ptb-modular" onclick="selectPlanType('modular')">
+                    <div style="font-size:2rem;">📋</div>
+                    <div style="font-weight:800; margin-top:6px;">Plan Modular</div>
+                    <div style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Objetivo holístico y cuadro de unidades por módulo</div>
+                </button>
+                <button class="plan-type-btn" id="ptb-aula_taller" onclick="selectPlanType('aula_taller')">
+                    <div style="font-size:2rem;">🏫</div>
+                    <div style="font-weight:800; margin-top:6px;">Plan Aula Taller</div>
+                    <div style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Sesión detallada por tema con tabla de desarrollo</div>
+                </button>
+                <button class="plan-type-btn" id="ptb-modulo_completo" onclick="selectPlanType('modulo_completo')">
+                    <div style="font-size:2rem;">📚</div>
+                    <div style="font-weight:800; margin-top:6px;">Módulo Completo</div>
+                    <div style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Guía de aprendizaje con los 4 temas (Presentación, Teoría, Evaluación)</div>
+                </button>
+                <button class="plan-type-btn" id="ptb-tema" onclick="selectPlanType('tema')">
+                    <div style="font-size:2rem;">🎯</div>
+                    <div style="font-weight:800; margin-top:6px;">Tema Específico</div>
+                    <div style="font-size:0.75rem; color:var(--muted); margin-top:4px;">Desarrollo de un solo tema: Práctica, Teoría, Valoración, Producción</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- PASO 2: Selección de Módulo y Tema -->
+        <div class="card" id="plan-selector" style="display:none;">
+            <div class="card-title" id="plan-selector-title">Selecciona el Módulo</div>
+            <div class="card-sub">Los módulos se cargan desde la malla curricular real.</div>
+
+            <label>Carrera</label>
+            <select id="pl-carrera" onchange="cargarModulosIA()">
+                <option value="">-- Seleccionar --</option>
+            </select>
+
+            <label>Nivel</label>
+            <select id="pl-nivel" onchange="cargarModulosIA()">
+                <option value="">-- Seleccionar --</option>
+            </select>
+
+            <label>Módulo (Botones)</label>
+            <div id="pl-modulos-btns" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:1rem;"></div>
+
+            <div id="pl-temas-section" style="display:none;">
+                <label>Tema (1-4)</label>
+                <div id="pl-temas-btns" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:1rem;"></div>
+            </div>
+
+            <label>Periodos / Horas de sesión</label>
+            <input type="number" id="pl-horas" value="25" min="1" max="100" style="width:120px;">
+
+            <label>Observaciones del facilitador (opcional)</label>
+            <input type="text" id="pl-obs" placeholder="Ej: Enfocarse en casos prácticos locales...">
+
+            <button class="btn-primary" id="pl-generar-btn" onclick="generarPlanIA()" style="margin-top:1rem; background:linear-gradient(135deg,var(--violet),var(--primary)); width:100%;">
+                ✨ Generar con IA
+            </button>
+        </div>
+
+        <!-- RESULTADO -->
+        <div class="card" id="plan-resultado" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+                <div>
+                    <div class="card-title" id="plan-resultado-titulo">Documento Generado</div>
+                    <div class="card-sub">Generado por IA · CEA "Prof. Herman Ortiz Camargo"</div>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button onclick="copiarPlan()" style="padding:8px 16px; background:rgba(14,165,233,0.15); border:1px solid var(--primary); color:var(--primary); border-radius:8px; font-weight:700; cursor:pointer; font-size:0.82rem;">📋 Copiar</button>
+                    <button onclick="imprimirPlan()" style="padding:8px 16px; background:rgba(139,92,246,0.15); border:1px solid var(--violet); color:var(--violet); border-radius:8px; font-weight:700; cursor:pointer; font-size:0.82rem;">🖨️ Imprimir</button>
+                    <button onclick="nuevoplan()" style="padding:8px 16px; background:rgba(72,209,142,0.15); border:1px solid var(--secondary); color:var(--secondary); border-radius:8px; font-weight:700; cursor:pointer; font-size:0.82rem;">+ Nuevo Plan</button>
+                </div>
+            </div>
+            <div id="plan-contenido" style="background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:12px; padding:1.5rem; white-space:pre-wrap; font-size:0.85rem; line-height:1.7; max-height:70vh; overflow-y:auto;"></div>
+        </div>
+
+        <!-- HISTORIAL -->
+        <div class="card">
+            <div class="card-title">📜 Historial de Planes Generados</div>
+            <div id="planes-historial"><p style="color:var(--muted); font-size:0.85rem;">Cargando...</p></div>
+        </div>
+    </div>
+
     <!-- NOTAS (Read Only) -->
     <div class="tab-panel" id="tab-notas">
         <div class="card">
@@ -239,6 +334,7 @@
         el.classList.add('active');
         if (id==='docentes') cargarDocentes();
         if (id==='notas') cargarNotasJef();
+        if (id==='planes') { cargarCarrerasIA(); cargarHistorialPlanes(); }
     }
 
     let jefArea = 'humanistica';
@@ -449,9 +545,198 @@
     }
 
     setJefArea('humanistica');
-
     function logout(){ localStorage.clear(); history.replaceState(null, '', window.location.href); window.location.replace('../../login.html'); }
     cargarStats();
+
+    // ── ESTILOS PLAN TYPE BUTTONS ──────────────────────────────────────────────
+    const planStyle = document.createElement('style');
+    planStyle.textContent = `
+        .plan-type-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem 1rem;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.25s;
+            text-align: center;
+        }
+        .plan-type-btn:hover { border-color: var(--violet); background: rgba(139,92,246,0.08); transform: translateY(-3px); }
+        .plan-type-btn.selected { border-color: var(--violet); background: rgba(139,92,246,0.15); box-shadow: 0 0 20px rgba(139,92,246,0.2); }
+        .mod-btn, .tema-btn {
+            padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04); color: var(--text); cursor: pointer;
+            font-weight: 700; font-size: 0.82rem; transition: all 0.2s;
+        }
+        .mod-btn:hover, .tema-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .mod-btn.sel, .tema-btn.sel { background: var(--primary); border-color: var(--primary); color: #000; }
+    `;
+    document.head.appendChild(planStyle);
+
+    // ── VARIABLES ESTADO PLAN IA ────────────────────────────────────────────────
+    let planTipo = '';
+    let planCarrerasData = [];
+    let planModulosData = [];
+    let selModuloId = null;
+    let selTemaId = null;
+
+    function selectPlanType(tipo) {
+        planTipo = tipo;
+        document.querySelectorAll('.plan-type-btn').forEach(b => b.classList.remove('selected'));
+        document.getElementById('ptb-' + tipo).classList.add('selected');
+        document.getElementById('plan-selector').style.display = 'block';
+        document.getElementById('plan-resultado').style.display = 'none';
+        const titles = { semestral: '📅 Plan Semestral — Selecciona Carrera y Nivel', modular: '📋 Plan Modular — Selecciona el Módulo', aula_taller: '🏫 Plan Aula Taller — Selecciona Módulo y Tema', modulo_completo: '📚 Módulo Completo — Selecciona el Módulo', tema: '🎯 Tema Específico — Selecciona Módulo y Tema' };
+        document.getElementById('plan-selector-title').textContent = titles[tipo] || 'Selecciona los datos';
+        const needsTema = ['aula_taller','tema'].includes(tipo);
+        document.getElementById('pl-temas-section').style.display = 'none';
+        selModuloId = null; selTemaId = null;
+        renderModulosBtns();
+    }
+
+    async function cargarCarrerasIA() {
+        try {
+            const r = await fetch(`${API_URL}/malla/carreras`, {headers:{'Authorization':`Bearer ${token}`}});
+            const d = await r.json();
+            planCarrerasData = d.carreras || [];
+            const sel = document.getElementById('pl-carrera');
+            sel.innerHTML = '<option value="">-- Seleccionar Carrera --</option>';
+            planCarrerasData.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.nombre} (${c.area})</option>`);
+        } catch(e) {}
+    }
+
+    async function cargarModulosIA() {
+        const cid = document.getElementById('pl-carrera').value;
+        const nivel = document.getElementById('pl-nivel').value;
+        if (!cid) return;
+        const carrera = planCarrerasData.find(c => c.id == cid);
+        if (carrera) {
+            const niveles = carrera.area && carrera.area.toLowerCase().includes('hum')
+                ? ['Aplicados (Primer Año)','Complementarios (Segundo Año)','Especializados (Tercer Año)']
+                : ['Nivel Básico','Nivel Auxiliar','Nivel Medio I','Nivel Medio II'];
+            const ns = document.getElementById('pl-nivel');
+            ns.innerHTML = '<option value="">-- Seleccionar Nivel --</option>';
+            niveles.forEach(n => ns.innerHTML += `<option value="${n}">${n}</option>`);
+        }
+        if (!nivel) return;
+        try {
+            const r = await fetch(`${API_URL}/malla/modulos?carrera_id=${cid}&nivel=${encodeURIComponent(nivel)}`, {headers:{'Authorization':`Bearer ${token}`}});
+            const d = await r.json();
+            planModulosData = d.modulos || [];
+            renderModulosBtns();
+        } catch(e) { planModulosData = []; renderModulosBtns(); }
+    }
+
+    function renderModulosBtns() {
+        const cont = document.getElementById('pl-modulos-btns');
+        if (!planModulosData.length) { cont.innerHTML = '<span style="color:var(--muted);font-size:0.82rem;">Selecciona carrera y nivel primero.</span>'; return; }
+        cont.innerHTML = planModulosData.map((m,i) => `<button class="mod-btn${selModuloId==m.id?' sel':''}" onclick="selectModulo(${m.id})">${i+1}. ${m.nombre}</button>`).join('');
+    }
+
+    function selectModulo(id) {
+        selModuloId = id; selTemaId = null;
+        renderModulosBtns();
+        const needsTema = ['aula_taller','tema'].includes(planTipo);
+        if (needsTema) {
+            const mod = planModulosData.find(m => m.id == id);
+            const temas = mod && mod.temas ? mod.temas : [];
+            const cont = document.getElementById('pl-temas-btns');
+            cont.innerHTML = temas.length
+                ? temas.map(t => `<button class="tema-btn" onclick="selectTema(${t.id})" id="tb-${t.id}">Tema ${t.numero}: ${t.titulo}</button>`).join('')
+                : '<span style="color:var(--muted);font-size:0.82rem;">Sin temas definidos en la malla.</span>';
+            document.getElementById('pl-temas-section').style.display = 'block';
+        } else {
+            document.getElementById('pl-temas-section').style.display = 'none';
+        }
+    }
+
+    function selectTema(id) {
+        selTemaId = id;
+        document.querySelectorAll('.tema-btn').forEach(b => b.classList.remove('sel'));
+        const el = document.getElementById('tb-' + id);
+        if (el) el.classList.add('sel');
+    }
+
+    async function generarPlanIA() {
+        const cid = parseInt(document.getElementById('pl-carrera').value);
+        if (!cid || !selModuloId) { Swal.fire('Atención','Selecciona carrera y módulo primero.','warning'); return; }
+        if (['aula_taller','tema'].includes(planTipo) && !selTemaId) { Swal.fire('Atención','Selecciona el tema primero.','warning'); return; }
+        const btn = document.getElementById('pl-generar-btn');
+        btn.disabled = true; btn.textContent = '⏳ Generando con IA...';
+        const payload = {
+            tipo: planTipo, carrera_id: cid, modulo_id: selModuloId,
+            tema_id: selTemaId || null,
+            nivel: document.getElementById('pl-nivel').value,
+            horas_sesion: parseInt(document.getElementById('pl-horas').value) || 25,
+            observaciones: document.getElementById('pl-obs').value,
+            generar_completo: planTipo === 'modulo_completo'
+        };
+        try {
+            const r = await fetch(`${API_URL}/planes/generar`, {
+                method: 'POST', headers: {'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+                body: JSON.stringify(payload)
+            });
+            if (!r.ok) { const e = await r.json(); throw new Error(e.detail || 'Error IA'); }
+            const d = await r.json();
+            document.getElementById('plan-resultado-titulo').textContent = d.titulo || 'Plan Generado';
+            document.getElementById('plan-contenido').textContent = d.contenido;
+            document.getElementById('plan-resultado').style.display = 'block';
+            document.getElementById('plan-resultado').scrollIntoView({behavior:'smooth'});
+            cargarHistorialPlanes();
+        } catch(e) {
+            Swal.fire('Error', e.message, 'error');
+        } finally {
+            btn.disabled = false; btn.textContent = '✨ Generar con IA';
+        }
+    }
+
+    function copiarPlan() {
+        const txt = document.getElementById('plan-contenido').textContent;
+        navigator.clipboard.writeText(txt).then(() => Swal.fire({icon:'success',title:'¡Copiado!',timer:1200,showConfirmButton:false}));
+    }
+
+    function imprimirPlan() {
+        const w = window.open('','_blank');
+        w.document.write(`<html><head><title>Plan CEA</title><style>body{font-family:Arial,sans-serif;padding:2cm;font-size:11pt;line-height:1.6;}pre{white-space:pre-wrap;}</style></head><body><pre>${document.getElementById('plan-contenido').textContent}</pre></body></html>`);
+        w.document.close(); w.print();
+    }
+
+    function nuevoplan() {
+        document.getElementById('plan-resultado').style.display = 'none';
+        document.getElementById('plan-selector').style.display = 'none';
+        document.querySelectorAll('.plan-type-btn').forEach(b => b.classList.remove('selected'));
+        planTipo = ''; selModuloId = null; selTemaId = null;
+    }
+
+    async function cargarHistorialPlanes() {
+        const cont = document.getElementById('planes-historial');
+        try {
+            const r = await fetch(`${API_URL}/planes/historial`, {headers:{'Authorization':`Bearer ${token}`}});
+            const d = await r.json();
+            const lista = d.planes || [];
+            if (!lista.length) { cont.innerHTML = '<p style="color:var(--muted);font-size:0.85rem;">Aún no has generado ningún plan.</p>'; return; }
+            cont.innerHTML = `<table><thead><tr><th>Tipo</th><th>Título</th><th>Módulo</th><th>Fecha</th><th></th></tr></thead><tbody>${
+                lista.map(p => `<tr>
+                    <td><span class="badge cursando">${p.tipo}</span></td>
+                    <td style="font-weight:600;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.titulo}</td>
+                    <td style="color:var(--muted);">${p.modulo||'-'}</td>
+                    <td style="color:var(--muted);font-size:0.78rem;">${new Date(p.fecha_generacion).toLocaleDateString('es')}</td>
+                    <td><button onclick="verPlan(${p.id})" style="background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.75rem;">Ver</button></td>
+                </tr>`).join('')
+            }</tbody></table>`;
+        } catch(e) { cont.innerHTML = '<p style="color:var(--muted);">No disponible.</p>'; }
+    }
+
+    async function verPlan(id) {
+        try {
+            const r = await fetch(`${API_URL}/planes/${id}`, {headers:{'Authorization':`Bearer ${token}`}});
+            const d = await r.json();
+            document.getElementById('plan-resultado-titulo').textContent = d.titulo;
+            document.getElementById('plan-contenido').textContent = d.contenido_ia;
+            document.getElementById('plan-resultado').style.display = 'block';
+            document.getElementById('plan-resultado').scrollIntoView({behavior:'smooth'});
+        } catch(e) {}
+    }
 </script>
 </body>
 </html>
