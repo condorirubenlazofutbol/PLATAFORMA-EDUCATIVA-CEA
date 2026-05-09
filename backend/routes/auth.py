@@ -80,7 +80,7 @@ def generate_cea_email(nombre: str, apellido: str):
     # Usar solo primer nombre y primer apellido (paterno)
     clean_n = nombre.strip().split(" ")[0].lower()
     clean_a = apellido.strip().split(" ")[0].lower()
-    return f"{clean_n}{clean_a}" + "@ceapilon.com"
+    return f"{clean_n}{clean_a}" + "@ceapailon.com"
 
 @router.post("/register-usuario", dependencies=[Depends(get_current_user)])
 def register_usuario(data: RegistroUsuario):
@@ -339,7 +339,7 @@ async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = 
             # Limpieza profunda para email
             clean_n = str(nombre).strip().split(' ')[0].lower()
             clean_a = str(apellido).strip().split(' ')[0].lower()
-            email = f"{clean_n}.{clean_a}@educonnect.com"
+            email = f"{clean_n}{clean_a}@ceapailon.com"
             
             # Asegurar carnet como string y hash
             s_carnet = str(carnet).strip()

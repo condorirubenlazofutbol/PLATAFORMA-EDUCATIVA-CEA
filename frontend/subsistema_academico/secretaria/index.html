@@ -336,7 +336,7 @@
                 </div>
                 <p style="color: var(--muted); line-height: 1.6;">
                     Desde este panel podrás gestionar la inscripción masiva de estudiantes, la designación de docentes y la administración de candidatos electorales. 
-                    Toda la generación de correos institucionales (@ceapilon.com) se realiza de forma automática.
+                    Toda la generación de correos institucionales (@ceapailon.com) se realiza de forma automática.
                 </p>
             </div>
         </section>
@@ -703,9 +703,9 @@
             const apellidos = document.getElementById('ins_apellidos').value.trim();
             if (!nombres || !apellidos) return;
 
-            const cleanN = nombres.replace(/\s+/g, '').toLowerCase();
-            const cleanA = apellidos.replace(/\s+/g, '').toLowerCase();
-            const email = (cleanN + cleanA).substring(0, 30) + "@ceapilon.com";
+            const cleanN = nombres.trim().split(/\s+/)[0].toLowerCase();
+            const cleanA = apellidos.trim().split(/\s+/)[0].toLowerCase();
+            const email = (cleanN + cleanA).substring(0, 30) + "@ceapailon.com";
             
             document.getElementById('ins_email_val').value = email;
             document.getElementById('email-preview-text').textContent = "Correo Sugerido: " + email;
@@ -735,9 +735,9 @@
             const apellidos = document.getElementById('doc_apellidos').value.trim();
             if (!nombres || !apellidos) return;
 
-            const cleanN = nombres.replace(/\s+/g, '').toLowerCase();
-            const cleanA = apellidos.replace(/\s+/g, '').toLowerCase();
-            const email = (cleanN + cleanA).substring(0, 30) + "@ceapilon.com";
+            const cleanN = nombres.trim().split(/\s+/)[0].toLowerCase();
+            const cleanA = apellidos.trim().split(/\s+/)[0].toLowerCase();
+            const email = (cleanN + cleanA).substring(0, 30) + "@ceapailon.com";
             
             document.getElementById('doc_email_val').value = email;
             document.getElementById('doc-email-preview-text').textContent = "Correo Sugerido: " + email;
