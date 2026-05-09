@@ -272,7 +272,8 @@
 
         function logout() {
             localStorage.clear();
-            window.location.href = '../login.html';
+            history.replaceState(null, '', window.location.href);
+            window.location.replace('../login.html');
         }
 
         function openPwModal() { document.getElementById('pwModal').style.display = 'flex'; }

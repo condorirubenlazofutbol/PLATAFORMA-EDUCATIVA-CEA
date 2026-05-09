@@ -376,7 +376,7 @@
     });
 
     setDirArea('humanistica');
-    function logout() { localStorage.clear(); window.location.href='../../login.html'; }
+    function logout() { localStorage.clear(); history.replaceState(null, '', window.location.href); window.location.replace('../../login.html'); }
     cargarStats();
 </script>
 </body>

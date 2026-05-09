@@ -115,6 +115,18 @@
 
     <script src="portal/js/api.js"></script>
     <script>
+        // Si ya hay sesión activa, redirigir al portal directamente
+        (function() {
+            const t = localStorage.getItem('token');
+            const u = JSON.parse(localStorage.getItem('user') || '{}');
+            if (t && u.rol) {
+                window.location.replace('portal/index.html');
+            }
+        })();
+
+        // Evitar que el botón Atrás lleve a esta página después de hacer login
+        history.replaceState(null, '', 'login.html');
+
         const form = document.getElementById('loginForm');
         const btn = document.getElementById('btnSubmit');
         const toast = document.getElementById('toast');
@@ -151,7 +163,9 @@
                         rol: data.rol,
                         nivel_asignado: data.nivel_asignado
                     }));
-                    setTimeout(() => { window.location.href = 'portal/index.html'; }, 1000);
+                    // replaceState evita que el botón "Atrás" regrese al login
+                    history.replaceState(null, '', 'login.html');
+                    setTimeout(() => { window.location.replace('portal/index.html'); }, 900);
                 } else {
                     showToast(data.detail || 'Credenciales incorrectas');
                     btn.disabled = false;

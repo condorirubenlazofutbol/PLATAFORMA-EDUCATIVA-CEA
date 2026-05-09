@@ -130,24 +130,62 @@ const user = JSON.parse(localStorage.getItem('user')||'{}');
 if(!token || !['director','administrador','secretaria'].includes(user.rol)) window.location.href='../login.html';
 
 async function init() {
-  try {
-    const [resR, resC, resN, resA] = await Promise.all([
-      fetch(`${API_BASE}/estadisticas/resumen`, {headers:{Authorization:`Bearer ${token}`}}),
-      fetch(`${API_BASE}/estadisticas/por-carrera`, {headers:{Authorization:`Bearer ${token}`}}),
-      fetch(`${API_BASE}/estadisticas/por-nivel`, {headers:{Authorization:`Bearer ${token}`}}),
-      fetch(`${API_BASE}/estadisticas/actividad-reciente`, {headers:{Authorization:`Bearer ${token}`}})
-    ]);
-    
-    if(!resR.ok) throw new Error('Error al cargar datos');
+  const content = document.getElementById('mainContent');
+  content.innerHTML = `
+    <div class="loading" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:80px 20px;">
+      <div style="font-size:2rem;animation:spin 1.5s linear infinite;">⚙️</div>
+      <div style="font-size:1rem;font-weight:700;color:var(--primary);">Conectando con el servidor...</div>
+      <div style="font-size:0.82rem;color:var(--muted);max-width:400px;text-align:center;">El servidor puede tardar hasta 50 segundos en despertar si estuvo inactivo. Por favor espera.</div>
+      <div id="retryMsg" style="font-size:0.78rem;color:var(--muted);"></div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+  `;
 
-    const sum = await resR.json();
-    const {carreras} = await resC.json();
-    const {niveles} = await resN.json();
-    const act = await resA.json();
+  // Retry hasta 3 veces con delay incremental (Render free tier wake-up)
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      if (attempt > 1) {
+        document.getElementById('retryMsg').textContent = `Intento ${attempt}/3... esperando respuesta del servidor.`;
+        await new Promise(r => setTimeout(r, attempt * 8000));
+      }
 
-    renderUI(sum, carreras, niveles, act);
-  } catch(e) {
-    document.getElementById('mainContent').innerHTML = `<div class="loading" style="color:var(--rojo);">❌ Error: ${e.message}</div>`;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 55000);
+
+      const [resR, resC, resN, resA] = await Promise.all([
+        fetch(`${API_BASE}/estadisticas/resumen`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal}),
+        fetch(`${API_BASE}/estadisticas/por-carrera`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal}),
+        fetch(`${API_BASE}/estadisticas/por-nivel`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal}),
+        fetch(`${API_BASE}/estadisticas/actividad-reciente`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal})
+      ]);
+
+      clearTimeout(timeout);
+
+      if (!resR.ok) {
+        const errText = await resR.text();
+        throw new Error(`Error del servidor (${resR.status}): ${errText.slice(0, 120)}`);
+      }
+
+      const sum = await resR.json();
+      const {carreras} = await resC.json();
+      const {niveles} = await resN.json();
+      const act = await resA.json();
+
+      renderUI(sum, carreras, niveles, act);
+      return; // éxito, salir
+
+    } catch(e) {
+      if (attempt === 3) {
+        content.innerHTML = `
+          <div class="loading" style="color:var(--rojo);flex-direction:column;gap:14px;display:flex;align-items:center;padding:60px 20px;">
+            <div style="font-size:2.5rem;">❌</div>
+            <div style="font-weight:800;font-size:1.1rem;">No se pudo conectar con el servidor</div>
+            <div style="color:var(--muted);font-size:0.85rem;max-width:450px;text-align:center;">El servidor de estadísticas no responde. Puede estar reiniciándose. Espera un momento y recarga la página.</div>
+            <button onclick="location.reload()" style="margin-top:12px;padding:10px 24px;background:var(--primary);border:none;border-radius:10px;color:white;font-weight:800;cursor:pointer;font-size:0.9rem;">🔄 Recargar Página</button>
+          </div>
+        `;
+      }
+    }
   }
 }
 
