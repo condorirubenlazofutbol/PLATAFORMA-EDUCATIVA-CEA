@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secretaría | EduConnect Pro</title>
+    <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="pragma" content="no-cache">
+    <title>Secretaría | EduConnect Pro v2</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -684,10 +686,19 @@
         }
 
         function showTab(id, el) {
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            // Control directo via JS — no depende solo del CSS
+            document.querySelectorAll('.tab-panel').forEach(p => {
+                p.style.display = 'none';
+                p.classList.remove('active');
+            });
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            document.getElementById(`tab-${id}`).classList.add('active');
-            if(el) el.classList.add('active');
+
+            const panel = document.getElementById(`tab-${id}`);
+            if (panel) {
+                panel.style.display = 'block';
+                panel.classList.add('active');
+            }
+            if (el) el.classList.add('active');
 
             if (window.innerWidth <= 900) toggleMenu();
 
@@ -700,7 +711,7 @@
                 candidatos: ['Elecciones', 'Gestión de candidatos electorales'],
                 comunicados: ['Comunicados', 'Publicaciones institucionales']
             };
-            if(titles[id]) {
+            if (titles[id]) {
                 document.getElementById('tab-title').textContent = titles[id][0];
                 document.getElementById('tab-subtitle').textContent = titles[id][1];
             }
@@ -710,6 +721,13 @@
             if (id === 'candidatos') loadElecciones();
             if (id === 'inscritos') loadInscritos();
         }
+
+        // Inicializar: ocultar todos menos dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+            const dash = document.getElementById('tab-dashboard');
+            if (dash) dash.style.display = 'block';
+        });
 
         function setArea(area) {
             currentArea = area;
