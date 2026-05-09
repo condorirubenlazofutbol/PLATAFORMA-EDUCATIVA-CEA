@@ -82,6 +82,8 @@
             th, td { white-space: nowrap; }
             .card-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
             .card-header .flex-center, .card-header input { width: 100%; }
+            .malla-actions { flex-direction: column; gap: 8px; }
+            .malla-actions button { width: 100%; margin: 0; }
         }
     </style>
     <script>
@@ -175,7 +177,12 @@
                 </select>
                 <label>Nombre del Módulo</label>
                 <input type="text" id="mj_modulo" required placeholder="Ej: Módulo 1 - Aritmética">
-                <button type="submit" class="btn-primary">Agregar a la Malla</button>
+                <div class="malla-actions" style="display:flex; gap:10px; margin-top:10px;">
+                    <button type="submit" class="btn-primary" style="flex:1;">Agregar a la Malla</button>
+                    <button type="button" class="btn-primary" style="background:var(--secondary); color:#111; flex:1;" onclick="descargarPlantillaMalla()">📥 Descargar Plantilla Excel</button>
+                    <button type="button" class="btn-primary" style="background:#f59e0b; color:#111; flex:1;" onclick="document.getElementById('malla-excel').click()">📤 Importar Malla (Excel)</button>
+                    <input type="file" id="malla-excel" hidden accept=".xlsx, .xls" onchange="importarMallaExcel(this)">
+                </div>
             </form>
         </div>
     </div>
@@ -196,6 +203,7 @@
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="../../portal/js/api.js"></script>
 <script>
     // ── Datos Iniciales ─────────────────────────────────────────────
@@ -304,6 +312,78 @@
         document.getElementById('formMallaJef').reset();
         setJefArea(jefArea);
     });
+
+    function descargarPlantillaMalla() {
+        const wb = XLSX.utils.book_new();
+        const wsData = [
+            ["Nivel", "Nombre del Módulo"],
+            ["Nivel Básico", "Ofimática Básica"],
+            ["Nivel Básico", "Sistemas Operativos"],
+            ["Nivel Auxiliar", "Diseño Gráfico I"],
+            ["Nivel Medio I", "Programación Web I"],
+            ["Aplicados (Primer Año)", "Matemática Aplicada"]
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        // Ajustar ancho de columnas
+        ws['!cols'] = [{wch: 30}, {wch: 40}];
+        XLSX.utils.book_append_sheet(wb, ws, "Plantilla_Malla");
+        XLSX.writeFile(wb, "Plantilla_Malla_Curricular_CEA.xlsx");
+    }
+
+    async function importarMallaExcel(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet);
+
+                if (rows.length === 0) {
+                    Swal.fire('Archivo vacío', 'El archivo Excel no contiene datos.', 'warning');
+                    return;
+                }
+
+                Swal.fire({title:'Importando...', text:'Por favor espera', allowOutsideClick:false, didOpen:()=>{Swal.showLoading()}});
+
+                let success = 0;
+                let fails = 0;
+
+                for (const row of rows) {
+                    const nivel = row["Nivel"] || row["nivel"];
+                    const nombre = row["Nombre del Módulo"] || row["nombre"] || row["modulo"];
+                    
+                    if (nivel && nombre) {
+                        try {
+                            const r = await fetch(`${API_URL}/modulos`, {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
+                                body: JSON.stringify({ nombre: nombre, nivel: nivel })
+                            });
+                            if (r.ok) success++; else fails++;
+                        } catch (err) { fails++; }
+                    } else {
+                        fails++;
+                    }
+                }
+
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Importación Completada',
+                    text: `Se agregaron ${success} módulos exitosamente. Fallaron: ${fails}.`
+                });
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'No se pudo leer el archivo Excel.', 'error');
+            }
+            input.value = "";
+        };
+        reader.readAsArrayBuffer(file);
+    }
 
     setJefArea('humanistica');
 
