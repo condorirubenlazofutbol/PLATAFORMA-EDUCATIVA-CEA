@@ -1,7 +1,9 @@
-// CEA Elecciones — API Client v5.0
+// CEA Elecciones — API Client v5.0 (Unified with Platform)
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
     ? 'http://localhost:8000'
     : 'https://educonnect-backend-ay2z.onrender.com';
+
+const apiUrl = API_URL; // alias de compatibilidad
 
 window.getApiUrl = () => API_URL;
 
@@ -10,7 +12,8 @@ async function apiFetch(endpoint, options = {}) {
   const timeoutId = setTimeout(() => controller.abort(), 30000);
   try {
     const headers = {};
-    const token = localStorage.getItem("jwt_token");
+    // Unificado: usa 'token' igual que el resto de la plataforma
+    const token = localStorage.getItem("token") || localStorage.getItem("jwt_token");
     if (token) headers["Authorization"] = `Bearer ${token}`;
     if (!(options.body instanceof FormData)) {
       headers["Content-Type"] = "application/json";
@@ -27,30 +30,25 @@ async function apiFetch(endpoint, options = {}) {
     clearTimeout(timeoutId);
     console.error("apiFetch Error:", err);
     const msg = err.name === "AbortError"
-      ? "Tiempo de espera agotado. ¿Está el backend corriendo en localhost:8000?"
+      ? "Tiempo de espera agotado. Verifica tu conexión."
       : `Error de conexión: ${err.message}`;
     return { ok: false, status: 503, json: async () => ({ detail: msg }) };
   }
 }
 
 function cerrarSesion() {
+  localStorage.removeItem("token");
   localStorage.removeItem("jwt_token");
+  localStorage.removeItem("user");
   localStorage.removeItem("user_rol");
-  const base = window.location.origin + window.location.pathname.split("/pages/")[0].split("/index.html")[0];
-  window.location.href = base + "/index.html";
+  window.location.href = "../../login.html";
 }
 
 function volverPortal() {
-  // Redirigir al portal principal sin cerrar sesión
   window.location.href = "../../portal/index.html";
 }
 
 function redirigirPorRol(rol) {
-  const base = window.location.origin +
-    window.location.pathname.replace(/\/[^/]*$/, "").replace(/\/pages$/, "");
-  if (rol === "admin") window.location.href = base + "/pages/dashboard-admin.html";
-  else if (rol === "secretaria") window.location.href = base + "/pages/dashboard-secretaria.html";
-  else if (rol === "jefe") window.location.href = base + "/pages/dashboard-jefe.html";
-  else if (rol === "votante") window.location.href = base + "/pages/dashboard-votante.html";
-  else window.location.href = base + "/index.html";
+  // Redirige al portal principal unificado
+  window.location.href = "../../portal/index.html";
 }

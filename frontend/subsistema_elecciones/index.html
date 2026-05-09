@@ -383,11 +383,11 @@
       });
       const data = await res.json();
       if (res.ok) {
-        localStorage.setItem('jwt_token', data.access_token);
-        // Usar rol devuelto por la API (también está en el payload JWT)
         const rol = data.rol || 'votante';
-        localStorage.setItem('user_rol', rol);
-        redirigirPorRol(rol);
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('user', JSON.stringify({ nombre: data.nombre || ci, apellido: data.apellido || '', rol: rol, id: data.id }));
+        // Redirigir al portal unificado
+        window.location.href = '../../portal/index.html';
       } else {
         mostrarMensaje('❌ ' + (data.detail || 'CI no encontrado en el padrón.'), 'error');
       }
@@ -428,11 +428,12 @@
 
       const data = await res.json();
       if (res.ok) {
-        localStorage.setItem('jwt_token', data.access_token);
         const payload = JSON.parse(atob(data.access_token.split('.')[1]));
         const rol = payload.rol;
-        localStorage.setItem('user_rol', rol);
-        redirigirPorRol(rol);
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('user', JSON.stringify({ nombre: payload.sub || correo, apellido: '', rol: rol, id: payload.id }));
+        // Redirigir al portal unificado
+        window.location.href = '../../portal/index.html';
       } else {
         // Manejar tanto string como array de errores (FastAPI 422)
         let msg = 'Credenciales incorrectas.';
@@ -496,16 +497,14 @@
     location.reload(true);
   }
 
-  // ─── SSO MAGIC ───
+  // ─── SSO: Si el usuario ya inició sesión en el portal, redirigir directo ───
   function checkSSO() {
     const portalToken = localStorage.getItem('token');
     const portalUser = JSON.parse(localStorage.getItem('user') || 'null');
     
     if (portalToken && portalUser) {
-        console.log("SSO: Token de portal detectado. Iniciando sesión automática...");
-        localStorage.setItem('jwt_token', portalToken);
-        localStorage.setItem('user_rol', portalUser.rol);
-        redirigirPorRol(portalUser.rol);
+        console.log("SSO: Sesión activa detectada. Redirigiendo al portal...");
+        window.location.href = '../../portal/index.html';
     }
   }
 
