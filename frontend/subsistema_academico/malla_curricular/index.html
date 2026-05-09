@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Malla Curricular | EduConnect Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         :root {
@@ -48,6 +49,22 @@
         input, select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: rgba(0,0,0,0.3); color: white; }
         .btn-add { padding: 12px 30px; background: var(--violet); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.2s; }
         .btn-add:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3); }
+        .btn-excel { padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border); font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: 0.2s; display:inline-flex; align-items:center; gap:8px; }
+        .btn-excel.download { background: rgba(34,197,94,0.12); color: #22c55e; border-color: rgba(34,197,94,0.3); }
+        .btn-excel.upload  { background: rgba(14,165,233,0.12); color: var(--primary); border-color: rgba(14,165,233,0.3); }
+        .btn-excel:hover { transform: translateY(-2px); filter: brightness(1.2); }
+        /* Validator */
+        .validator-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(8px); z-index:9000; align-items:center; justify-content:center; }
+        .validator-overlay.open { display:flex; }
+        .validator-box { background:#0f172a; border:1px solid var(--border); border-radius:20px; padding:2.5rem; max-width:820px; width:95%; max-height:90vh; overflow-y:auto; }
+        .validator-box h3 { font-size:1.4rem; font-weight:900; margin-bottom:0.5rem; }
+        .v-row { display:flex; gap:12px; align-items:center; padding:10px 14px; border-radius:10px; margin-bottom:8px; font-size:0.85rem; border:1px solid transparent; }
+        .v-row.ok  { background:rgba(34,197,94,0.08); border-color:rgba(34,197,94,0.25); color:#86efac; }
+        .v-row.err { background:rgba(244,63,94,0.08); border-color:rgba(244,63,94,0.25); color:#fda4af; }
+        .v-row.warn{ background:rgba(245,158,11,0.08); border-color:rgba(245,158,11,0.25); color:#fcd34d; }
+        .v-icon { font-size:1.1rem; flex-shrink:0; }
+        .v-msg  { flex:1; }
+        .v-meta { color:var(--muted); font-size:0.75rem; }
 
         /* Malla Visual */
         .nivel-section { margin-bottom: 3.5rem; }
@@ -98,58 +115,57 @@
 
     <div class="container">
         
+        <!-- Validator Modal -->
+        <div class="validator-overlay" id="validatorOverlay">
+            <div class="validator-box">
+                <h3>🔍 Validador de Plantilla Excel</h3>
+                <p style="color:var(--muted); margin-bottom:1.5rem; font-size:0.85rem;">Resultado del análisis fila por fila antes de importar.</p>
+                <div id="validatorResults"></div>
+                <div id="validatorSummary" style="margin-top:1.5rem; padding:1rem; border-radius:12px; font-weight:700;"></div>
+                <div style="display:flex; gap:12px; margin-top:1.5rem; flex-wrap:wrap;">
+                    <button id="btnConfirmImport" onclick="confirmarImport()" style="display:none; padding:12px 28px; background:var(--violet); color:white; border:none; border-radius:10px; font-weight:800; cursor:pointer;">✅ Confirmar e Importar</button>
+                    <button onclick="document.getElementById('validatorOverlay').classList.remove('open')" style="padding:12px 28px; background:rgba(255,255,255,0.07); color:var(--muted); border:1px solid var(--border); border-radius:10px; font-weight:700; cursor:pointer;">✕ Cerrar</button>
+                </div>
+            </div>
+        </div>
+        <input type="file" id="excel-import-input" hidden accept=".xlsx,.xls" onchange="validateAndImportExcel(this)">
+
         <!-- Panel Admin -->
         <div class="card admin-panel" id="adminPanel">
-            <h1>Gestión de Programa</h1>
-            <p style="color: var(--muted);">Añade nuevos módulos curriculares al plan de estudios institucional.</p>
-            
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
+                <div>
+                    <h1>Gestión de Programa</h1>
+                    <p style="color: var(--muted); margin-top:0.3rem;">Añade módulos manualmente o importa desde Excel con validación automática.</p>
+                </div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn-excel download" onclick="downloadPlantilla()" type="button">📥 Descargar Plantilla</button>
+                    <button class="btn-excel upload" onclick="document.getElementById('excel-import-input').click()" type="button">📤 Importar Excel</button>
+                </div>
+            </div>
+
             <div style="display:flex; gap:10px; margin-bottom: 1.5rem; margin-top: 1.5rem;">
                 <button class="btn-add" id="btn-area-humanistica" onclick="setMallaArea('humanistica')" type="button" style="background: var(--primary);">Humanística</button>
                 <button class="btn-add" id="btn-area-tecnica" onclick="setMallaArea('tecnica')" type="button" style="background: rgba(255,255,255,0.1); color: var(--muted);">Técnica</button>
             </div>
 
             <form id="formMalla" class="form-row">
-                <!-- Humanística: Materia + Nivel -->
                 <div class="input-group" id="group-materia">
-                    <label id="label-materia">Materia (Humanística)</label>
-                    <select id="nombre_materia" required>
-                        <option value="Matemática">Matemática</option>
-                        <option value="Lenguaje">Lenguaje</option>
-                        <option value="Ciencias Naturales">Ciencias Naturales</option>
-                        <option value="Ciencias Sociales">Ciencias Sociales</option>
-                    </select>
+                    <label id="label-materia">Seleccione Materia</label>
+                    <select id="nombre_materia" required></select>
                 </div>
-
-                <!-- Técnica: Carrera (hidden by default) -->
                 <div class="input-group" id="group-carrera" style="display:none">
                     <label>Carrera Técnica</label>
-                    <select id="carrera_tecnica">
-                        <option value="Sistemas Informáticos">Sistemas Informáticos</option>
-                        <option value="Veterinaria">Veterinaria</option>
-                        <option value="Educación Parvularia">Educación Parvularia</option>
-                        <option value="Fisioterapia">Fisioterapia</option>
-                        <option value="Contabilidad General">Contabilidad General</option>
-                        <option value="Corte y Confección">Corte y Confección</option>
-                        <option value="Belleza Integral">Belleza Integral</option>
-                        <option value="Gastronomía">Gastronomía</option>
-                    </select>
+                    <select id="carrera_tecnica"></select>
                 </div>
-
                 <div class="input-group">
                     <label id="label-nivel">Ciclo / Nivel</label>
-                    <select id="nivel" required>
-                        <option value="Aplicados (Primer Año)">Aplicados (Primer Año)</option>
-                        <option value="Complementarios (Segundo Año)">Complementarios (Segundo Año)</option>
-                        <option value="Especializados (Tercer Año)">Especializados (Tercer Año)</option>
-                    </select>
+                    <select id="nivel" required></select>
                 </div>
-
                 <div class="input-group">
                     <label>Nombre del Módulo</label>
                     <input type="text" id="nombre_modulo" required placeholder="Ej: Módulo 1 - Álgebra Básica">
                 </div>
-
-                <button type="submit" class="btn-add">Añadir Módulo</button>
+                <button type="submit" class="btn-add">➕ Añadir Módulo</button>
             </form>
         </div>
 
@@ -190,6 +206,190 @@
             }
         };
 
+        let pendingImportRows = [];
+
+        // ─── PLANTILLA EXCEL ───────────────────────────────────────────────
+        function downloadPlantilla() {
+            const headers = [
+                'Nivel', 'Area', 'Carrera_Curso',
+                'Modulo',
+                'Tema1', 'Subtitulos_T1',
+                'Tema2', 'Subtitulos_T2',
+                'Tema3', 'Subtitulos_T3',
+                'Tema4', 'Subtitulos_T4'
+            ];
+            const ejemplos = [
+                ['Aplicados (Primer Año)', 'Humanística', 'Matemática',
+                 'Módulo 1 - Álgebra Básica',
+                 'Introducción al Álgebra', 'Definición,Variables,Constantes,Expresiones',
+                 'Operaciones Algebraicas', 'Suma,Resta,Multiplicación,División',
+                 'Ecuaciones Lineales', 'Concepto,Solución,Verificación,Aplicaciones',
+                 'Inecuaciones', 'Definición,Tipos,Resolución,Gráfica'],
+                ['Nivel Básico', 'Técnica', 'Sistemas Informáticos',
+                 'Módulo 1 - Fundamentos TI',
+                 'Hardware', 'CPU,RAM,Disco Duro,Periféricos',
+                 'Software', 'Sistema Operativo,Aplicaciones,Licencias,Instalación',
+                 'Redes Básicas', 'LAN,WAN,Protocolo TCP/IP,DNS',
+                 'Seguridad Informática', 'Antivirus,Contraseñas,Phishing,Backup'],
+            ];
+            const ws = XLSX.utils.aoa_to_sheet([headers, ...ejemplos]);
+            // Estilos de ancho de columnas
+            ws['!cols'] = headers.map((h, i) => ({ wch: [10,12,22,30,28,35,28,35,28,35,28,35][i] || 20 }));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Malla_CEA');
+            XLSX.writeFile(wb, 'Plantilla_Malla_Curricular_CEA.xlsx');
+        }
+
+        // ─── VALIDADOR EXCEL PRO ──────────────────────────────────────────
+        function validateAndImportExcel(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const wb = XLSX.read(e.target.result, { type: 'array' });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const raw = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                if (raw.length < 2) {
+                    Swal.fire('⚠️ Plantilla vacía', 'El archivo no contiene datos.', 'warning');
+                    return;
+                }
+
+                const resultDiv  = document.getElementById('validatorResults');
+                const summaryDiv = document.getElementById('validatorSummary');
+                const btnConfirm = document.getElementById('btnConfirmImport');
+                resultDiv.innerHTML  = '';
+                summaryDiv.innerHTML = '';
+                pendingImportRows    = [];
+
+                let errores = 0, advertencias = 0, correctas = 0;
+                const dataRows = raw.slice(1); // skip header
+
+                dataRows.forEach((row, idx) => {
+                    const fila = idx + 2; // Excel fila real
+                    const [nivel, area, carreraCurso, modulo,
+                           t1, s1, t2, s2, t3, s3, t4, s4] = row.map(c => (c || '').toString().trim());
+
+                    const rowErrors = [];
+                    const rowWarns  = [];
+
+                    // Validaciones obligatorias
+                    if (!nivel)       rowErrors.push('Falta columna <b>Nivel</b>');
+                    if (!area)        rowErrors.push('Falta columna <b>Área</b>');
+                    if (!carreraCurso) rowErrors.push('Falta columna <b>Carrera/Curso</b>');
+                    if (!modulo)      rowErrors.push('Falta columna <b>Módulo</b>');
+
+                    // Validar 4 temas y sus 4 subtítulos cada uno
+                    const temas = [
+                        { num: 1, titulo: t1, subs: s1 },
+                        { num: 2, titulo: t2, subs: s2 },
+                        { num: 3, titulo: t3, subs: s3 },
+                        { num: 4, titulo: t4, subs: s4 },
+                    ];
+                    temas.forEach(t => {
+                        if (!t.titulo) {
+                            rowErrors.push(`Falta el <b>Tema ${t.num}</b>`);
+                        } else {
+                            const subList = t.subs ? t.subs.split(',').map(s => s.trim()).filter(Boolean) : [];
+                            if (subList.length < 4) {
+                                rowErrors.push(`Tema ${t.num} "<i>${t.titulo}</i>" necesita 4 subtítulos separados por coma (tiene ${subList.length})`);
+                            }
+                        }
+                    });
+
+                    // Advertencias
+                    if (area && !['Humanística','Técnica','humanistica','tecnica'].includes(area)) {
+                        rowWarns.push(`Área "<b>${area}</b>" no reconocida — revise (Human\u00edstica / T\u00e9cnica)`);
+                    }
+
+                    const hasErrors = rowErrors.length > 0;
+                    const haswarn   = rowWarns.length > 0;
+
+                    if (hasErrors) errores++;
+                    else if (haswarn) { advertencias++; correctas++; }
+                    else correctas++;
+
+                    const type = hasErrors ? 'err' : (haswarn ? 'warn' : 'ok');
+                    const icon = hasErrors ? '❌' : (haswarn ? '⚠️' : '✅');
+                    const msgs = [...rowErrors, ...rowWarns];
+
+                    resultDiv.innerHTML += `
+                        <div class="v-row ${type}">
+                            <span class="v-icon">${icon}</span>
+                            <div class="v-msg">
+                                <b>Fila ${fila}:</b> ${modulo || '(sin nombre)'} — ${carreraCurso || ''}
+                                ${msgs.length ? '<br><small style="opacity:0.9;">• ' + msgs.join('<br>• ') + '</small>' : ''}
+                            </div>
+                            <span class="v-meta">${nivel || ''} · ${area || ''}</span>
+                        </div>`;
+
+                    if (!hasErrors) {
+                        // Preparar payload válido para importar
+                        pendingImportRows.push({ nivel, area, carreraCurso, modulo,
+                            temas: temas.map(t => ({
+                                numero: t.num,
+                                titulo: t.titulo,
+                                subtitulos: (t.subs||'').split(',').map(s=>s.trim()).filter(Boolean)
+                            }))
+                        });
+                    }
+                });
+
+                // Resumen
+                const allOk = errores === 0;
+                summaryDiv.style.background = allOk ? 'rgba(34,197,94,0.1)' : 'rgba(244,63,94,0.1)';
+                summaryDiv.style.color = allOk ? '#86efac' : '#fda4af';
+                summaryDiv.style.border = `1px solid ${allOk ? 'rgba(34,197,94,0.3)' : 'rgba(244,63,94,0.3)'}`;
+                summaryDiv.innerHTML = allOk
+                    ? `✅ Validación exitosa — ${correctas} filas listas para importar.`
+                    : `❌ ${errores} fila(s) con errores · ${advertencias} advertencia(s) · ${correctas} correctas. Corrija los errores antes de importar.`;
+
+                btnConfirm.style.display = allOk && pendingImportRows.length ? '' : 'none';
+                document.getElementById('validatorOverlay').classList.add('open');
+            };
+            reader.readAsArrayBuffer(file);
+            input.value = '';
+        }
+
+        async function confirmarImport() {
+            if (!pendingImportRows.length) return;
+            document.getElementById('btnConfirmImport').textContent = '⏳ Importando...';
+            document.getElementById('btnConfirmImport').disabled = true;
+
+            let ok = 0, fail = 0;
+            for (const row of pendingImportRows) {
+                // Buscar carrera en DB
+                const matchArea = row.area.toLowerCase().includes('hum') ? 'Humanística' : 'Técnica';
+                const carrera = carrerasDB.find(c =>
+                    c.nombre.toLowerCase() === row.carreraCurso.toLowerCase() &&
+                    c.area.includes(matchArea)
+                );
+                if (!carrera) { fail++; continue; }
+
+                try {
+                    const res = await fetch(`${API_URL}/malla/modulo`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({
+                            carrera_id: carrera.id,
+                            nombre: row.modulo,
+                            nivel: row.nivel,
+                            area: matchArea,
+                            temas: row.temas
+                        })
+                    });
+                    res.ok ? ok++ : fail++;
+                } catch { fail++; }
+            }
+
+            document.getElementById('validatorOverlay').classList.remove('open');
+            Swal.fire(
+                ok > 0 ? '¡Importación Completa!' : 'Sin cambios',
+                `✅ ${ok} módulo(s) importados correctamente.${fail ? `\n⚠️ ${fail} no pudieron importarse (verifique permisos o carrera).` : ''}`,
+                ok > 0 ? 'success' : 'warning'
+            ).then(() => cargarMalla());
+        }
+
+
         let carrerasDB = [];
 
         async function cargarCarreras() {
@@ -201,6 +401,7 @@
             } catch (e) {
                 console.error("Error cargando carreras:", e);
             }
+
         }
 
         function setMallaArea(area) {
