@@ -28,44 +28,57 @@ def get_modulos(current_user: dict = Depends(get_current_user)):
             # Estudiante: Solo módulos de su carrera e inscripciones
             cur.execute("""
                 SELECT m.id, m.nombre, m.nivel, m.subnivel, m.orden, 
-                       m.carrera_id, m.periodo, c.nombre as carrera_nombre 
+                       m.carrera_id, m.periodo, c.nombre as carrera_nombre,
+                       m.docente_id, (u.nombre || ' ' || u.apellido) as docente_nombre
                 FROM modulos m
                 JOIN carreras c ON m.carrera_id = c.id
                 JOIN inscripciones i ON i.carrera_id = c.id
+                LEFT JOIN usuarios u ON m.docente_id = u.id
                 WHERE i.usuario_id = %s
                 ORDER BY m.orden, m.id
             """, (current_user["id"],))
         elif current_user["rol"] in ["docente", "profesor"]:
-            # Docente: Filtrar por nivel asignado si lo tiene
-            nivel = current_user.get("nivel_asignado")
-            if nivel:
-                cur.execute("""
-                    SELECT m.id, m.nombre, m.nivel, m.subnivel, m.orden, 
-                           m.carrera_id, m.periodo, c.nombre as carrera_nombre 
-                    FROM modulos m
-                    LEFT JOIN carreras c ON m.carrera_id = c.id
-                    WHERE m.nivel = %s
-                    ORDER BY m.orden, m.id
-                """, (nivel,))
-            else:
-                cur.execute("""
-                    SELECT m.id, m.nombre, m.nivel, m.subnivel, m.orden, 
-                           m.carrera_id, m.periodo, c.nombre as carrera_nombre 
-                    FROM modulos m
-                    LEFT JOIN carreras c ON m.carrera_id = c.id
-                    ORDER BY m.orden, m.id
-                """)
+            # Docente: Filtrar por módulos asignados a este docente
+            cur.execute("""
+                SELECT m.id, m.nombre, m.nivel, m.subnivel, m.orden, 
+                       m.carrera_id, m.periodo, c.nombre as carrera_nombre,
+                       m.docente_id, (u.nombre || ' ' || u.apellido) as docente_nombre
+                FROM modulos m
+                LEFT JOIN carreras c ON m.carrera_id = c.id
+                LEFT JOIN usuarios u ON m.docente_id = u.id
+                WHERE m.docente_id = %s
+                ORDER BY m.orden, m.id
+            """, (current_user["id"],))
         else:
             # Admin/Director: Ver todo el CEA
             cur.execute("""
                 SELECT m.id, m.nombre, m.nivel, m.subnivel, m.orden, 
-                       m.carrera_id, m.periodo, c.nombre as carrera_nombre 
+                       m.carrera_id, m.periodo, c.nombre as carrera_nombre,
+                       m.docente_id, (u.nombre || ' ' || u.apellido) as docente_nombre
                 FROM modulos m
                 LEFT JOIN carreras c ON m.carrera_id = c.id
+                LEFT JOIN usuarios u ON m.docente_id = u.id
                 ORDER BY m.orden, m.id
             """)
             
         return {"modulos": rows_to_dicts(cur, cur.fetchall())}
+    finally: conn.close()
+
+class AsignarDocente(BaseModel):
+    modulo_id: int
+    docente_id: int
+
+@router.post("/asignar-docente")
+def asignar_docente(data: AsignarDocente, current_user: dict = Depends(get_current_user)):
+    if current_user["rol"] not in ["jefe_carrera", "director", "admin"]:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    conn = get_db_connection()
+    if not conn: raise HTTPException(status_code=500, detail="Error DB")
+    try:
+        cur = conn.cursor()
+        cur.execute("UPDATE modulos SET docente_id = %s WHERE id = %s", (data.docente_id, data.modulo_id))
+        conn.commit()
+        return {"mensaje": "Docente asignado correctamente"}
     finally: conn.close()
 
 @router.get("/stats")

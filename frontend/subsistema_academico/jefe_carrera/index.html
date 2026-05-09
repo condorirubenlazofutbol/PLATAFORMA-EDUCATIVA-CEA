@@ -275,29 +275,71 @@
 
     async function cargarDocentes() {
         const list = document.getElementById('asignacionList');
-        const mockModulos = [
-            {id:1, nombre:'Ofimática Básica', nivel:'Primer Semestre', docente:'Sin asignar'},
-            {id:2, nombre:'Diseño Gráfico I', nivel:'Segundo Semestre', docente:'Prof. Ruiz'},
-            {id:3, nombre:'Programación Web', nivel:'Tercer Semestre', docente:'Sin asignar'}
-        ];
-        list.innerHTML = '';
-        mockModulos.forEach(m => {
-            list.innerHTML += `
-                <div class="assign-card">
-                    <div class="assign-info">
-                        <h4>${m.nombre}</h4>
-                        <p>${m.nivel} · Docente actual: <strong>${m.docente}</strong></p>
-                    </div>
-                    <div style="display:flex; gap:0.5rem; align-items:center;">
-                        <select class="assign-select">
-                            <option>Prof. García</option>
-                            <option>Prof. Ruiz</option>
-                            <option>Prof. Flores</option>
-                        </select>
-                        <button class="btn-assign" onclick="Swal.fire({icon:'success',title:'Docente asignado',timer:1200,showConfirmButton:false})">Asignar</button>
-                    </div>
-                </div>`;
-        });
+        list.innerHTML = '<p style="color:var(--muted); text-align:center;">Cargando módulos y docentes...</p>';
+        try {
+            // Obtener profesores
+            const rProf = await fetch(`${API_URL}/auth/profesores`, {headers:{'Authorization':`Bearer ${token}`}});
+            const dProf = await rProf.json();
+            const profesores = dProf.profesores || [];
+            
+            // Obtener módulos
+            const rMod = await fetch(`${API_URL}/modulos`, {headers:{'Authorization':`Bearer ${token}`}});
+            const dMod = await rMod.json();
+            const modulos = dMod.modulos || [];
+            
+            list.innerHTML = '';
+            if(modulos.length === 0) {
+                list.innerHTML = '<p style="color:var(--muted); text-align:center;">No hay módulos registrados.</p>';
+                return;
+            }
+            
+            let profOptions = '<option value="">-- Seleccionar Docente --</option>';
+            profesores.forEach(p => {
+                profOptions += `<option value="${p.id}">${p.nombre} ${p.apellido}</option>`;
+            });
+
+            modulos.forEach(m => {
+                const docenteActual = m.docente_nombre ? m.docente_nombre : 'Sin asignar';
+                list.innerHTML += `
+                    <div class="assign-card">
+                        <div class="assign-info">
+                            <h4>${m.nombre}</h4>
+                            <p>${m.carrera_nombre || 'Área General'} - ${m.nivel} <br> Docente actual: <strong style="color:var(--primary);">${docenteActual}</strong></p>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                            <select class="assign-select" id="sel-doc-${m.id}">
+                                ${profOptions}
+                            </select>
+                            <button class="btn-assign" onclick="asignarDocente(${m.id})">Asignar</button>
+                        </div>
+                    </div>`;
+            });
+        } catch(e) {
+            list.innerHTML = '<p style="color:#f43f5e; text-align:center;">Error al cargar datos de red.</p>';
+        }
+    }
+
+    async function asignarDocente(moduloId) {
+        const docenteId = document.getElementById(`sel-doc-${moduloId}`).value;
+        if(!docenteId) {
+            Swal.fire('Atención', 'Selecciona un docente primero.', 'warning');
+            return;
+        }
+        try {
+            const r = await fetch(`${API_URL}/modulos/asignar-docente`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
+                body: JSON.stringify({modulo_id: parseInt(moduloId), docente_id: parseInt(docenteId)})
+            });
+            if(r.ok) {
+                Swal.fire({icon:'success',title:'Docente asignado',timer:1200,showConfirmButton:false});
+                cargarDocentes(); // recargar vista
+            } else {
+                Swal.fire('Error', 'No se pudo asignar.', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Error de red.', 'error');
+        }
     }
 
     async function cargarNotasJef() {
