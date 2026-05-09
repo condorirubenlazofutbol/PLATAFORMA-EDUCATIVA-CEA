@@ -54,7 +54,8 @@
             flex-direction: column;
             padding: 2rem 1.2rem;
             height: 100vh;
-            z-index: 100;
+            z-index: 1001;
+            position: relative;
         }
 
         .brand {
@@ -264,8 +265,8 @@
             .btn-menu { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; }
         }
         
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; backdrop-filter: blur(4px); }
-        .overlay.active { display: block; }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 998; backdrop-filter: blur(4px); pointer-events: none; }
+        .overlay.active { display: block; pointer-events: auto; }
 
         /* TAB VISIBILITY — CRITICAL */
         .tab-panel { display: none; }
