@@ -290,12 +290,9 @@
             <div class="nav-item active" onclick="showTab('dashboard', this)">
                 <span>📊</span> Dashboard
             </div>
-            <div class="nav-item" onclick="showTab('inscripciones', this)">
-                <span>📝</span> Inscripciones
-            </div>
-            <div class="nav-item" onclick="showTab('usuarios', this)">
-                <span>👥</span> Directorio
-            </div>
+            <div class="nav-item" onclick="showTab('inscripciones', this)">📝 Inscripciones</div>
+            <div class="nav-item" onclick="showTab('inscritos', this)">📋 Lista Inscritos</div>
+            <div class="nav-item" onclick="showTab('usuarios', this)">👥 Directorio</div>
         </div>
 
         <div class="nav-group">
@@ -571,7 +568,29 @@
             </div>
         </section>
 
-        <!-- TAB: COMUNICADOS -->
+        <!-- TAB: LISTA INSCRITOS -->
+        <section id="tab-inscritos" class="tab-panel">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📋 Lista de Inscritos</h3>
+                    <div class="flex-center">
+                        <input type="text" id="filter-inscritos" placeholder="Buscar por nombre, CI, carrera..." oninput="filtrarInscritos(this.value)" style="min-width:250px;">
+                        <button class="btn-action btn-outline" onclick="exportarInscritos()">📥 Exportar Excel</button>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr>
+                            <th>Estudiante</th><th>CI</th><th>Área</th><th>Carrera</th>
+                            <th>Nivel</th><th>Paralelo</th><th>Estado</th><th>Acciones</th>
+                        </tr></thead>
+                        <tbody id="inscritos-tbody">
+                            <tr><td colspan="8" style="text-align:center; color:var(--muted);">⏳ Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
         <section id="tab-comunicados" class="tab-panel">
             <div class="card">
                 <div class="card-header">
@@ -600,36 +619,30 @@
     <script src="../../portal/js/api.js"></script>
     <script>
         let currentArea = 'humanistica';
+        let currentDocArea = 'humanistica';
         let allUsers = [];
+        let allInscritos = [];
+        let carrerasDB = [];
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || '{}');
 
         if (!token) window.location.href = '../../login.html';
-        if (!['secretaria', 'admin', 'administrador'].includes(user.rol)) window.location.href = '../../portal/index.html';
+        if (!['secretaria', 'admin', 'administrador', 'director'].includes(user.rol)) window.location.href = '../../portal/index.html';
 
-        // Init UI
         document.getElementById('user-name').textContent = user.nombre || 'Secretaría';
         document.getElementById('user-initials').textContent = (user.nombre || 'S')[0];
 
-        const levels = {
-            humanistica: ['Aplicados (Primer Año)', 'Complementarios (Segundo Año)', 'Especializados (Tercer Año)'],
-            tecnica_carreras: [
-                'Sistemas Informáticos', 
-                'Gastronomía', 
-                'Belleza Integral', 
-                'Corte y Confección', 
-                'Educación Parvularia', 
-                'Contabilidad General', 
-                'Fisioterapia', 
-                'Veterinaria'
-            ],
-            tecnica_niveles: [
-                'Nivel Básico',
-                'Nivel Auxiliar',
-                'Nivel Medio I',
-                'Nivel Medio II'
-            ]
-        };
+        // Cargar carreras dinámicas desde la API
+        async function loadCarreras() {
+            try {
+                const r = await fetch(`${API_URL}/malla/carreras`, { headers: {'Authorization': `Bearer ${token}`} });
+                const d = await r.json();
+                carrerasDB = d.carreras || [];
+                // Inicializar formularios con datos reales
+                setArea('humanistica');
+                setDocArea('humanistica');
+            } catch(e) { console.error('Error cargando carreras:', e); }
+        }
 
         // ======= Responsive Logic =======
         function toggleMenu() {
@@ -669,47 +682,57 @@
         function showTab(id, el) {
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            
             document.getElementById(`tab-${id}`).classList.add('active');
-            el.classList.add('active');
+            if(el) el.classList.add('active');
 
             if (window.innerWidth <= 900) toggleMenu();
 
             const titles = {
                 dashboard: ['Panel de Control', 'Resumen general de la institución'],
                 inscripciones: ['Inscripciones', 'Gestión de ingreso de estudiantes'],
+                inscritos: ['Lista de Inscritos', 'Estudiantes matriculados con paralelo asignado'],
                 usuarios: ['Directorio', 'Lista completa de usuarios'],
                 docentes: ['Cuerpo Docente', 'Registro de profesores'],
                 candidatos: ['Elecciones', 'Gestión de candidatos electorales'],
                 comunicados: ['Comunicados', 'Publicaciones institucionales']
             };
-            document.getElementById('tab-title').textContent = titles[id][0];
-            document.getElementById('tab-subtitle').textContent = titles[id][1];
+            if(titles[id]) {
+                document.getElementById('tab-title').textContent = titles[id][0];
+                document.getElementById('tab-subtitle').textContent = titles[id][1];
+            }
 
             if (id === 'dashboard') loadStats();
             if (id === 'usuarios') loadUsers();
             if (id === 'candidatos') loadElecciones();
+            if (id === 'inscritos') loadInscritos();
         }
 
         function setArea(area) {
             currentArea = area;
-            document.querySelectorAll('.area-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${area}`).classList.add('active');
-            
+            document.querySelectorAll('#tab-inscripciones .area-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById(`btn-${area}`);
+            if(btn) btn.classList.add('active');
+
             const selectNivel = document.getElementById('ins_nivel');
             const selectCarrera = document.getElementById('ins_carrera');
             const carreraGroup = document.getElementById('carrera-group');
-            
+
             if (area === 'humanistica') {
                 carreraGroup.classList.add('hidden');
                 selectCarrera.removeAttribute('required');
-                selectNivel.innerHTML = levels.humanistica.map(l => `<option value="${l}">${l}</option>`).join('');
+                selectNivel.innerHTML = ['Aplicados (Primer Año)', 'Complementarios (Segundo Año)', 'Especializados (Tercer Año)']
+                    .map(l => `<option value="${l}">${l}</option>`).join('');
                 document.getElementById('level-label').textContent = 'Curso';
             } else {
                 carreraGroup.classList.remove('hidden');
                 selectCarrera.setAttribute('required', 'true');
-                selectCarrera.innerHTML = levels.tecnica_carreras.map(c => `<option value="${c}">${c}</option>`).join('');
-                selectNivel.innerHTML = levels.tecnica_niveles.map(l => `<option value="${l}">${l}</option>`).join('');
+                // Usar carreras reales de la API
+                const tecnicas = carrerasDB.filter(c => c.area && c.area.toLowerCase().includes('técnica'));
+                selectCarrera.innerHTML = tecnicas.length
+                    ? tecnicas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('')
+                    : '<option value="Sistemas Informáticos">Sistemas Informáticos</option>';
+                selectNivel.innerHTML = ['Nivel Básico', 'Nivel Auxiliar', 'Nivel Medio I', 'Nivel Medio II']
+                    .map(l => `<option value="${l}">${l}</option>`).join('');
                 document.getElementById('level-label').textContent = 'Nivel Técnico';
             }
         }
@@ -739,11 +762,21 @@
             document.getElementById('btn-doc-humanistica').classList.remove('active');
             document.getElementById('btn-doc-tecnica').classList.remove('active');
             document.getElementById(`btn-doc-${area}`).classList.add('active');
-            
+
             const select = document.getElementById('doc_especialidad');
-            select.innerHTML = docLevels[area].map(l => `<option value="${l}">${l}</option>`).join('');
-            
-            document.getElementById('doc-level-label').textContent = area === 'humanistica' ? 'Materia' : 'Carrera Técnica';
+            if(area === 'humanistica') {
+                const hum = carrerasDB.filter(c => c.area && c.area.toLowerCase().includes('humanística'));
+                select.innerHTML = hum.length
+                    ? hum.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('')
+                    : ['Matemática','Lenguaje','Ciencias Naturales','Ciencias Sociales'].map(l=>`<option>${l}</option>`).join('');
+                document.getElementById('doc-level-label').textContent = 'Materia';
+            } else {
+                const tec = carrerasDB.filter(c => c.area && c.area.toLowerCase().includes('técnica'));
+                select.innerHTML = tec.length
+                    ? tec.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('')
+                    : '<option value="Sistemas Informáticos">Sistemas Informáticos</option>';
+                document.getElementById('doc-level-label').textContent = 'Carrera Técnica';
+            }
         }
 
         function updateDocEmailPreview() {
@@ -773,8 +806,80 @@
             try {
                 const r = await fetch(`${API_URL}/auth/usuarios`, { headers: {'Authorization': `Bearer ${token}`} });
                 allUsers = await r.json();
-                renderUserTable(allUsers);
+                if(Array.isArray(allUsers)) renderUserTable(allUsers);
             } catch (e) { console.error(e); }
+        }
+
+        async function loadInscritos() {
+            const tbody = document.getElementById('inscritos-tbody');
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted);">⏳ Cargando inscripciones...</td></tr>`;
+            try {
+                const r = await fetch(`${API_URL}/auth/inscripciones`, { headers: {'Authorization': `Bearer ${token}`} });
+                const d = await r.json();
+                allInscritos = d.inscripciones || [];
+                renderInscritosTable(allInscritos);
+            } catch(e) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--rose);">❌ Error cargando inscripciones.</td></tr>`;
+            }
+        }
+
+        function renderInscritosTable(list) {
+            const tbody = document.getElementById('inscritos-tbody');
+            if(!list.length) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted);">Sin inscripciones registradas.</td></tr>`;
+                return;
+            }
+            const estadoColors = { activo: '#22c55e', pausado: '#f59e0b', retirado: '#f43f5e' };
+            tbody.innerHTML = list.map(i => `
+                <tr>
+                    <td><b>${i.nombre} ${i.apellido}</b><br><small style="color:var(--muted);">${i.email}</small></td>
+                    <td style="font-family:monospace;">${i.carnet || '-'}</td>
+                    <td><span class="badge" style="background:rgba(139,92,246,0.2); color:#c4b5fd; font-size:0.7rem;">${i.carrera_area || '-'}</span></td>
+                    <td>${i.carrera_nombre || '-'}</td>
+                    <td>${i.nivel || '-'}</td>
+                    <td><span class="badge" style="background:rgba(14,165,233,0.2); color:var(--primary); font-weight:800;">Paralelo ${i.paralelo || 'A'}</span></td>
+                    <td><span class="badge" style="background:${estadoColors[i.estado]||'#22c55e'}22; color:${estadoColors[i.estado]||'#22c55e'}; text-transform:capitalize;">${i.estado || 'activo'}</span></td>
+                    <td>
+                        <button onclick="toggleEstadoInscripcion(${i.id})" style="background:transparent; border:1px solid var(--border); color:var(--muted); padding:4px 8px; border-radius:6px; cursor:pointer; font-size:0.75rem;">Cambiar Estado</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filtrarInscritos(val) {
+            const q = val.toLowerCase();
+            renderInscritosTable(allInscritos.filter(i =>
+                `${i.nombre} ${i.apellido} ${i.carnet} ${i.carrera_nombre} ${i.nivel}`.toLowerCase().includes(q)
+            ));
+        }
+
+        async function toggleEstadoInscripcion(id) {
+            try {
+                const r = await fetch(`${API_URL}/auth/inscripciones/${id}/estado`, {
+                    method: 'PUT',
+                    headers: {'Authorization': `Bearer ${token}`}
+                });
+                if(r.ok) { loadInscritos(); }
+                else { Swal.fire('Error', 'No se pudo cambiar el estado', 'error'); }
+            } catch(e) {}
+        }
+
+        function exportarInscritos() {
+            if(!allInscritos.length) return Swal.fire('Aviso', 'No hay datos para exportar.', 'info');
+            const ws = XLSX.utils.json_to_sheet(allInscritos.map(i => ({
+                'Nombres': `${i.nombre} ${i.apellido}`,
+                'CI/Carnet': i.carnet,
+                'Email': i.email,
+                'Área': i.carrera_area,
+                'Carrera': i.carrera_nombre,
+                'Nivel': i.nivel,
+                'Paralelo': i.paralelo,
+                'Estado': i.estado,
+                'Fecha Inscripción': i.fecha_inscripcion
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Inscritos');
+            XLSX.writeFile(wb, `Inscritos_CEA_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
         }
 
         function renderUserTable(list) {
@@ -979,8 +1084,7 @@
         }
 
         // Init
-        setArea('humanistica');
-        setDocArea('humanistica');
+        loadCarreras();
         loadStats();
     </script>
 </body>

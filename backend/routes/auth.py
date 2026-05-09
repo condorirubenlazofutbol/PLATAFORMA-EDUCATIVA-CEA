@@ -284,6 +284,77 @@ def get_profesores():
     finally:
         conn.close()
 
+@router.get("/usuarios")
+def get_usuarios(current_user: dict = Depends(get_current_user)):
+    """Lista todos los usuarios para la Secretaría/Director/Admin."""
+    if current_user["rol"] not in ["admin", "administrador", "director", "secretaria"]:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Error de base de datos")
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT u.id, u.nombre, u.apellido, u.email, u.rol, u.nivel_asignado, 
+                   u.carnet, u.estado, u.fecha_registro
+            FROM usuarios u
+            ORDER BY u.rol, u.nombre
+        """)
+        return rows_to_dicts(cur, cur.fetchall())
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+@router.get("/inscripciones")
+def get_inscripciones(current_user: dict = Depends(get_current_user)):
+    """Lista todas las inscripciones con datos del estudiante, carrera y paralelo."""
+    if current_user["rol"] not in ["admin", "administrador", "director", "secretaria", "jefe_carrera"]:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Error de base de datos")
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT 
+                i.id, i.usuario_id, i.carrera_id, i.nivel, i.paralelo, i.estado, i.fecha_inscripcion,
+                u.nombre, u.apellido, u.carnet, u.email,
+                c.nombre AS carrera_nombre, c.area AS carrera_area
+            FROM inscripciones i
+            JOIN usuarios u ON u.id = i.usuario_id
+            JOIN carreras c ON c.id = i.carrera_id
+            ORDER BY c.area, c.nombre, i.nivel, i.paralelo, u.apellido
+        """)
+        return {"inscripciones": rows_to_dicts(cur, cur.fetchall())}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+@router.put("/inscripciones/{inscripcion_id}/estado")
+def cambiar_estado_inscripcion(inscripcion_id: int, current_user: dict = Depends(get_current_user)):
+    """Cambia el estado de una inscripción (activo/pausado/retirado)."""
+    if current_user["rol"] not in ["admin", "administrador", "director", "secretaria"]:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Error de base de datos")
+    try:
+        from pydantic import BaseModel as BM
+        # State toggle: activo -> pausado -> retirado -> activo
+        cur = conn.cursor()
+        cur.execute("SELECT estado FROM inscripciones WHERE id=%s", (inscripcion_id,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(404, "Inscripción no encontrada")
+        next_state = {"activo": "pausado", "pausado": "retirado", "retirado": "activo"}.get(row[0], "activo")
+        cur.execute("UPDATE inscripciones SET estado=%s WHERE id=%s", (next_state, inscripcion_id))
+        conn.commit()
+        return {"nuevo_estado": next_state}
+    finally:
+        conn.close()
+
 @router.get("/personal")
 def get_personal(current_user: dict = Depends(get_current_user)):
     if current_user["rol"] not in ["admin", "director", "secretaria"]:
