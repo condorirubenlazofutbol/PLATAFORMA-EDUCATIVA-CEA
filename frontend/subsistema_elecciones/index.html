@@ -386,8 +386,7 @@
         const rol = data.rol || 'votante';
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('user', JSON.stringify({ nombre: data.nombre || ci, apellido: data.apellido || '', rol: rol, id: data.id }));
-        // Redirigir al portal unificado
-        window.location.href = '../../portal/index.html';
+        redirigirPorRol(rol);
       } else {
         mostrarMensaje('❌ ' + (data.detail || 'CI no encontrado en el padrón.'), 'error');
       }
@@ -432,8 +431,7 @@
         const rol = payload.rol;
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('user', JSON.stringify({ nombre: payload.sub || correo, apellido: '', rol: rol, id: payload.id }));
-        // Redirigir al portal unificado
-        window.location.href = '../../portal/index.html';
+        redirigirPorRol(rol);
       } else {
         // Manejar tanto string como array de errores (FastAPI 422)
         let msg = 'Credenciales incorrectas.';
@@ -503,8 +501,8 @@
     const portalUser = JSON.parse(localStorage.getItem('user') || 'null');
     
     if (portalToken && portalUser) {
-        console.log("SSO: Sesión activa detectada. Redirigiendo al portal...");
-        window.location.href = '../../portal/index.html';
+        console.log("SSO: Sesión activa detectada. Redirigiendo a dashboard de votación...");
+        redirigirPorRol(portalUser.rol);
     }
   }
 

@@ -49,6 +49,19 @@ function volverPortal() {
 }
 
 function redirigirPorRol(rol) {
-  // Redirige al portal principal unificado
-  window.location.href = "../../portal/index.html";
+  const isLocal = window.location.protocol === 'file:';
+  let base = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "").replace(/\/pages$/, "");
+  if (isLocal) {
+      base = window.location.pathname.replace(/\/[^/]*$/, "").replace(/\/pages$/, "");
+  }
+  
+  if (rol === "admin" || rol === "administrador" || rol === "director") {
+      window.location.href = base + "/pages/dashboard-admin.html";
+  } else if (rol === "secretaria") {
+      window.location.href = base + "/pages/dashboard-secretaria.html";
+  } else if (rol === "jefe" || rol === "jefe_carrera") {
+      window.location.href = base + "/pages/dashboard-jefe.html";
+  } else {
+      window.location.href = base + "/pages/dashboard-votante.html";
+  }
 }

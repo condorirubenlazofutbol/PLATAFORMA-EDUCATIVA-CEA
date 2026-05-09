@@ -230,7 +230,30 @@
       const esTecnica = carrera.area === 'Técnica';
       const iconClass = esTecnica ? 'icon-tecnica' : 'icon-humanistica';
       const icon = getIcon(carrera.nombre);
-      const niveles = carrera.niveles || [];
+      let niveles = carrera.niveles || [];
+      
+      // ORDENAR NIVELES OFICIALES
+      if (esTecnica) {
+        const orderTech = { 'básico': 1, 'auxiliar': 2, 'medio i': 3, 'medio ii': 4 };
+        niveles.sort((a, b) => {
+          let aStr = (a.nivel || '').toLowerCase();
+          let bStr = (b.nivel || '').toLowerCase();
+          let wa = 99, wb = 99;
+          for (let key in orderTech) if (aStr.includes(key)) wa = orderTech[key];
+          for (let key in orderTech) if (bStr.includes(key)) wb = orderTech[key];
+          return wa - wb;
+        });
+      } else {
+        const orderHum = { 'aplicados': 1, 'complementarios': 2, 'especializados': 3 };
+        niveles.sort((a, b) => {
+          let aStr = (a.nivel || '').toLowerCase();
+          let bStr = (b.nivel || '').toLowerCase();
+          let wa = 99, wb = 99;
+          for (let key in orderHum) if (aStr.includes(key)) wa = orderHum[key];
+          for (let key in orderHum) if (bStr.includes(key)) wb = orderHum[key];
+          return wa - wb;
+        });
+      }
 
       const nivelesHTML = niveles.map(niv => {
         const modHTML = (niv.modulos || []).map((mod, mi) => {
