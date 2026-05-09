@@ -7,15 +7,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --azul:#003580; --azul-c:#0056b3; --dorado:#f5a623;
-      --verde:#16a34a; --rojo:#dc2626; --naranja:#ea580c;
-      --bg:#f0f4ff; --card:#ffffff; --text:#1a1a2e; --muted:#6b7280;
+      --azul: #0ea5e9; --azul-c: #8b5cf6; --dorado: #f59e0b;
+      --verde: #10b981; --rojo: #f43f5e; --naranja: #f97316;
+      --bg: #0b0f1a; --card: rgba(19, 25, 41, 0.7); --text: #f8fafc; --muted: #94a3b8;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
     header {
-      background:linear-gradient(135deg,var(--azul),#001f5b);
+      background: rgba(11, 15, 26, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       padding:14px 24px; display:flex; align-items:center; justify-content:space-between;
       box-shadow:0 4px 20px rgba(0,53,128,0.4); position:sticky; top:0; z-index:100;
     }
@@ -57,11 +57,18 @@
     /* STATS */
     .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:30px; }
     .stat-card {
-      background:var(--card); border-radius:14px; padding:16px 18px;
-      box-shadow:0 2px 12px rgba(0,53,128,0.07); border:1px solid rgba(0,53,128,0.06);
-      display:flex; align-items:center; gap:12px;
+      background: var(--card); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px; padding: 24px; display:flex; align-items:center; gap:16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2); transition:transform 0.2s;
     }
-    .stat-icono { font-size:1.8rem; }
+    .stat-card:hover { transform:translateY(-4px); border-color: var(--azul); }
+    .stat-icon {
+      width: 56px; height: 56px; border-radius: 12px;
+      display:flex; align-items:center; justify-content:center; font-size:1.8rem;
+    }
+    .ico-azul { background: rgba(14,165,233,0.15); color: var(--azul); border: 1px solid rgba(14,165,233,0.3); }
+    .ico-naranja { background: rgba(249,115,22,0.15); color: var(--naranja); border: 1px solid rgba(249,115,22,0.3); }
+    .ico-verde { background: rgba(16,185,129,0.15); color: var(--verde); border: 1px solid rgba(16,185,129,0.3); }
     .stat-valor { font-size:1.5rem; font-weight:800; color:var(--azul); line-height:1; }
     .stat-label { font-size:0.7rem; color:var(--muted); margin-top:3px; font-weight:500; }
 
