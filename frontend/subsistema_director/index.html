@@ -69,16 +69,48 @@ header{background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(12px);border-bottom
 
 @media(max-width:900px){.layout{grid-template-columns:1fr;}}
 @media(max-width:700px){
-  header{flex-wrap:wrap;gap:8px;padding:10px 14px;}
-  .h-brand{flex-wrap:wrap;}
-  .btn-back{font-size:.75rem;padding:6px 12px;}
-  .kpi-grid{grid-template-columns:1fr 1fr;}
-  .container{padding:14px 10px;}
-  .tabs{flex-wrap:wrap;gap:6px;padding:10px 10px 0;}
-  .tab-btn{padding:8px 14px;font-size:.8rem;}
+  header{flex-wrap:nowrap;gap:6px;padding:8px 10px;}
+  .h-brand{flex-wrap:nowrap;gap:8px;}
+  .h-logo{width:32px;height:32px;font-size:1rem !important;}
+  .h-title h1{font-size:.85rem;}
+  .h-title p{font-size:.65rem;}
+  .btn-back{font-size:.65rem;padding:6px 10px;white-space:nowrap;}
+  
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .kpi-card{padding:12px;gap:8px;}
+  .kpi-icon{width:40px;height:40px;font-size:1.2rem;}
+  .kpi-info h3{font-size:.65rem;}
+  .kpi-info .num{font-size:1.4rem;}
+  
+  .container{padding:10px 8px;}
+  .tabs{flex-wrap:nowrap;gap:2px;padding:6px 6px 0;overflow-x:auto;scroll-behavior:smooth;}
+  .tab-btn{padding:8px 12px;font-size:.75rem;white-space:nowrap;}
+  
+  .acciones-globales{padding:8px;gap:4px;flex-wrap:nowrap;overflow-x:auto;}
+  .acciones-globales span{display:none;}
+  .btn-del{font-size:.65rem !important;padding:6px 8px !important;white-space:nowrap;}
+  
+  .dir-tabs{flex-wrap:nowrap;gap:4px;}
+  .dir-tab-btn{padding:6px 10px;font-size:.75rem;flex:1;text-align:center;white-space:nowrap;}
+  
+  .search-bar input, .search-bar select{padding:8px 10px;font-size:.75rem;min-width:140px;}
+  
+  .dir-area-header{padding:10px 12px;}
+  .dir-area-title{font-size:.85rem;}
+  .area-badge{font-size:.6rem;padding:2px 6px;}
+  .dir-area-body{padding:10px 8px;}
+  
+  .dir-carrera-header{padding:8px 10px;gap:4px;}
+  .dir-carrera-title{font-size:.8rem;}
+  .dir-carrera-badge{font-size:.65rem;}
+  .dir-carrera-actions{gap:4px;}
+  
+  .dir-nivel{padding:8px 10px;}
+  .dir-nivel-title{font-size:.75rem;}
+  .dir-nivel-count{font-size:.65rem;}
 }
 @media(max-width:420px){
-  .kpi-grid{grid-template-columns:1fr;}
+  .kpi-grid{grid-template-columns:1fr 1fr;}
 }
 .tbl-wrap{overflow-x:auto;width:100%;}
 /* Accordion Directorio */
