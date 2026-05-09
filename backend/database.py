@@ -80,9 +80,13 @@ def init_db():
                 nivel_asignado VARCHAR(100),
                 carnet VARCHAR(50),
                 estado VARCHAR(20) DEFAULT 'activo',
+                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (subsistema_id) REFERENCES subsistemas(id) ON DELETE SET NULL
             )
         ''')
+        
+        # Add column if table already exists (for backwards compatibility without data loss)
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
 
         # 2.5 Nueva Tabla: Inscripciones (Dualidad)
         cursor.execute('''

@@ -313,8 +313,9 @@
 
   // Protección de ruta "Nivel Pro"
   (function() {
-    const rol = localStorage.getItem('user_rol');
-    const validRoles = ['votante', 'estudiante', 'docente', 'profesor', 'jefe', 'admin'];
+    const userObj = JSON.parse(localStorage.getItem('user') || '{}');
+    const rol = userObj.rol;
+    const validRoles = ['votante', 'estudiante', 'docente', 'profesor', 'jefe', 'admin', 'director'];
     if (!validRoles.includes(rol)) {
       console.warn("Acceso denegado. Rol:", rol);
       window.location.href = '../../portal/index.html';
