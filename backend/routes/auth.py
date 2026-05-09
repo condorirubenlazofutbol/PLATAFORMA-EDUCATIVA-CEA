@@ -284,6 +284,20 @@ def get_profesores():
     finally:
         conn.close()
 
+@router.get("/personal")
+def get_personal(current_user: dict = Depends(get_current_user)):
+    if current_user["rol"] not in ["admin", "director", "secretaria"]:
+        raise HTTPException(status_code=403, detail="No autorizado")
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Error DB")
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT id, nombre, apellido, email, rol, nivel_asignado, carnet, estado FROM usuarios WHERE rol IN ('profesor', 'jefe_carrera', 'secretaria', 'director') ORDER BY rol, nombre")
+        return {"personal": rows_to_dicts(cur, cur.fetchall())}
+    finally:
+        conn.close()
+
 @router.delete("/usuarios/{usuario_id}", dependencies=[Depends(get_current_user)])
 def delete_usuario(usuario_id: int):
     conn = get_db_connection()
@@ -411,3 +425,66 @@ async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = 
         "registrados": registrados,
         "errores": errores
     }
+
+class PromoverDirectorRequest(BaseModel):
+    usuario_id: int
+    nuevo_rol: str # 'director' o 'secretaria'
+
+@router.post("/promover-alta-direccion", dependencies=[Depends(get_current_user)])
+def promover_alta_direccion(data: PromoverDirectorRequest, current_user: dict = Depends(get_current_user)):
+    if current_user["rol"] != "admin":
+        raise HTTPException(status_code=403, detail="Solo el Súper Admin puede realizar esta acción")
+    if data.nuevo_rol not in ["director", "secretaria"]:
+        raise HTTPException(status_code=400, detail="Rol inválido")
+        
+    conn = get_db_connection()
+    if not conn: raise HTTPException(status_code=500, detail="Error DB")
+    try:
+        cur = conn.cursor()
+        
+        # 1. Identificar si ya hay alguien con este rol y degradarlo a profesor
+        cur.execute("UPDATE usuarios SET rol = 'profesor' WHERE rol = %s", (data.nuevo_rol,))
+        
+        # 2. Ascender al nuevo usuario
+        cur.execute("UPDATE usuarios SET rol = %s WHERE id = %s", (data.nuevo_rol, data.usuario_id))
+        
+        conn.commit()
+        return {"mensaje": f"Usuario ascendido a {data.nuevo_rol} exitosamente. El anterior fue degradado a profesor."}
+    finally:
+        conn.close()
+
+class PromoverJefeRequest(BaseModel):
+    usuario_id: int
+    carrera_id: int
+
+@router.post("/promover-jefe-carrera", dependencies=[Depends(get_current_user)])
+def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depends(get_current_user)):
+    if current_user["rol"] not in ["admin", "director"]:
+        raise HTTPException(status_code=403, detail="Solo la Dirección puede nombrar Jefes de Carrera")
+        
+    conn = get_db_connection()
+    if not conn: raise HTTPException(status_code=500, detail="Error DB")
+    try:
+        cur = conn.cursor()
+        
+        # 1. Encontrar quién era el jefe de esta carrera antes
+        cur.execute("SELECT jefe_id FROM carreras WHERE id = %s", (data.carrera_id,))
+        c_row = cur.fetchone()
+        if not c_row:
+            raise HTTPException(status_code=404, detail="Carrera no encontrada")
+            
+        antiguo_jefe_id = c_row[0]
+        if antiguo_jefe_id:
+            # Degradamos al antiguo jefe a profesor solo si era jefe_carrera
+            cur.execute("UPDATE usuarios SET rol = 'profesor' WHERE id = %s AND rol = 'jefe_carrera'", (antiguo_jefe_id,))
+            
+        # 2. Promovemos al nuevo usuario a jefe_carrera
+        cur.execute("UPDATE usuarios SET rol = 'jefe_carrera' WHERE id = %s", (data.usuario_id,))
+        
+        # 3. Asignamos en la tabla carreras
+        cur.execute("UPDATE carreras SET jefe_id = %s WHERE id = %s", (data.usuario_id, data.carrera_id))
+        
+        conn.commit()
+        return {"mensaje": "Profesor ascendido a Jefe de Carrera exitosamente. El anterior fue degradado."}
+    finally:
+        conn.close()

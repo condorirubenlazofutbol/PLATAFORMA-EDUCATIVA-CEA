@@ -565,6 +565,7 @@ function renderDocentes() {
                 <td style="white-space:nowrap;">
                   <button class="btn-del btn-del-ind" onclick="eliminarIndividual(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')" >🗑 Eliminar</button>
                   <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">🔑 Clave</button>
+                  <button class="btn-sm" style="margin-left:4px; background:var(--violet); color:white; border:none;" onclick="modalNombrarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🎖️ Nombrar Jefe</button>
                 </td>
               </tr>`).join('')}
             </tbody>
@@ -665,6 +666,58 @@ function exportarExcelPro() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docs), "Plantel Docente");
 
   XLSX.writeFile(wb, `Directorio_CEA_Pailon_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
+}
+
+// ── Nombrar Jefe de Carrera ───────────────────────────
+async function modalNombrarJefe(id, nombre) {
+    try {
+        const res = await fetch(`${API_BASE}/malla/carreras`, {headers:{Authorization:`Bearer ${token}`}});
+        if(!res.ok) throw new Error('Error al obtener carreras');
+        const data = await res.json();
+        const carreras = data.carreras || [];
+        
+        let optionsHtml = '<option value="">-- Seleccione una Carrera --</option>';
+        carreras.forEach(c => {
+            optionsHtml += `<option value="${c.id}">${c.nombre} (${c.area})</option>`;
+        });
+
+        const { value: formValues } = await Swal.fire({
+            title: 'Nombrar Jefe de Carrera',
+            html: `
+                <p style="margin-bottom:1rem; font-size:0.9rem; color:var(--muted);">Estás a punto de ascender al Prof. <strong>${nombre}</strong>.</p>
+                <select id="swal-carrera" class="swal2-select" style="width:100%; max-width:100%; display:block; padding:8px;">
+                    ${optionsHtml}
+                </select>
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonColor: '#8b5cf6',
+            confirmButtonText: 'Ascender a Jefe',
+            preConfirm: () => {
+                const cid = document.getElementById('swal-carrera').value;
+                if (!cid) { Swal.showValidationMessage('Debe seleccionar una carrera'); return false; }
+                return cid;
+            }
+        });
+
+        if (formValues) {
+            const r2 = await fetch(`${API_BASE}/auth/promover-jefe-carrera`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+                body: JSON.stringify({usuario_id: id, carrera_id: parseInt(formValues)})
+            });
+            const d2 = await r2.json();
+            if (r2.ok) {
+                Swal.fire('¡Éxito!', d2.mensaje, 'success');
+                document.directorioLoaded = false;
+                loadDirectorio();
+            } else {
+                Swal.fire('Error', d2.detail || 'Error', 'error');
+            }
+        }
+    } catch(e) {
+        Swal.fire('Error', 'Error al cargar carreras: ' + e.message, 'error');
+    }
 }
 
 init();

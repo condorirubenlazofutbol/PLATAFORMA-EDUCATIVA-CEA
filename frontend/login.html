@@ -163,9 +163,11 @@
                         rol: data.rol,
                         nivel_asignado: data.nivel_asignado
                     }));
-                    // replaceState evita que el botón "Atrás" regrese al login
                     history.replaceState(null, '', 'login.html');
-                    setTimeout(() => { window.location.replace('portal/index.html'); }, 900);
+                    setTimeout(() => { 
+                        if(data.rol === 'admin') window.location.replace('subsistema_admin/index.html');
+                        else window.location.replace('portal/index.html'); 
+                    }, 900);
                 } else {
                     showToast(data.detail || 'Credenciales incorrectas');
                     btn.disabled = false;

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Súper Admin - CEA Pailón</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --rojo: #ef4444;
+            --violet: #8b5cf6;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--panel-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .brand { padding: 1.5rem; font-size: 1.25rem; font-weight: 700; color: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; }
+        .brand span { color: var(--primary); }
+        .nav-menu { padding: 1.5rem 1rem; flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+        .nav-btn { background: transparent; border: none; padding: 0.875rem 1rem; border-radius: 8px; color: var(--text-muted); cursor: pointer; text-align: left; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.75rem; }
+        .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-btn.active { background: var(--primary); color: white; }
+        .logout-btn { margin: 1rem; background: rgba(239, 68, 68, 0.1); color: var(--rojo); padding: 0.875rem; text-align: center; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .logout-btn:hover { background: var(--rojo); color: white; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-color); }
+        .header { background: var(--glass-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--glass-border); padding: 1.5rem 2.5rem; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
+        .header h2 { font-size: 1.5rem; font-weight: 700; color: white; }
+        .header-profile { display: flex; align-items: center; gap: 1rem; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--violet)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; }
+
+        .content-body { padding: 2.5rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+        /* Dashboard Cards */
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+        .card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-3px); }
+        .card-title { color: var(--text-muted); font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+        .card-value { font-size: 2rem; font-weight: 700; color: white; }
+        .card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 1rem; }
+
+        /* Table */
+        .panel-box { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+        .panel-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .panel-title { font-size: 1.1rem; font-weight: 600; color: white; }
+        .search-input { background: var(--bg-color); border: 1px solid var(--border); color: white; padding: 0.6rem 1rem; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.2s; }
+        .search-input:focus { border-color: var(--primary); }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); }
+        td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); font-size: 0.95rem; color: var(--text-main); }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+        .b-admin { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .b-director { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; }
+        .b-secretaria { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+        .b-jefe { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+        .b-prof { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+
+        .action-btn { background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: background 0.2s; }
+        .action-btn:hover { background: var(--primary-hover); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; flex-direction: row; align-items: center; padding: 0.5rem; overflow-x: auto; }
+            .nav-menu { flex-direction: row; padding: 0; }
+            .logout-btn { margin: 0 0.5rem; padding: 0.5rem 1rem; }
+            .brand span:nth-child(2) { display: none; }
+            .content-body { padding: 1rem; }
+            .table-wrap { overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="brand">
+            <span>🛡️</span> <span>Admin Central</span>
+        </div>
+        <div class="nav-menu">
+            <button class="nav-btn active">👥 Control de Personal</button>
+        </div>
+        <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <h2>Gestión Jerárquica</h2>
+            <div class="header-profile">
+                <div style="text-align: right;">
+                    <p style="font-weight: 600; font-size: 0.95rem;" id="adminNombre">Cargando...</p>
+                    <p style="color: var(--primary); font-size: 0.8rem; font-weight: 600;">SÚPER ADMIN</p>
+                </div>
+                <div class="avatar" id="adminInitial">A</div>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="grid-cards">
+                <div class="card">
+                    <div class="card-icon" style="background: rgba(139, 92, 246, 0.2); color: #c4b5fd;">👑</div>
+                    <div class="card-title">Director Actual</div>
+                    <div class="card-value" id="dirActual" style="font-size: 1.3rem;">--</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd;">📝</div>
+                    <div class="card-title">Secretaría Actual</div>
+                    <div class="card-value" id="secActual" style="font-size: 1.3rem;">--</div>
+                </div>
+                <div class="card">
+                    <div class="card-icon" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7;">👨‍🏫</div>
+                    <div class="card-title">Total Personal</div>
+                    <div class="card-value" id="totalPersonal">--</div>
+                </div>
+            </div>
+
+            <div class="panel-box">
+                <div class="panel-header">
+                    <h3 class="panel-title">Directorio del Personal</h3>
+                    <input type="text" id="searchPersonal" class="search-input" placeholder="🔍 Buscar por nombre o CI..." onkeyup="renderTable()">
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nombre Completo</th>
+                                <th>CI / Carnet</th>
+                                <th>Rol Actual</th>
+                                <th>Acciones de Jerarquía</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbPersonal">
+                            <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Cargando personal...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'https://va-cea.onrender.com';
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if(!token || user.rol !== 'admin') {
+            window.location.href = '../login.html';
+        }
+
+        document.getElementById('adminNombre').textContent = user.nombre || 'Administrador';
+        document.getElementById('adminInitial').textContent = (user.nombre || 'A').charAt(0).toUpperCase();
+
+        let personalData = [];
+
+        async function loadPersonal() {
+            try {
+                const res = await fetch(`${API_URL}/auth/personal`, {
+                    headers: {'Authorization': `Bearer ${token}`}
+                });
+                if(!res.ok) throw new Error('Error de red');
+                const data = await res.json();
+                personalData = data.personal || [];
+                
+                // Actualizar contadores
+                document.getElementById('totalPersonal').textContent = personalData.length;
+                const dir = personalData.find(p => p.rol === 'director');
+                const sec = personalData.find(p => p.rol === 'secretaria');
+                document.getElementById('dirActual').textContent = dir ? `${dir.nombre} ${dir.apellido}` : 'Sin Asignar';
+                document.getElementById('secActual').textContent = sec ? `${sec.nombre} ${sec.apellido}` : 'Sin Asignar';
+
+                renderTable();
+            } catch(e) {
+                document.getElementById('tbPersonal').innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--rojo);">Error al cargar datos.</td></tr>`;
+            }
+        }
+
+        function renderTable() {
+            const query = document.getElementById('searchPersonal').value.toLowerCase();
+            const tb = document.getElementById('tbPersonal');
+            tb.innerHTML = '';
+
+            const filtered = personalData.filter(p => 
+                `${p.nombre} ${p.apellido} ${p.carnet}`.toLowerCase().includes(query)
+            );
+
+            if(filtered.length === 0) {
+                tb.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No se encontraron resultados.</td></tr>`;
+                return;
+            }
+
+            const badges = {
+                'admin': 'b-admin',
+                'director': 'b-director',
+                'secretaria': 'b-secretaria',
+                'jefe_carrera': 'b-jefe',
+                'profesor': 'b-prof'
+            };
+
+            filtered.forEach(p => {
+                if(p.rol === 'admin') return; // No permitimos editar otros admins por seguridad
+
+                const isDirector = p.rol === 'director';
+                const isSecretaria = p.rol === 'secretaria';
+
+                tb.innerHTML += `
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600;">${p.nombre} ${p.apellido}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</div>
+                        </td>
+                        <td style="font-family: monospace;">${p.carnet}</td>
+                        <td><span class="badge ${badges[p.rol] || 'b-prof'}">${p.rol}</span></td>
+                        <td>
+                            <div style="display:flex; gap:0.5rem;">
+                                ${!isDirector ? `<button class="action-btn" style="background:var(--violet);" onclick="promover(${p.id}, 'director', '${p.nombre}')">Nombrar Director</button>` : `<span style="color:var(--text-muted);font-size:0.85rem;">✔ Director Actual</span>`}
+                                ${!isSecretaria && !isDirector ? `<button class="action-btn" style="background:var(--primary);" onclick="promover(${p.id}, 'secretaria', '${p.nombre}')">Nombrar Secretaria</button>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function promover(id, nuevoRol, nombre) {
+            const rolM = nuevoRol === 'director' ? 'Director/a' : 'Secretario/a';
+            const confirm = await Swal.fire({
+                title: `¿Nombrar como ${rolM}?`,
+                text: `El personal que ocupaba este cargo pasará a ser profesor. ¡Solo puede haber un ${rolM}!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#334155',
+                confirmButtonText: 'Sí, ascender',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if(!confirm.isConfirmed) return;
+
+            try {
+                const res = await fetch(`${API_URL}/auth/promover-alta-direccion`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
+                    body: JSON.stringify({usuario_id: id, nuevo_rol: nuevoRol})
+                });
+
+                const data = await res.json();
+                if(res.ok) {
+                    Swal.fire('¡Éxito!', data.mensaje, 'success');
+                    loadPersonal();
+                } else {
+                    Swal.fire('Error', data.detail || 'Ocurrió un error', 'error');
+                }
+            } catch(e) {
+                Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '../login.html';
+        }
+
+        loadPersonal();
+    </script>
+</body>
+</html>
