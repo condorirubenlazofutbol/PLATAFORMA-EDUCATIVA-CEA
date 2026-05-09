@@ -172,8 +172,9 @@
 
         if (!token) window.location.href = '../../login.html';
 
-        const userRol = user.rol || user.role || '';
-        if (['director', 'jefe_carrera', 'administrador', 'secretaria'].includes(userRol)) {
+        const userRol = (user.rol || user.role || '').toLowerCase();
+        const isAdmin = ['director', 'jefe_carrera', 'administrador', 'admin', 'secretaria', 'profesor', 'docente'].includes(userRol);
+        if (isAdmin) {
             document.getElementById('adminPanel').style.display = 'block';
         }
 
@@ -189,7 +190,18 @@
             }
         };
 
-        let currentMallaArea = 'humanistica';
+        let carrerasDB = [];
+
+        async function cargarCarreras() {
+            try {
+                const res = await fetch(`${API_URL}/malla/carreras`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+                carrerasDB = data.carreras || [];
+                setMallaArea('humanistica'); // Inicializar con datos
+            } catch (e) {
+                console.error("Error cargando carreras:", e);
+            }
+        }
 
         function setMallaArea(area) {
             currentMallaArea = area;
@@ -203,11 +215,26 @@
             document.getElementById('group-materia').style.display = isHum ? '' : 'none';
             document.getElementById('group-carrera').style.display = isHum ? 'none' : '';
 
-            const nivelSel = document.getElementById('nivel');
-            const cfg = isHum ? CEA_CONFIG.humanistica : CEA_CONFIG.tecnica;
-            nivelSel.innerHTML = cfg.niveles.map(n => `<option value="${n}">${n}</option>`).join('');
+            // Filtrar carreras por área
+            const areaLabel = isHum ? 'Humanística' : 'Técnica';
+            const filtered = carrerasDB.filter(c => c.area.includes(areaLabel));
 
-            document.getElementById('label-materia').textContent = isHum ? 'Materia (Humanística)' : 'Nombre del Módulo';
+            if (isHum) {
+                const selectHum = document.getElementById('nombre_materia');
+                selectHum.innerHTML = filtered.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+                document.getElementById('label-materia').textContent = 'Seleccione Materia';
+            } else {
+                const selectTec = document.getElementById('carrera_tecnica');
+                selectTec.innerHTML = filtered.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+                document.getElementById('label-materia').textContent = 'Nombre del Módulo';
+            }
+
+            const nivelSel = document.getElementById('nivel');
+            const niveles = isHum ? 
+                ['Aplicados (Primer Año)', 'Complementarios (Segundo Año)', 'Especializados (Tercer Año)'] :
+                ['Nivel Básico', 'Nivel Auxiliar', 'Nivel Medio I', 'Nivel Medio II'];
+            
+            nivelSel.innerHTML = niveles.map(n => `<option value="${n}">${n}</option>`).join('');
             document.getElementById('label-nivel').textContent   = isHum ? 'Ciclo Humanístico' : 'Nivel Técnico';
         }
 
@@ -286,20 +313,34 @@
             }
 
             try {
-                const res = await fetch(`${API_URL}/modulos`, {
+                const carrera_id = currentMallaArea === 'humanistica' ? 
+                    document.getElementById('nombre_materia').value : 
+                    document.getElementById('carrera_tecnica').value;
+
+                const res = await fetch(`${API_URL}/malla/modulo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ nombre, nivel })
+                    body: JSON.stringify({ 
+                        carrera_id: parseInt(carrera_id), 
+                        nombre, 
+                        nivel,
+                        area: currentMallaArea === 'humanistica' ? 'Humanística' : 'Técnica',
+                        temas: [
+                            {numero:1, titulo:'Tema 1', subtitulos:[]},
+                            {numero:2, titulo:'Tema 2', subtitulos:[]},
+                            {numero:3, titulo:'Tema 3', subtitulos:[]},
+                            {numero:4, titulo:'Tema 4', subtitulos:[]}
+                        ]
+                    })
                 });
 
                 if (res.ok) {
                     Swal.fire('¡Añadido!', 'El módulo se integró correctamente al plan CEA.', 'success');
                     document.getElementById('formMalla').reset();
-                    setMallaArea(currentMallaArea);
                     cargarMalla();
                 } else {
                     const err = await res.json();
-                    Swal.fire('Error', err.detail || 'No se pudo añadir.', 'error');
+                    Swal.fire('Acceso Denegado', err.detail || 'No se pudo añadir.', 'error');
                 }
             } catch (e) {
                 Swal.fire('Error', 'Fallo de conexión.', 'error');
@@ -307,7 +348,7 @@
         });
 
         // Init
-        setMallaArea('humanistica');
+        cargarCarreras();
         cargarMalla();
     </script>
 </body>

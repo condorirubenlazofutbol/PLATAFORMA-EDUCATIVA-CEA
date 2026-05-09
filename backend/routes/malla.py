@@ -19,30 +19,49 @@ def rows_to_dicts(cursor, rows):
 
 
 def require_malla_role(user, carrera_id=None):
-    """Director/jefe_carrera pueden editar todo; docente solo su nivel."""
-    if user["rol"] in ["director", "jefe_carrera", "administrador"]:
+    """
+    Control de acceso jerárquico CEA:
+    - Admin/Director: Acceso total.
+    - Jefe de Carrera: Acceso si es el jefe asignado a la carrera técnica.
+    - Profesor/Docente: Acceso total si la carrera es 'Humanística'.
+    """
+    rol = user["rol"].lower()
+    if rol in ["admin", "administrador", "director"]:
         return True
-    if user["rol"] == "docente":
-        if carrera_id is None:
-            raise HTTPException(403, "Docente debe especificar carrera")
-        # Verificar que el docente está asignado a esa carrera
-        conn = get_db_connection()
-        try:
-            cur = conn.cursor()
-            cur.execute(
-                "SELECT id FROM carreras WHERE id=%s AND jefe_id=%s",
-                (carrera_id, user["id"])
-            )
-            if not cur.fetchone():
-                # Verificar en inscripciones (docente asignado al nivel)
-                cur.execute(
-                    "SELECT 1 FROM modulos WHERE carrera_id=%s LIMIT 1", (carrera_id,)
-                )
-                # Para docentes permitimos acceso si hay módulos de su nivel
+    
+    if not carrera_id:
+        # Para listados globales, permitimos a personal docente
+        if rol in ["jefe_carrera", "profesor", "docente"]:
+            return True
+        raise HTTPException(403, "Acceso restringido a personal administrativo")
+
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT area, jefe_id FROM carreras WHERE id=%s", (carrera_id,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(404, "Carrera no encontrada")
+        
+        area = str(row[0]).lower()
+        jefe_id = row[1]
+        
+        # Área Técnica: Solo Jefe de Carrera (el asignado) o Admin
+        if "técnica" in area:
+            if rol == "jefe_carrera" and jefe_id == user["id"]:
                 return True
-        finally:
-            conn.close()
-    raise HTTPException(403, "Sin permisos para gestionar la malla")
+            raise HTTPException(403, "Solo el Jefe de esta Carrera Técnica puede modificar su malla.")
+            
+        # Área Humanística: Cualquier profesor puede subir su malla
+        if "humanística" in area:
+            if rol in ["profesor", "docente", "jefe_carrera"]:
+                return True
+            raise HTTPException(403, "Solo personal docente puede gestionar mallas humanísticas.")
+                
+    finally:
+        conn.close()
+        
+    raise HTTPException(403, "Sin permisos suficientes para esta operación curricular.")
 
 
 # ─── MODELOS ─────────────────────────────────────────────────────────────────

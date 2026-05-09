@@ -115,11 +115,15 @@ def init_db():
                 carrera_id INT,
                 periodo VARCHAR(100), -- '1er Semestre', 'Gestión 2026', etc.
                 docente_id INT,
+                area VARCHAR(50),      -- 'Técnica' o 'Humanística'
+                descripcion TEXT,
                 FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE SET NULL,
                 FOREIGN KEY (docente_id) REFERENCES usuarios(id) ON DELETE SET NULL
             )
         ''')
         cursor.execute("ALTER TABLE modulos ADD COLUMN IF NOT EXISTS docente_id INT")
+        cursor.execute("ALTER TABLE modulos ADD COLUMN IF NOT EXISTS area VARCHAR(50)")
+        cursor.execute("ALTER TABLE modulos ADD COLUMN IF NOT EXISTS descripcion TEXT")
         # No podemos agregar el foreign key de docente_id tan fácilmente con if not exists en postgres sin un bloque DO, pero dejaremos el foreign key en el CREATE.
 
         cursor.execute('''
