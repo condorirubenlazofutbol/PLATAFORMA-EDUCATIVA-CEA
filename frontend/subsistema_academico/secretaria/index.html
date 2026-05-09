@@ -264,6 +264,10 @@
         
         .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 999; backdrop-filter: blur(4px); }
         .overlay.active { display: block; }
+
+        /* TAB VISIBILITY — CRITICAL */
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
     </style>
 </head>
 <body>
@@ -754,7 +758,7 @@
 
         const docLevels = {
             humanistica: ['Matemática', 'Lenguaje', 'Ciencias Naturales', 'Ciencias Sociales'],
-            tecnica: levels.tecnica_carreras
+            tecnica: ['Sistemas Informáticos', 'Veterinaria', 'Parvularia', 'Fisioterapia', 'Contabilidad', 'Confección', 'Belleza Integral', 'Gastronomía']
         };
 
         function setDocArea(area) {
