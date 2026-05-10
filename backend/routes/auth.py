@@ -649,9 +649,9 @@ def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depend
             if c_row:
                 carrera_id = c_row[0]
             else:
-                # Crear la carrera automáticamente
+                # Crear la carrera automáticamente sin subsistema_id estricto
                 cur.execute(
-                    "INSERT INTO carreras (nombre, area, subsistema_id) VALUES (%s, 'General', 1) RETURNING id",
+                    "INSERT INTO carreras (nombre, area, subsistema_id) VALUES (%s, 'General', NULL) RETURNING id",
                     (nombre_esp,)
                 )
                 carrera_id = cur.fetchone()[0]
@@ -679,5 +679,9 @@ def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depend
         
         conn.commit()
         return {"mensaje": "Profesor ascendido a Jefe de Carrera exitosamente."}
+    except Exception as e:
+        if conn: conn.rollback()
+        print(f"Error en promover_jefe_carrera: {e}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
     finally:
-        conn.close()
+        if conn: conn.close()
