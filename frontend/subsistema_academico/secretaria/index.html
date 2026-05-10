@@ -665,9 +665,9 @@
         // ======= Descargar Plantilla Excel =======
         function downloadExcelTemplate() {
             const data = [
-                ["Carnet", "Nombres", "Apellidos", "Area", "Nivel"],
-                ["1234567", "Juan", "Perez", "humanistica", "Aplicados (Primer Año)"],
-                ["7654321", "Maria", "Lopez", "tecnica", "Sistemas Informáticos - Nivel Básico"]
+                ["Nombre", "Apellido", "Carnet/CI", "Área (humanistica/tecnica)", "Nivel"],
+                ["Juan", "Perez", "1234567", "humanistica", "Primer Semestre"],
+                ["Maria", "Lopez", "7654321", "tecnica", "Sistemas Informáticos"]
             ];
             const ws = XLSX.utils.aoa_to_sheet(data);
             const wb = XLSX.utils.book_new();
@@ -1049,7 +1049,7 @@
 
             const formData = new FormData();
             formData.append('file', file);
-            input.value = ""; // Limpiar inmediatamente para permitir seleccionar el mismo archivo de nuevo
+            input.value = ""; // Limpiar para permitir re-seleccionar
 
             Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
@@ -1062,7 +1062,15 @@
                 const data = await r.json();
                 Swal.close();
                 if (r.ok) {
-                    Swal.fire('Importación Completa', `Registrados: ${data.registrados}\nErrores: ${data.errores.length}`, 'success');
+                    const errDetail = data.errores && data.errores.length > 0
+                        ? `\n\n⚠️ Errores (${data.errores.length}):\n` + data.errores.slice(0, 5).join('\n')
+                        : '';
+                    Swal.fire({
+                        icon: data.registrados > 0 ? 'success' : 'warning',
+                        title: 'Importación Completa',
+                        text: `✅ Registrados: ${data.registrados}   ❌ Errores: ${data.errores.length}${errDetail}`,
+                    });
+                    if (data.registrados > 0) loadInscritos();
                 } else {
                     Swal.fire('Error', data.detail || 'Fallo en la importación', 'error');
                 }

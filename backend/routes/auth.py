@@ -260,15 +260,21 @@ async def importar_estudiantes_excel(file: UploadFile = File(...), current_user:
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Esperamos columnas: Carnet, Nombres, Apellidos, Area (humanistica/tecnica), Nivel
+        # Columnas: Nombre | Apellido | Carnet | Área | Nivel (mismo orden que plantilla docentes)
         for row in ws.iter_rows(min_row=2, values_only=True):
-            if not row[0]: continue
+            # Ignorar filas completamente vacías
+            if not row or not row[0]: continue
             
-            carnet = str(row[0]).strip()
-            nombres = str(row[1] or "").strip()
-            apellidos = str(row[2] or "").strip()
-            area = str(row[3] or "humanistica").lower().strip()
-            nivel = str(row[4] or "Primer Semestre").strip()
+            nombres   = str(row[0]).strip() if len(row) > 0 and row[0] else ""
+            apellidos = str(row[1]).strip() if len(row) > 1 and row[1] else ""
+            carnet    = str(row[2]).strip() if len(row) > 2 and row[2] else ""
+            area      = str(row[3]).lower().strip() if len(row) > 3 and row[3] else "humanistica"
+            nivel     = str(row[4]).strip() if len(row) > 4 and row[4] else "Primer Semestre"
+            
+            # Validar que al menos tenga nombre y carnet
+            if not nombres or not carnet:
+                errores.append(f"Fila ignorada: nombre o carnet vacío")
+                continue
             
             email = generate_cea_email(nombres, apellidos)
             password = auth.get_password_hash(carnet)
@@ -286,9 +292,16 @@ async def importar_estudiantes_excel(file: UploadFile = File(...), current_user:
                 carrera_id = c_row[0]
                 db_area = c_row[1]
                 
-                # Insertar usuario
+                # Insertar usuario — ON CONFLICT actualiza en vez de fallar si ya existe
                 cur.execute(
-                    "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (1,%s,%s,%s,%s,'estudiante',%s,%s) RETURNING id",
+                    """INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet)
+                       VALUES (1,%s,%s,%s,%s,'estudiante',%s,%s)
+                       ON CONFLICT (email) DO UPDATE SET
+                           nombre = EXCLUDED.nombre,
+                           apellido = EXCLUDED.apellido,
+                           nivel_asignado = EXCLUDED.nivel_asignado,
+                           carnet = EXCLUDED.carnet
+                       RETURNING id""",
                     (nombres, apellidos, email, password, nivel, carnet)
                 )
                 new_id = cur.fetchone()[0]
