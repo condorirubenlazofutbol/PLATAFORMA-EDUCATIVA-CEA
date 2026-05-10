@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aula Virtual | EduConnect Pro</title>
+    <title>Aula Virtual | EduConnect CEA</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         :root {
             --primary: #0ea5e9;
             --secondary: #48d18e;
+            --violet: #8b5cf6;
             --bg-dark: #0b0f1a;
             --sidebar-bg: rgba(15, 23, 42, 0.98);
             --card-bg: rgba(19, 25, 41, 0.7);
@@ -20,318 +21,324 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-dark); color: var(--text); min-height: 100vh; display: flex; overflow: hidden; }
 
-        /* Sidebar */
+        /* ── Sidebar ── */
         .sidebar {
-            width: 320px; height: 100vh;
+            width: 300px; min-width: 300px; height: 100vh;
             background: var(--sidebar-bg);
             border-right: 1px solid var(--border);
             display: flex; flex-direction: column;
-            backdrop-filter: blur(15px);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1000;
+            overflow: hidden;
+            z-index: 100;
         }
-        .sidebar-header { padding: 2rem 1.5rem; border-bottom: 1px solid var(--border); position: relative; }
-        .sidebar-header h2 { font-size: 1.2rem; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-        .back-link { display: block; margin-top: 0.5rem; font-size: 0.85rem; color: var(--muted); text-decoration: none; font-weight: 600; }
-        .back-link:hover { color: var(--primary); }
-
-        /* Mobile Toggle */
-        .mobile-header { display: none; padding: 1rem; background: var(--sidebar-bg); border-bottom: 1px solid var(--border); align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; z-index: 900; }
-        .btn-toggle { background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; }
-
-        .modulos-list { flex: 1; overflow-y: auto; padding: 1rem; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        .sidebar-header h2 { font-size: 1.1rem; font-weight: 900; color: var(--primary); }
+        .sidebar-header .back-link { display: block; margin-top: 0.4rem; font-size: 0.82rem; color: var(--muted); text-decoration: none; }
+        .sidebar-header .back-link:hover { color: var(--primary); }
+        .modulos-list { flex: 1; overflow-y: auto; padding: 0.8rem; }
         .modulo-item {
-            padding: 1rem; border-radius: 12px; margin-bottom: 0.8rem;
+            padding: 0.9rem 1rem; border-radius: 10px; margin-bottom: 0.5rem;
             cursor: pointer; border: 1px solid transparent;
-            transition: all 0.2s; display: flex; align-items: center; gap: 1rem;
+            transition: all 0.2s; display: flex; align-items: center; gap: 0.8rem;
         }
         .modulo-item:hover { background: rgba(255,255,255,0.03); border-color: var(--border); }
-        .modulo-item.active { background: rgba(14, 165, 233, 0.1); border-color: var(--primary); }
-        .modulo-item h3 { font-size: 0.95rem; font-weight: 700; }
-        .modulo-item p { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+        .modulo-item.active { background: rgba(14, 165, 233, 0.12); border-color: var(--primary); }
+        .modulo-num { width: 32px; height: 32px; border-radius: 8px; background: rgba(14,165,233,0.15); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 0.9rem; flex-shrink: 0; }
+        .modulo-item.active .modulo-num { background: var(--primary); color: white; }
+        .modulo-item h3 { font-size: 0.9rem; font-weight: 700; line-height: 1.3; }
+        .modulo-item p { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
 
-        /* Main Content */
-        .main { flex: 1; height: 100vh; overflow-y: auto; padding: 3rem; background: radial-gradient(circle at top right, rgba(14, 165, 233, 0.05), transparent 40%); transition: all 0.3s; }
-        
-        .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); text-align: center; }
-        .empty-state h2 { color: var(--text); margin-bottom: 1rem; }
+        /* ── Main ── */
+        .main { flex: 1; height: 100vh; overflow-y: auto; }
+        .main-inner { padding: 2.5rem; max-width: 900px; }
 
-        /* Tabs */
-        .tabs { display: flex; gap: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; overflow-x: auto; padding-bottom: 2px; }
-        .tab { padding: 1rem 0; font-weight: 700; font-size: 0.9rem; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.2s; white-space: nowrap; }
-        .tab:hover { color: var(--text); }
-        .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--muted); text-align: center; padding: 4rem; min-height: 80vh; }
+        .empty-state .icon { font-size: 4rem; margin-bottom: 1.5rem; }
+        .empty-state h2 { font-size: 1.5rem; color: var(--text); margin-bottom: 0.5rem; }
 
-        /* Content Cards */
-        .content-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; flex-wrap: wrap; gap: 1rem; }
-        .content-card:hover { border-color: var(--primary); transform: translateX(5px); }
-        .content-info h4 { font-size: 1.1rem; margin-bottom: 0.3rem; }
-        .content-info p { color: var(--muted); font-size: 0.85rem; }
-        .content-icon { width: 45px; height: 45px; border-radius: 12px; background: rgba(14, 165, 233, 0.1); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        /* ── Módulo header ── */
+        .mod-header { margin-bottom: 2rem; }
+        .mod-header h1 { font-size: 1.8rem; font-weight: 900; }
+        .mod-header .meta { display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap; }
+        .badge-meta { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; background: rgba(14,165,233,0.12); color: var(--primary); border: 1px solid rgba(14,165,233,0.25); }
 
-        .btn-view { padding: 8px 20px; background: var(--primary); border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; width: auto; }
-        
-        /* Mobile Overlay */
-        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; backdrop-filter: blur(4px); }
+        /* ── Temas tabs ── */
+        .temas-nav { display: flex; gap: 0.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+        .tema-btn {
+            padding: 8px 20px; border-radius: 20px; border: 1px solid var(--border);
+            background: transparent; color: var(--muted); font-weight: 700; font-size: 0.85rem;
+            cursor: pointer; transition: 0.2s;
+        }
+        .tema-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .tema-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
+        /* ── Materiales del tema ── */
+        .tema-section { display: none; }
+        .tema-section.active { display: block; }
+
+        .material-slot {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px;
+            padding: 1.2rem 1.5rem; margin-bottom: 1rem;
+            display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+            transition: 0.2s; flex-wrap: wrap;
+        }
+        .material-slot:hover { border-color: rgba(14,165,233,0.3); }
+        .slot-left { display: flex; align-items: center; gap: 1rem; }
+        .slot-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+        .slot-icon.teoria { background: rgba(14,165,233,0.12); }
+        .slot-icon.presentacion { background: rgba(139,92,246,0.12); }
+        .slot-icon.tarea { background: rgba(245,158,11,0.12); }
+        .slot-icon.video { background: rgba(239,68,68,0.12); }
+        .slot-type { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; }
+        .slot-type.teoria { color: var(--primary); }
+        .slot-type.presentacion { color: var(--violet); }
+        .slot-type.tarea { color: #f59e0b; }
+        .slot-type.video { color: #ef4444; }
+        .slot-name { font-size: 0.92rem; font-weight: 600; }
+        .slot-empty { color: var(--muted); font-style: italic; }
+
+        .btn-open { padding: 7px 18px; background: var(--primary); border: none; border-radius: 8px; color: white; font-weight: 700; font-size: 0.82rem; cursor: pointer; white-space: nowrap; }
+        .btn-open:hover { opacity: 0.85; }
+
+        /* Docente: input para publicar */
+        .pub-form { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem 1.5rem; margin-bottom: 1rem; }
+        .pub-form .slot-type { margin-bottom: 6px; }
+        .pub-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 0.88rem; margin-top: 4px; }
+        .pub-input:focus { outline: none; border-color: var(--primary); }
+        .btn-save { margin-top: 8px; padding: 7px 18px; background: var(--primary); border: none; border-radius: 8px; color: white; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
+        .btn-save:hover { opacity: 0.85; }
+
+        /* ── Loading ── */
+        .loading { display: flex; align-items: center; justify-content: center; height: 60vh; color: var(--muted); font-size: 1rem; gap: 0.5rem; }
+        .spinner { width: 24px; height: 24px; border: 3px solid rgba(14,165,233,0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Mobile ── */
+        .mobile-header { display: none; padding: 1rem 1.2rem; background: var(--sidebar-bg); border-bottom: 1px solid var(--border); align-items: center; justify-content: space-between; position: fixed; top: 0; left: 0; right: 0; z-index: 900; }
+        .btn-toggle { background: none; border: none; color: var(--text); font-size: 1.4rem; cursor: pointer; }
+        .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 98; }
         @media (max-width: 900px) {
             body { flex-direction: column; }
-            .sidebar { position: fixed; left: 0; transform: translateX(-100%); }
+            .sidebar { position: fixed; left: 0; top: 0; transform: translateX(-100%); transition: transform 0.3s; }
             .sidebar.open { transform: translateX(0); }
-            .mobile-header { display: flex; }
-            .main { padding: 5rem 1.5rem 2rem; }
             .sidebar-overlay.active { display: block; }
-            .hero h1 { font-size: 1.8rem; }
-            .tabs { gap: 1rem; }
-            .content-card { flex-direction: column; align-items: flex-start; }
-            .btn-view { width: 100%; }
+            .mobile-header { display: flex; }
+            .main { padding-top: 60px; }
+            .main-inner { padding: 1.5rem 1rem; }
         }
     </style>
 </head>
 <body>
 
-    <div class="mobile-header">
-        <h2 style="font-size: 1.1rem; color: var(--primary); font-weight: 900;">📚 Aula Virtual</h2>
-        <button class="btn-toggle" onclick="toggleSidebar()">☰</button>
+<div class="mobile-header">
+    <span style="font-weight:900; color:var(--primary);">📖 Aula Virtual</span>
+    <button class="btn-toggle" onclick="toggleSidebar()">☰</button>
+</div>
+
+<div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2>📖 Aula Virtual</h2>
+        <a class="back-link" href="../../portal/index.html">← Volver al Portal</a>
     </div>
-
-    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
-
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h2>📚 Aula Virtual</h2>
-            <a href="../../portal/index.html" class="back-link">← Volver al Portal</a>
-        </div>
-        <div class="modulos-list" id="modulosList">
-            <div class="loading">Cargando módulos...</div>
-        </div>
+    <div class="modulos-list" id="modulosList">
+        <div class="loading"><div class="spinner"></div> Cargando...</div>
     </div>
+</div>
 
-    <div class="main" id="mainContent">
-        <div class="empty-state">
-            <span style="font-size: 4rem; margin-bottom: 2rem;">📖</span>
+<div class="main" id="mainArea">
+    <div class="main-inner">
+        <div class="empty-state" id="emptyState">
+            <div class="icon">📖</div>
             <h2>Bienvenido al Aula Virtual</h2>
-            <p>Selecciona una materia del panel izquierdo para ver materiales y tareas.</p>
+            <p>Selecciona una materia del panel izquierdo para ver los materiales y temas.</p>
         </div>
+        <div id="moduloContent" style="display:none"></div>
     </div>
+</div>
 
-    <script src="../../portal/js/api.js"></script>
-    <script>
-        const token = localStorage.getItem('token');
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
+<script src="../../portal/js/api.js"></script>
+<script>
+const token = localStorage.getItem('token');
+const user  = JSON.parse(localStorage.getItem('user') || '{}');
+if (!token) window.location.href = '../../login.html';
 
-        if (!token) window.location.href = '../../login.html';
+const esDocente = ['docente','profesor','jefe_carrera','director','administrador'].includes(user.rol);
 
-        const esDocente = ['docente', 'profesor', 'director', 'jefe_carrera', 'administrador'].includes(user.rol);
+// ── Sidebar toggle ──
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlay').classList.toggle('active');
+}
 
-        // ======= Responsive Toggle =======
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
+// ── Cargar lista de módulos ──
+async function cargarModulos() {
+    const list = document.getElementById('modulosList');
+    try {
+        const res = await fetch(`${API_BASE}/modulos/`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) throw new Error(res.status);
+        const data = await res.json();
+        const mods = data.modulos || data;
+
+        if (!mods.length) {
+            list.innerHTML = '<p style="padding:1rem;color:var(--muted);font-size:0.85rem;">No hay módulos asignados.</p>';
+            return;
         }
 
-        // ======= Cargar lista de módulos =======
-        async function cargarModulos() {
-            try {
-                const res = await fetch(`${API_BASE}/modulos`, { headers: { 'Authorization': `Bearer ${token}` } });
-                const data = await res.json();
-                const mods = data.modulos || data;
-                
-                const list = document.getElementById('modulosList');
-                list.innerHTML = '';
-                
-                if (!Array.isArray(mods) || mods.length === 0) {
-                    list.innerHTML = '<p style="padding:1rem; color:var(--muted)">No hay módulos asignados.</p>';
-                    return;
-                }
+        list.innerHTML = '';
+        mods.forEach((m, idx) => {
+            const div = document.createElement('div');
+            div.className = 'modulo-item';
+            div.innerHTML = `
+                <div class="modulo-num">${idx + 1}</div>
+                <div>
+                    <h3>${m.nombre}</h3>
+                    <p>${m.nivel || m.carrera_nombre || 'Módulo'}</p>
+                </div>`;
+            div.onclick = () => {
+                document.querySelectorAll('.modulo-item').forEach(e => e.classList.remove('active'));
+                div.classList.add('active');
+                renderModulo(m);
+                if (window.innerWidth <= 900) toggleSidebar();
+            };
+            list.appendChild(div);
+        });
+    } catch (e) {
+        list.innerHTML = `<p style="padding:1rem;color:#f43f5e;font-size:0.85rem;">Error cargando módulos: ${e.message}</p>`;
+    }
+}
 
-                mods.forEach(m => {
-                    const div = document.createElement('div');
-                    div.className = 'modulo-item';
-                    div.innerHTML = `
-                        <div class="modulo-icon">📘</div>
+// ── Tipos de material por tema ──
+const TIPOS = [
+    { key: 'teoria',       label: 'TEORÍA',        icon: '📄', cls: 'teoria' },
+    { key: 'presentacion', label: 'PRESENTACIÓN',  icon: '📊', cls: 'presentacion' },
+    { key: 'tarea',        label: 'TAREA',          icon: '📝', cls: 'tarea' },
+    { key: 'video',        label: 'VIDEO',          icon: '🎥', cls: 'video' },
+];
+
+let moduloActivo = null;
+let contenidosCache = {};
+let temaActivo = 1;
+
+async function renderModulo(modulo) {
+    moduloActivo = modulo;
+    temaActivo = 1;
+
+    document.getElementById('emptyState').style.display = 'none';
+    const content = document.getElementById('moduloContent');
+    content.style.display = 'block';
+    content.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando módulo...</div>';
+
+    // Cargar contenidos
+    let contenidos = [];
+    try {
+        const res = await fetch(`${API_BASE}/modulos/${modulo.id}/contenidos`, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.ok) {
+            const d = await res.json();
+            contenidos = d.contenidos || d;
+        }
+    } catch(e) {}
+    contenidosCache[modulo.id] = contenidos;
+
+    // Construir UI
+    const temasBtns = [1,2,3,4].map(n =>
+        `<button class="tema-btn ${n===1?'active':''}" id="btn-tema-${n}" onclick="cambiarTema(${n})">Tema ${n}</button>`
+    ).join('');
+
+    content.innerHTML = `
+        <div class="mod-header">
+            <h1>${modulo.nombre}</h1>
+            <div class="meta">
+                <span class="badge-meta">📚 ${modulo.nivel || 'General'}</span>
+                ${modulo.carrera_nombre ? `<span class="badge-meta">🏫 ${modulo.carrera_nombre}</span>` : ''}
+                ${modulo.docente_nombre ? `<span class="badge-meta">👤 ${modulo.docente_nombre}</span>` : ''}
+            </div>
+        </div>
+
+        <div class="temas-nav">${temasBtns}</div>
+
+        ${[1,2,3,4].map(n => `
+            <div class="tema-section ${n===1?'active':''}" id="tema-${n}">
+                ${renderTema(modulo.id, n, contenidos)}
+            </div>
+        `).join('')}
+    `;
+}
+
+function renderTema(moduloId, temaNum, contenidos) {
+    return TIPOS.map(tipo => {
+        const mat = contenidos.find(c => c.tema_num == temaNum && c.tipo === tipo.key);
+
+        if (esDocente) {
+            // Vista docente: formulario para publicar
+            return `
+            <div class="pub-form" id="slot-${tipo.key}-${temaNum}">
+                <div class="slot-type ${tipo.cls}">${tipo.icon} ${tipo.label}</div>
+                <input class="pub-input" id="url-${tipo.key}-${temaNum}"
+                    type="url" placeholder="Pega el enlace aquí (Google Drive, YouTube, etc.)"
+                    value="${mat ? mat.url : ''}">
+                <button class="btn-save" onclick="guardarMaterial(${moduloId}, ${temaNum}, '${tipo.key}', '${tipo.label}')">Guardar</button>
+            </div>`;
+        } else {
+            // Vista estudiante: abrir enlace si existe
+            if (!mat || !mat.url) {
+                return `
+                <div class="material-slot">
+                    <div class="slot-left">
+                        <div class="slot-icon ${tipo.cls}">${tipo.icon}</div>
                         <div>
-                            <h3>${m.nombre}</h3>
-                            <p>${m.nivel || 'Módulo General'}</p>
-                        </div>
-                    `;
-                    div.onclick = () => {
-                        seleccionarModulo(m, div);
-                        if (window.innerWidth <= 900) toggleSidebar();
-                    };
-                    list.appendChild(div);
-                });
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        let moduloActivo = null;
-        function seleccionarModulo(modulo, el) {
-            moduloActivo = modulo;
-            document.querySelectorAll('.modulo-item').forEach(e => e.classList.remove('active'));
-            el.classList.add('active');
-            renderModulo(modulo);
-        }
-
-        async function renderModulo(modulo) {
-            const main = document.getElementById('mainContent');
-            main.innerHTML = '<div class="loading">Cargando contenido...</div>';
-
-            const tabsHTML = esDocente
-                ? `<div class="tab active" onclick="cambiarTab(this, 'materiales')">Materiales</div>
-                   <div class="tab" onclick="cambiarTab(this, 'alumnos')">Alumnos</div>
-                   <div class="tab" onclick="cambiarTab(this, 'subir')">Publicar Material</div>`
-                : `<div class="tab active" onclick="cambiarTab(this, 'materiales')">Materiales</div>`;
-
-            // Intentar cargar contenidos reales
-            let contenidos = [];
-            try {
-                const res = await fetch(`${API_BASE}/modulos/${modulo.id}/contenidos`, { headers: { 'Authorization': `Bearer ${token}` } });
-                if (res.ok) contenidos = await res.json();
-            } catch(e) {}
-
-            if (contenidos.length === 0) {
-                contenidos = [
-                    { tipo: 'pdf', titulo: 'Guía del Módulo', url: '#' },
-                    { tipo: 'video', titulo: 'Clase Introductoria', url: '#' },
-                    { tipo: 'tarea', titulo: 'Tarea 1: Conceptos Básicos', url: '#' }
-                ];
-            }
-
-            const materialesHTML = contenidos.map(c => `
-                <div class="content-card">
-                    <div style="display:flex; align-items:center; gap: 1.5rem;">
-                        <div class="content-icon">${getIcon(c.tipo)}</div>
-                        <div class="content-info">
-                            <h4>${c.titulo}</h4>
-                            <p>${formatTipo(c.tipo)}</p>
+                            <div class="slot-type ${tipo.cls}">${tipo.label}</div>
+                            <div class="slot-name slot-empty">Aún no publicado por el docente</div>
                         </div>
                     </div>
-                    <button class="btn-view" onclick="window.open('${c.url}')">Abrir</button>
-                </div>
-            `).join('');
-
-            main.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                </div>`;
+            }
+            return `
+            <div class="material-slot">
+                <div class="slot-left">
+                    <div class="slot-icon ${tipo.cls}">${tipo.icon}</div>
                     <div>
-                        <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem;">${modulo.nombre}</h1>
-                        <p style="color:var(--muted); font-weight:600;">${modulo.nivel || 'Nivel General'}</p>
+                        <div class="slot-type ${tipo.cls}">${tipo.label}</div>
+                        <div class="slot-name">${mat.titulo || tipo.label + ' - Tema ' + temaNum}</div>
                     </div>
                 </div>
-
-                <div class="tabs" style="margin-top: 2rem;">${tabsHTML}</div>
-
-                <div id="tab-materiales">${materialesHTML}</div>
-
-                <div id="tab-subir" style="display:none;">
-                    <div style="background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:2.5rem; max-width: 600px;">
-                        <h2 style="margin-bottom: 1.5rem; color: var(--primary);">Subir Nuevo Material</h2>
-                        <div class="form-group">
-                            <label>Título del Material</label>
-                            <input type="text" id="mat_titulo" placeholder="Ej: Lectura Tema 1">
-                        </div>
-                        <div class="form-group">
-                            <label>Tipo de Contenido</label>
-                            <select id="mat_tipo">
-                                <option value="pdf">📄 Documento / PDF</option>
-                                <option value="video">🎥 Video / Tutorial</option>
-                                <option value="tarea">📝 Tarea / Trabajo</option>
-                                <option value="link">🔗 Enlace Externo</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>URL / Link del Recurso</label>
-                            <input type="url" id="mat_url" placeholder="https://...">
-                        </div>
-                        <button class="btn-submit" onclick="publicarMaterial()">Publicar Ahora</button>
-                    </div>
-                </div>
-
-                <div id="tab-alumnos" style="display:none;">
-                    <div id="alumnosList">Cargando lista de alumnos...</div>
-                </div>
-            `;
-            
-            if (esDocente) cargarAlumnosModulo(modulo.id);
+                <button class="btn-open" onclick="window.open('${mat.url}','_blank')">Abrir</button>
+            </div>`;
         }
+    }).join('');
+}
 
-        function getIcon(tipo) {
-            const map = { pdf: '📄', video: '🎥', tarea: '📝', link: '🔗' };
-            return map[tipo] || '📂';
+function cambiarTema(n) {
+    temaActivo = n;
+    document.querySelectorAll('.tema-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`btn-tema-${n}`).classList.add('active');
+    document.querySelectorAll('.tema-section').forEach(s => s.classList.remove('active'));
+    document.getElementById(`tema-${n}`).classList.add('active');
+}
+
+async function guardarMaterial(moduloId, temaNum, tipo, label) {
+    const url = document.getElementById(`url-${tipo}-${temaNum}`).value.trim();
+    if (!url) { Swal.fire('Campo vacío', 'Pega el enlace del material antes de guardar.', 'warning'); return; }
+
+    try {
+        const res = await fetch(`${API_BASE}/modulos/contenido`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ modulo_id: moduloId, tema_num: temaNum, tipo, titulo: `${label} - Tema ${temaNum}`, url })
+        });
+        if (res.ok) {
+            Swal.fire({ icon: 'success', title: '¡Guardado!', text: 'Material publicado correctamente.', timer: 1500, showConfirmButton: false });
+        } else {
+            const d = await res.json();
+            Swal.fire('Error', d.detail || 'No se pudo guardar.', 'error');
         }
+    } catch(e) {
+        Swal.fire('Error de red', e.message, 'error');
+    }
+}
 
-        function formatTipo(tipo) {
-            const map = { pdf: 'Documento PDF', video: 'Recurso Multimedia', tarea: 'Actividad / Tarea', link: 'Enlace' };
-            return map[tipo] || 'Material';
-        }
-
-        function cambiarTab(el, tabId) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            ['materiales', 'subir', 'alumnos'].forEach(id => {
-                const panel = document.getElementById(`tab-${id}`);
-                if (panel) panel.style.display = 'none';
-            });
-            document.getElementById(`tab-${tabId}`).style.display = 'block';
-        }
-
-        async function cargarAlumnosModulo(moduloId) {
-            const container = document.getElementById('alumnosList');
-            try {
-                const res = await fetch(`${API_BASE}/notas/modulo/${moduloId}`, { headers: { 'Authorization': `Bearer ${token}` } });
-                const data = await res.json();
-                const alumnos = data.alumnos || [];
-
-                if (alumnos.length === 0) {
-                    container.innerHTML = '<p style="color:var(--muted)">No hay estudiantes inscritos en este módulo.</p>';
-                    return;
-                }
-
-                container.innerHTML = alumnos.map(a => `
-                    <div class="content-card">
-                        <div class="content-info">
-                            <h4>${a.nombre} ${a.apellido}</h4>
-                            <p>Carnet: ${a.carnet || 'N/A'} · Estado: <strong>${a.estado.toUpperCase()}</strong></p>
-                        </div>
-                        <div style="font-weight: 800; font-size: 1.2rem; color: ${a.nota >= 60 ? 'var(--secondary)' : '#f43f5e'}">
-                            ${a.nota || 'S/N'}
-                        </div>
-                    </div>
-                `).join('');
-            } catch (e) {
-                container.innerHTML = '<p style="color:var(--muted)">Error al cargar alumnos.</p>';
-            }
-        }
-
-        async function publicarMaterial() {
-            const titulo = document.getElementById('mat_titulo').value;
-            const tipo = document.getElementById('mat_tipo').value;
-            const url = document.getElementById('mat_url').value;
-
-            if (!titulo || !url) { Swal.fire('Error', 'Completa todos los campos.', 'error'); return; }
-
-            try {
-                const res = await fetch(`${API_BASE}/modulos/${moduloActivo.id}/contenidos`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ titulo, tipo, url })
-                });
-                if (res.ok) {
-                    Swal.fire('¡Éxito!', 'Material publicado correctamente.', 'success');
-                    renderModulo(moduloActivo);
-                } else {
-                    throw new Error();
-                }
-            } catch (e) {
-                Swal.fire('Demo', 'Material guardado en la interfaz.', 'success');
-            }
-        }
-
-        // Init
-        cargarModulos();
-    </script>
+// ── Init ──
+cargarModulos();
+</script>
 </body>
 </html>
