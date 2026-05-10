@@ -1049,6 +1049,7 @@
 
             const formData = new FormData();
             formData.append('file', file);
+            input.value = ""; // Limpiar inmediatamente para permitir seleccionar el mismo archivo de nuevo
 
             Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
@@ -1063,10 +1064,9 @@
                 if (r.ok) {
                     Swal.fire('Importación Completa', `Registrados: ${data.registrados}\nErrores: ${data.errores.length}`, 'success');
                 } else {
-                    Swal.fire('Error', data.detail, 'error');
+                    Swal.fire('Error', data.detail || 'Fallo en la importación', 'error');
                 }
             } catch(e) { Swal.fire('Error', 'Fallo al procesar el archivo.', 'error'); }
-            input.value = "";
         }
 
         async function handleDocenteExcelImport(input) {
@@ -1076,6 +1076,7 @@
             const nivel = document.getElementById('doc_especialidad').value;
             const formData = new FormData();
             formData.append('file', file);
+            input.value = ""; // Limpiar inmediatamente
 
             Swal.fire({ title: 'Procesando Docentes...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
@@ -1090,10 +1091,9 @@
                 if (r.ok) {
                     Swal.fire('Importación Completa', `Docentes registrados: ${data.registrados}\nErrores: ${data.errores.length}`, 'success');
                 } else {
-                    Swal.fire('Error', data.detail, 'error');
+                    Swal.fire('Error', data.detail || 'Error en la importación', 'error');
                 }
             } catch(e) { Swal.fire('Error', 'Fallo al procesar docentes.', 'error'); }
-            input.value = "";
         }
 
         async function eliminarUsuario(id) {

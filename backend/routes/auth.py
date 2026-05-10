@@ -217,7 +217,7 @@ async def importar_estudiantes_excel(file: UploadFile = File(...), current_user:
                 cur.execute("SELECT id, area FROM carreras WHERE nombre ILIKE %s LIMIT 1", (f"%{area}%",))
                 c_row = cur.fetchone()
                 if not c_row:
-                    # Crear carrera si no existe (asumir técnica si no dice explícitamente humanística)
+                    # Crear carrera si no existe
                     db_area = 'Humanística' if 'human' in area.lower() else 'Técnica'
                     cur.execute("INSERT INTO carreras (nombre, area, subsistema_id) VALUES (%s, %s, 1) RETURNING id, area", (area, db_area))
                     c_row = cur.fetchone()
@@ -241,13 +241,13 @@ async def importar_estudiantes_excel(file: UploadFile = File(...), current_user:
                     (new_id, carrera_id, nivel, paralelo)
                 )
                 
+                conn.commit() # Commit PER ROW to prevent losing previous rows on error
                 registrados += 1
             except Exception as e:
-                conn.rollback()
+                conn.rollback() # Solo deshace esta iteración porque las anteriores ya se hicieron commit
                 errores.append(f"Error en CI {carnet}: {str(e)}")
                 continue
             
-        conn.commit()
         cur.close(); conn.close()
         
         return {"registrados": registrados, "errores": errores}
@@ -504,12 +504,13 @@ async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = 
                 "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
                 (subsistema_id, str(nombre).strip(), str(apellido).strip(), email, hashed, rol, nivel, s_carnet)
             )
+            conn.commit() # Commit per row
             registrados += 1
         except Exception as e:
+            conn.rollback() # Rollback solo esta fila
             errores.append(f"Error en fila {nombre}: {str(e)}")
             continue
 
-    conn.commit()
     cur.close(); conn.close()
     
     return {
