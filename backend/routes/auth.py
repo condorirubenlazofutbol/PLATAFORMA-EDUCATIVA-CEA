@@ -627,7 +627,8 @@ def promover_alta_direccion(data: PromoverDirectorRequest, current_user: dict = 
 
 class PromoverJefeRequest(BaseModel):
     usuario_id: int
-    carrera_id: int
+    carrera_id: Opt[int] = None
+    especialidad_nombre: Opt[str] = None  # Nombre de la especialidad si no hay carrera_id
 
 @router.post("/promover-jefe-carrera", dependencies=[Depends(get_current_user)])
 def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depends(get_current_user)):
@@ -638,9 +639,29 @@ def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depend
     if not conn: raise HTTPException(status_code=500, detail="Error DB")
     try:
         cur = conn.cursor()
+
+        # Resolver carrera_id: si viene especialidad_nombre, buscar o crear la carrera
+        carrera_id = data.carrera_id
+        if not carrera_id and data.especialidad_nombre:
+            nombre_esp = data.especialidad_nombre.strip()
+            cur.execute("SELECT id FROM carreras WHERE nombre ILIKE %s LIMIT 1", (nombre_esp,))
+            c_row = cur.fetchone()
+            if c_row:
+                carrera_id = c_row[0]
+            else:
+                # Crear la carrera automáticamente
+                cur.execute(
+                    "INSERT INTO carreras (nombre, area, subsistema_id) VALUES (%s, 'General', 1) RETURNING id",
+                    (nombre_esp,)
+                )
+                carrera_id = cur.fetchone()[0]
+                conn.commit()
+
+        if not carrera_id:
+            raise HTTPException(status_code=400, detail="Debe especificar una carrera o especialidad")
         
         # 1. Encontrar quién era el jefe de esta carrera antes
-        cur.execute("SELECT jefe_id FROM carreras WHERE id = %s", (data.carrera_id,))
+        cur.execute("SELECT jefe_id FROM carreras WHERE id = %s", (carrera_id,))
         c_row = cur.fetchone()
         if not c_row:
             raise HTTPException(status_code=404, detail="Carrera no encontrada")
@@ -654,9 +675,9 @@ def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depend
         cur.execute("UPDATE usuarios SET rol = 'jefe_carrera' WHERE id = %s", (data.usuario_id,))
         
         # 3. Asignamos en la tabla carreras
-        cur.execute("UPDATE carreras SET jefe_id = %s WHERE id = %s", (data.usuario_id, data.carrera_id))
+        cur.execute("UPDATE carreras SET jefe_id = %s WHERE id = %s", (data.usuario_id, carrera_id))
         
         conn.commit()
-        return {"mensaje": "Profesor ascendido a Jefe de Carrera exitosamente. El anterior fue degradado."}
+        return {"mensaje": "Profesor ascendido a Jefe de Carrera exitosamente."}
     finally:
         conn.close()

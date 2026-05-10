@@ -678,20 +678,42 @@ function exportarExcelPro() {
 // ── Nombrar Jefe de Carrera ───────────────────────────
 async function modalNombrarJefe(id, nombre) {
     try {
-        const res = await fetch(`${API_BASE}/malla/carreras`, {headers:{Authorization:`Bearer ${token}`}});
-        if(!res.ok) throw new Error('Error al obtener carreras');
-        const data = await res.json();
-        const carreras = data.carreras || [];
-        
+        // Primero intentar cargar carreras del sistema
+        let carreras = [];
+        try {
+            const res = await fetch(`${API_BASE}/malla/carreras`, {headers:{Authorization:`Bearer ${token}`}});
+            if(res.ok) {
+                const data = await res.json();
+                carreras = data.carreras || [];
+            }
+        } catch(e) {}
+
+        // Si no hay carreras en la BD, usar las especialidades del directorio actual
+        if (carreras.length === 0) {
+            // Obtener especialidades únicas del directorio de docentes ya cargado
+            const especialidades = [...new Set(
+                Object.keys(directorioData || {}).filter(e => e && e !== 'Sin Especialidad')
+            )];
+            // Crear carreras "virtuales" para el selector
+            carreras = especialidades.map((e, i) => ({
+                id: `esp:${e}`, nombre: e, area: 'General'
+            }));
+        }
+
+        if (carreras.length === 0) {
+            Swal.fire('Sin carreras', 'No hay carreras/especialidades registradas. Primero asigna una especialidad al docente con "Asignar Nivel".', 'info');
+            return;
+        }
+
         let optionsHtml = '<option value="">-- Seleccione una Carrera --</option>';
         carreras.forEach(c => {
             optionsHtml += `<option value="${c.id}">${c.nombre} (${c.area})</option>`;
         });
 
         const { value: formValues } = await Swal.fire({
-            title: 'Nombrar Jefe de Carrera',
+            title: '🎖️ Nombrar Jefe de Carrera',
             html: `
-                <p style="margin-bottom:1rem; font-size:0.9rem; color:var(--muted);">Estás a punto de ascender al Prof. <strong>${nombre}</strong>.</p>
+                <p style="margin-bottom:1rem; font-size:0.9rem; color:var(--muted);">Ascender al Prof. <strong>${nombre}</strong> como Jefe de la siguiente carrera:</p>
                 <select id="swal-carrera" class="swal2-select" style="width:100%; max-width:100%; display:block; padding:8px;">
                     ${optionsHtml}
                 </select>
@@ -699,7 +721,7 @@ async function modalNombrarJefe(id, nombre) {
             focusConfirm: false,
             showCancelButton: true,
             confirmButtonColor: '#8b5cf6',
-            confirmButtonText: 'Ascender a Jefe',
+            confirmButtonText: '🎖️ Ascender a Jefe',
             preConfirm: () => {
                 const cid = document.getElementById('swal-carrera').value;
                 if (!cid) { Swal.showValidationMessage('Debe seleccionar una carrera'); return false; }
@@ -708,22 +730,28 @@ async function modalNombrarJefe(id, nombre) {
         });
 
         if (formValues) {
+            Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             const r2 = await fetch(`${API_BASE}/auth/promover-jefe-carrera`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
-                body: JSON.stringify({usuario_id: id, carrera_id: parseInt(formValues)})
+                body: JSON.stringify({
+                    usuario_id: id,
+                    carrera_id: isNaN(parseInt(formValues)) ? null : parseInt(formValues),
+                    especialidad_nombre: formValues.startsWith('esp:') ? formValues.replace('esp:', '') : null
+                })
             });
             const d2 = await r2.json();
+            Swal.close();
             if (r2.ok) {
-                Swal.fire('¡Éxito!', d2.mensaje, 'success');
+                Swal.fire('\u00a1\u00c9xito!', d2.mensaje, 'success');
                 document.directorioLoaded = false;
                 loadDirectorio();
             } else {
-                Swal.fire('Error', d2.detail || 'Error', 'error');
+                Swal.fire('Error', d2.detail || 'Error al promover', 'error');
             }
         }
     } catch(e) {
-        Swal.fire('Error', 'Error al cargar carreras: ' + e.message, 'error');
+        Swal.fire('Error', 'Error inesperado: ' + e.message, 'error');
     }
 }
 
