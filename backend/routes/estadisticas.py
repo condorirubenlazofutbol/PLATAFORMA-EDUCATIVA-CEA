@@ -294,22 +294,30 @@ def eliminar_inscripciones(data: EliminarBody, current_user: dict = Depends(get_
         if data.tipo == "individual":
             if not data.usuario_id:
                 raise HTTPException(400, "Se requiere usuario_id para eliminación individual")
-            cur.execute("DELETE FROM usuarios WHERE id = %s AND rol = ANY(%s) RETURNING id", 
-                       (data.usuario_id, roles_objetivo))
+            cur.execute("DELETE FROM usuarios WHERE id = %s RETURNING id", (data.usuario_id,))
             eliminados = cur.rowcount
 
         elif data.tipo == "carrera":
             if not data.carrera:
-                raise HTTPException(400, "Se requiere el nombre de la carrera")
-            # Buscar usuarios que tengan progreso en módulos de esa carrera
-            cur.execute("""
-                DELETE FROM usuarios WHERE id IN (
-                    SELECT DISTINCT p.usuario_id FROM progreso p
-                    JOIN modulos m ON p.modulo_id = m.id
-                    JOIN carreras c ON m.carrera_id = c.id
-                    WHERE c.nombre = %s
-                ) AND rol = ANY(%s) RETURNING id
-            """, (data.carrera, roles_objetivo))
+                raise HTTPException(400, "Se requiere el nombre de la carrera/especialidad")
+            
+            if data.rol == "docente":
+                # Para docentes, la especialidad se guarda en nivel_asignado
+                cur.execute("""
+                    DELETE FROM usuarios 
+                    WHERE nivel_asignado = %s AND rol = ANY(%s) 
+                    RETURNING id
+                """, (data.carrera, roles_objetivo))
+            else:
+                # Para estudiantes, buscar por progreso/inscripción en módulos de la carrera
+                cur.execute("""
+                    DELETE FROM usuarios WHERE id IN (
+                        SELECT DISTINCT p.usuario_id FROM progreso p
+                        JOIN modulos m ON p.modulo_id = m.id
+                        JOIN carreras c ON m.carrera_id = c.id
+                        WHERE c.nombre = %s
+                    ) AND rol = ANY(%s) RETURNING id
+                """, (data.carrera, roles_objetivo))
             eliminados = cur.rowcount
 
         elif data.tipo == "nivel":
