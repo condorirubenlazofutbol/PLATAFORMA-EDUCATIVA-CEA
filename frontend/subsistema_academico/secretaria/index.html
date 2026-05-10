@@ -223,6 +223,7 @@
         /* Helpers */
         .flex-center { display: flex; align-items: center; gap: 10px; }
         .hidden { display: none; }
+        .mobile-top-bar { display: none; }
         
         /* Responsividad */
         @media (max-width: 900px) {
@@ -275,7 +276,7 @@
 </head>
 <body>
 
-    <div class="mobile-top-bar" id="mobileBar" style="display: none;">
+    <div class="mobile-top-bar" id="mobileBar">
         <div class="brand" style="margin-bottom: 0;">
             <div class="brand-icon" style="width: 30px; height: 30px; font-size: 0.9rem;">📋</div>
             <span class="brand-text" style="font-size: 1rem;">Secretaría</span>
@@ -772,8 +773,6 @@
             document.getElementById('ins_email_val').value = email;
             document.getElementById('email-preview-text').textContent = "Correo Sugerido: " + email;
         }
-
-        let currentDocArea = 'humanistica';
 
         const docLevels = {
             humanistica: ['Matemática', 'Lenguaje', 'Ciencias Naturales', 'Ciencias Sociales'],

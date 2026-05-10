@@ -111,7 +111,7 @@ def actividad_reciente(current_user: dict = Depends(get_current_user)):
         """)
         recientes = rows_to_dicts(cur, cur.fetchall())
         cur.execute("""
-            SELECT c.codigo, u.nombre, u.apellido, m.nombre as modulo,
+            SELECT c.codigo_qr as codigo, u.nombre, u.apellido, m.nombre as modulo,
                    c.fecha_emision::date as fecha
             FROM certificados c
             JOIN usuarios u ON c.estudiante_id=u.id

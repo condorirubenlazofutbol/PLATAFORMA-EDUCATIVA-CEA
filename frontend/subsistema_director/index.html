@@ -565,6 +565,7 @@ function renderDocentes() {
                 <td style="white-space:nowrap;">
                   <button class="btn-del btn-del-ind" onclick="eliminarIndividual(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')" >🗑 Eliminar</button>
                   <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">🔑 Clave</button>
+                  <button class="btn-sm" style="margin-left:4px; background:var(--primary); color:white; border:none;" onclick="modalAsignarEspecialidad(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">📘 Asignar Nivel</button>
                   <button class="btn-sm" style="margin-left:4px; background:var(--violet); color:white; border:none;" onclick="modalNombrarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🎖️ Nombrar Jefe</button>
                 </td>
               </tr>`).join('')}
@@ -717,6 +718,45 @@ async function modalNombrarJefe(id, nombre) {
         }
     } catch(e) {
         Swal.fire('Error', 'Error al cargar carreras: ' + e.message, 'error');
+    }
+}
+
+async function modalAsignarEspecialidad(id, nombre) {
+    const { value: especialidad } = await Swal.fire({
+        title: 'Asignar Nivel / Especialidad',
+        html: `
+            <p style="margin-bottom:1rem; font-size:0.9rem; color:var(--muted);">Establece el Nivel/Especialidad para el Prof. <strong>${nombre}</strong>.</p>
+            <input type="text" id="swal-especialidad" class="swal2-input" placeholder="Ej: Matemática, Sistemas Informáticos..." style="width:90%;">
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonColor: '#0ea5e9',
+        confirmButtonText: 'Asignar Nivel',
+        preConfirm: () => {
+            const esp = document.getElementById('swal-especialidad').value;
+            if (!esp) { Swal.showValidationMessage('Debe ingresar un nivel/especialidad'); return false; }
+            return esp;
+        }
+    });
+
+    if (especialidad) {
+        try {
+            const r = await fetch(`${API_BASE}/auth/usuarios/${id}/especialidad`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+                body: JSON.stringify({especialidad: especialidad})
+            });
+            const d = await r.json();
+            if (r.ok) {
+                Swal.fire('¡Éxito!', d.mensaje, 'success');
+                document.directorioLoaded = false;
+                loadDirectorio();
+            } else {
+                Swal.fire('Error', d.detail || 'Error', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Error de red: ' + e.message, 'error');
+        }
     }
 }
 

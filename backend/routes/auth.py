@@ -432,6 +432,27 @@ def update_estado(usuario_id: int, data: EstadoUpdateBody):
     finally:
         conn.close()
 
+class EspecialidadUpdateBody(BaseModel):
+    especialidad: str
+
+@router.put("/usuarios/{usuario_id}/especialidad", dependencies=[Depends(get_current_user)])
+def update_especialidad(usuario_id: int, data: EspecialidadUpdateBody):
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Error de base de datos")
+    try:
+        cur = conn.cursor()
+        cur.execute("UPDATE usuarios SET nivel_asignado = %s WHERE id = %s AND rol IN ('docente', 'profesor')", (data.especialidad, usuario_id))
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Docente no encontrado")
+        conn.commit()
+        return {"mensaje": f"Especialidad/Nivel actualizado correctamente a: {data.especialidad}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+
 @router.put("/update-password")
 def update_my_password(data: PasswordResetBody, current_user: dict = Depends(get_current_user)):
     """Permite al usuario logueado cambiar su propia contraseña."""
