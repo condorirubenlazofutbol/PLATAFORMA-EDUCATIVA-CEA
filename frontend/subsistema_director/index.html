@@ -572,8 +572,8 @@ function renderDocentes() {
                   <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">🔑 Clave</button>
                   <button class="btn-sm" style="margin-left:4px; background:var(--primary); color:white; border:none;" onclick="modalAsignarEspecialidad(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">📘 Asignar Nivel</button>
                   ${d.rol === 'jefe_carrera' ? 
-                    `<button class="btn-sm" style="margin-left:4px; background:var(--warning); color:#fff; border:none;" onclick="modalNombrarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🔄 Reasignar Jefatura</button>` : 
-                    `<button class="btn-sm" style="margin-left:4px; background:var(--violet); color:white; border:none;" onclick="modalNombrarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🎖️ Nombrar Jefe</button>`
+                    `<button class="btn-sm" style="margin-left:4px; background:var(--warning); color:#fff; border:none;" onclick="modalNombrarJefe(${d.id}, '${esp.replace(/'/g,"\\'")}')">🔄 Reasignar Jefatura</button>` : 
+                    `<button class="btn-sm" style="margin-left:4px; background:var(--violet); color:white; border:none;" onclick="modalNombrarJefe(${d.id}, '${esp.replace(/'/g,"\\'")}')">🎖️ Nombrar Jefe</button>`
                   }
                 </td>
               </tr>`).join('')}
@@ -678,96 +678,79 @@ function exportarExcelPro() {
 }
 
 // ── Nombrar Jefe de Carrera ───────────────────────────
-async function modalNombrarJefe(id, nombre) {
-    try {
-        // Primero intentar cargar carreras del sistema
-        let carreras = [];
+async function modalNombrarJefe(id, especialidad) {
+    if (!especialidad || especialidad === 'Sin Especialidad') {
+        Swal.fire('Atención', 'El docente primero debe tener un nivel/especialidad asignado antes de ser Jefe.', 'warning');
+        return;
+    }
+    
+    const conf = await Swal.fire({
+        title: '🎖️ Nombrar Jefe de Carrera',
+        text: `¿Ascender a este profesor como Jefe de ${especialidad}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#8b5cf6',
+        confirmButtonText: 'Sí, ascender'
+    });
+
+    if (conf.isConfirmed) {
+        Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         try {
-            const res = await fetch(`${API_BASE}/malla/carreras`, {headers:{Authorization:`Bearer ${token}`}});
-            if(res.ok) {
-                const data = await res.json();
-                carreras = data.carreras || [];
-            }
-        } catch(e) {}
-
-        // Si no hay carreras en la BD, usar las especialidades del directorio actual
-        if (carreras.length === 0) {
-            // Obtener especialidades únicas del directorio de docentes ya cargado
-            const especialidades = [...new Set(
-                Object.keys(directorioData || {}).filter(e => e && e !== 'Sin Especialidad')
-            )];
-            // Crear carreras "virtuales" para el selector
-            carreras = especialidades.map((e, i) => ({
-                id: `esp:${e}`, nombre: e, area: 'General'
-            }));
-        }
-
-        if (carreras.length === 0) {
-            Swal.fire('Sin carreras', 'No hay carreras/especialidades registradas. Primero asigna una especialidad al docente con "Asignar Nivel".', 'info');
-            return;
-        }
-
-        let optionsHtml = '<option value="">-- Seleccione una Carrera --</option>';
-        carreras.forEach(c => {
-            optionsHtml += `<option value="${c.id}">${c.nombre} (${c.area})</option>`;
-        });
-
-        const { value: formValues } = await Swal.fire({
-            title: '🎖️ Nombrar Jefe de Carrera',
-            html: `
-                <p style="margin-bottom:1rem; font-size:0.9rem; color:var(--muted);">Ascender al Prof. <strong>${nombre}</strong> como Jefe de la siguiente carrera:</p>
-                <select id="swal-carrera" class="swal2-select" style="width:100%; max-width:100%; display:block; padding:8px;">
-                    ${optionsHtml}
-                </select>
-            `,
-            focusConfirm: false,
-            showCancelButton: true,
-            confirmButtonColor: '#8b5cf6',
-            confirmButtonText: '🎖️ Ascender a Jefe',
-            preConfirm: () => {
-                const cid = document.getElementById('swal-carrera').value;
-                if (!cid) { Swal.showValidationMessage('Debe seleccionar una carrera'); return false; }
-                return cid;
-            }
-        });
-
-        if (formValues) {
-            Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             const r2 = await fetch(`${API_BASE}/auth/promover-jefe-carrera`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
                 body: JSON.stringify({
                     usuario_id: id,
-                    carrera_id: isNaN(parseInt(formValues)) ? null : parseInt(formValues),
-                    especialidad_nombre: formValues.startsWith('esp:') ? formValues.replace('esp:', '') : null
+                    carrera_id: null,
+                    especialidad_nombre: especialidad
                 })
             });
             const d2 = await r2.json();
             Swal.close();
             if (r2.ok) {
-                Swal.fire('\u00a1\u00c9xito!', d2.mensaje, 'success');
+                Swal.fire('¡Éxito!', d2.mensaje, 'success');
                 document.directorioLoaded = false;
                 loadDirectorio();
             } else {
                 Swal.fire('Error', d2.detail || 'Error al promover', 'error');
             }
+        } catch(e) {
+            Swal.fire('Error', 'Error inesperado: ' + e.message, 'error');
         }
-    } catch(e) {
-        Swal.fire('Error', 'Error inesperado: ' + e.message, 'error');
     }
 }
 
 async function modalAsignarEspecialidad(id, nombre) {
+    // Extraer carreras y niveles activos de los estudiantes para el selector
+    let opcionesExtra = new Set();
+    if (dirData && dirData.grupos) {
+        for (const area in dirData.grupos) {
+            for (const carrera in dirData.grupos[area]) {
+                opcionesExtra.add(carrera);
+                for (const nivel in dirData.grupos[area][carrera]) {
+                    opcionesExtra.add(`${carrera} - ${nivel}`);
+                }
+            }
+        }
+    }
+    
+    let datalistHtml = '<datalist id="niveles-list">';
+    [...opcionesExtra].sort().forEach(op => {
+        datalistHtml += `<option value="${op}">`;
+    });
+    datalistHtml += '</datalist>';
+
     const { value: especialidad } = await Swal.fire({
-        title: 'Asignar Nivel / Especialidad',
+        title: '📘 Asignar Curso / Nivel',
         html: `
-            <p style="margin-bottom:1rem; font-size:0.9rem; color:var(--muted);">Establece el Nivel/Especialidad para el Prof. <strong>${nombre}</strong>.</p>
-            <input type="text" id="swal-especialidad" class="swal2-input" placeholder="Ej: Matemática, Sistemas Informáticos..." style="width:90%;">
+            <p style="margin-bottom:1rem; font-size:0.9rem; color:var(--muted);">Establece el Curso/Nivel para el Prof. <strong>${nombre}</strong>.</p>
+            <input type="text" list="niveles-list" id="swal-especialidad" class="swal2-input" placeholder="Ej: Sistemas Informáticos - Básico..." style="width:90%;">
+            ${datalistHtml}
         `,
         focusConfirm: false,
         showCancelButton: true,
         confirmButtonColor: '#0ea5e9',
-        confirmButtonText: 'Asignar Nivel',
+        confirmButtonText: 'Guardar Nivel',
         preConfirm: () => {
             const esp = document.getElementById('swal-especialidad').value;
             if (!esp) { Swal.showValidationMessage('Debe ingresar un nivel/especialidad'); return false; }
