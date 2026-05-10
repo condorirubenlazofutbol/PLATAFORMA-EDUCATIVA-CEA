@@ -677,9 +677,9 @@
 
         function downloadDocenteTemplate() {
             const data = [
-                ["Nombre", "Apellido", "Carnet"],
-                ["Carlos", "Mamani", "8877665"],
-                ["Ana", "Suarez", "5544332"]
+                ["Nombre", "Apellido", "Carnet", "Especialidad"],
+                ["Carlos", "Mamani", "8877665", "Ciencias Naturales"],
+                ["Ana", "Suarez", "5544332", "Sistemas Informáticos"]
             ];
             const ws = XLSX.utils.aoa_to_sheet(data);
             const wb = XLSX.utils.book_new();
