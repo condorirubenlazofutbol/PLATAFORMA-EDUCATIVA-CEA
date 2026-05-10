@@ -559,14 +559,20 @@ function renderDocentes() {
             <tbody>${docs.map(d => `
               <tr>
                 <td><strong>${d.carnet||'S/N'}</strong></td>
-                <td>${d.apellido} ${d.nombre}</td>
+                <td>
+                  ${d.apellido} ${d.nombre}
+                  ${d.rol === 'jefe_carrera' ? '<span class="badge" style="background:var(--violet); color:white; margin-left:8px; font-size:0.7rem;">🎖️ Jefe de Carrera</span>' : ''}
+                </td>
                 <td style="font-size:.78rem;color:var(--muted);">${d.email}</td>
                 <td><span class="badge ${d.estado==='activo'?'b-ok':'b-err'}">${d.estado}</span></td>
                 <td style="white-space:nowrap;">
                   <button class="btn-del btn-del-ind" onclick="eliminarIndividual(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')" >🗑 Eliminar</button>
                   <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">🔑 Clave</button>
                   <button class="btn-sm" style="margin-left:4px; background:var(--primary); color:white; border:none;" onclick="modalAsignarEspecialidad(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">📘 Asignar Nivel</button>
-                  <button class="btn-sm" style="margin-left:4px; background:var(--violet); color:white; border:none;" onclick="modalNombrarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🎖️ Nombrar Jefe</button>
+                  ${d.rol === 'jefe_carrera' ? 
+                    `<button class="btn-sm" style="margin-left:4px; background:var(--warning); color:#fff; border:none;" onclick="modalNombrarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🔄 Reasignar Jefatura</button>` : 
+                    `<button class="btn-sm" style="margin-left:4px; background:var(--violet); color:white; border:none;" onclick="modalNombrarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🎖️ Nombrar Jefe</button>`
+                  }
                 </td>
               </tr>`).join('')}
             </tbody>

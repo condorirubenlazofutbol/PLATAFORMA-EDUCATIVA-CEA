@@ -487,8 +487,13 @@ async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = 
     subsistema_id = current_user.get("subsistema_id")
     
     for row in sheet.iter_rows(min_row=2, values_only=True):
-        nombre, apellido, carnet = row
+        nombre = row[0]
+        carnet = row[2] if len(row) > 2 else None
         if not nombre or not carnet: continue
+        
+        apellido = row[1] if len(row) > 1 else ""
+        # Si el excel tiene una 4ta columna, usarla como nivel/especialidad, sino usar el default
+        actual_nivel = str(row[3]).strip() if len(row) > 3 and row[3] else nivel
         
         try:
             # Limpieza profunda para email
@@ -502,7 +507,7 @@ async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = 
             
             cur.execute(
                 "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                (subsistema_id, str(nombre).strip(), str(apellido).strip(), email, hashed, rol, nivel, s_carnet)
+                (subsistema_id, str(nombre).strip(), str(apellido).strip(), email, hashed, rol, actual_nivel, s_carnet)
             )
             conn.commit() # Commit per row
             registrados += 1

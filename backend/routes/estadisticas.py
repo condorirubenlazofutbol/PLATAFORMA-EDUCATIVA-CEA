@@ -155,9 +155,9 @@ def directorio_exportar(current_user: dict = Depends(get_current_user)):
         
         # Profesores
         cur.execute("""
-            SELECT id, nombre, apellido, carnet, email, estado, nivel_asignado as area_especialidad, fecha_registro::date as fecha_ingreso
+            SELECT id, nombre, apellido, carnet, email, estado, rol, nivel_asignado as area_especialidad, fecha_registro::date as fecha_ingreso
             FROM usuarios 
-            WHERE rol IN ('docente','profesor')
+            WHERE rol IN ('docente','profesor','jefe_carrera')
             ORDER BY apellido
         """)
         profesores = rows_to_dicts(cur, cur.fetchall())
