@@ -174,7 +174,7 @@
             <!-- Cargado dinámicamente -->
         </div>
 
-        <div class="section-label" style="margin-top: 3rem;">Otros Recursos</div>
+        <div class="section-label" id="labelSecondary" style="margin-top: 3rem;">Otros Recursos</div>
         <div class="apps-grid" id="secondaryGrid">
             <!-- Cargado dinámicamente -->
         </div>
@@ -252,7 +252,8 @@
             totalVisible++;
         });
         document.getElementById('statAccesos').textContent = totalVisible;
-        if (!secondaryGrid.children.length) document.getElementById('labelSecondary').style.display = 'none';
+        const secLabel = document.getElementById('labelSecondary');
+        if (secLabel && !secondaryGrid.children.length) secLabel.style.display = 'none';
 
         fetch(`${API_BASE}/modulos`, { headers: { 'Authorization': `Bearer ${token}` } })
             .then(r => r.ok ? r.json() : {modulos: []})

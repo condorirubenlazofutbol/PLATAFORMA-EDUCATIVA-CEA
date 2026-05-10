@@ -52,8 +52,15 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
             raise HTTPException(status_code=401, detail="Contraseña incorrecta")
 
         token = auth.create_access_token(data={"sub": row[2]})
+        rol_retornado = row[4]
+        # Normalizar roles: unificar variantes para que el frontend funcione correctamente
+        if rol_retornado == 'profesor':
+            rol_retornado = 'docente'
+        elif rol_retornado == 'jefe':
+            rol_retornado = 'jefe_carrera'
+        
         return {"access_token": token, "token_type": "bearer",
-                "rol": row[4], "nombre": row[1], "nivel_asignado": row[5], "subsistema_id": row[7]}
+                "rol": rol_retornado, "nombre": row[1], "nivel_asignado": row[5], "subsistema_id": row[7]}
     except HTTPException as he:
         raise he
     except Exception as e:
@@ -182,6 +189,60 @@ def register_usuario(data: RegistroUsuario):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         cur.close(); conn.close()
+
+@router.get("/plantilla-estudiantes")
+def descargar_plantilla_estudiantes():
+    from fastapi.responses import StreamingResponse
+    import io
+    import openpyxl
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Estudiantes"
+    
+    headers = ["Carnet", "Nombres", "Apellidos", "Área (Técnica/Humanística)", "Nivel (Ej: 1er Semestre)"]
+    ws.append(headers)
+    
+    # Algunos datos de ejemplo
+    ws.append(["12345678", "Juan Perez", "Gomez", "Técnica", "Sistemas Informáticos"])
+    ws.append(["87654321", "Maria", "Lopez", "Humanística", "Ciencias Naturales"])
+
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+    
+    return StreamingResponse(
+        stream, 
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=Plantilla_Estudiantes_CEA.xlsx"}
+    )
+
+@router.get("/plantilla-docentes")
+def descargar_plantilla_docentes():
+    from fastapi.responses import StreamingResponse
+    import io
+    import openpyxl
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Docentes"
+    
+    headers = ["Nombres", "Apellidos", "Carnet", "Especialidad / Carrera Asignada"]
+    ws.append(headers)
+    
+    # Datos de ejemplo
+    ws.append(["Carlos", "Mamani", "8877665", "Sistemas Informáticos"])
+    ws.append(["Ana", "Suarez", "5544332", "Belleza Integral"])
+
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+    
+    return StreamingResponse(
+        stream, 
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=Plantilla_Docentes_CEA.xlsx"}
+    )
 
 @router.post("/importar-estudiantes-excel")
 async def importar_estudiantes_excel(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
