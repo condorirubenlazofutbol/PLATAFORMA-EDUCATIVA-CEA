@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from typing import Optional
@@ -532,11 +532,15 @@ def update_especialidad(usuario_id: int, data: EspecialidadUpdateBody):
         raise HTTPException(status_code=500, detail="Error de base de datos")
     try:
         cur = conn.cursor()
-        cur.execute("UPDATE usuarios SET nivel_asignado = %s WHERE id = %s AND rol IN ('docente', 'profesor')", (data.especialidad, usuario_id))
+        # Guarda en curso_asignado (no toca nivel_asignado que es la materia/especialidad del docente)
+        cur.execute(
+            "UPDATE usuarios SET curso_asignado = %s WHERE id = %s AND rol IN ('docente', 'profesor', 'jefe_carrera')",
+            (data.especialidad, usuario_id)
+        )
         if cur.rowcount == 0:
             raise HTTPException(status_code=404, detail="Docente no encontrado")
         conn.commit()
-        return {"mensaje": f"Especialidad/Nivel actualizado correctamente a: {data.especialidad}"}
+        return {"mensaje": f"Nivel/Curso asignado: {data.especialidad}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:

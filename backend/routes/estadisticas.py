@@ -216,6 +216,7 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
         cur.execute("""
             SELECT id, nombre, apellido, carnet, email, estado, rol,
                    COALESCE(nivel_asignado, 'Sin Especialidad') as especialidad,
+                   COALESCE(curso_asignado, '') as nivel_asignado,
                    fecha_registro::date as fecha_ingreso
             FROM usuarios 
             WHERE rol IN ('docente','profesor','jefe_carrera')

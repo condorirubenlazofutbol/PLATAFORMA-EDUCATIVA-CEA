@@ -87,6 +87,7 @@ def init_db():
         
         # Add column if table already exists (for backwards compatibility without data loss)
         cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS curso_asignado VARCHAR(200)")
 
         # 2.5 Nueva Tabla: Inscripciones (Dualidad)
         cursor.execute('''
