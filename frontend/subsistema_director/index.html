@@ -431,7 +431,23 @@ function renderDirectorio() {
   let html = '';
 
   const areaLabels = { tecnica: { label: '🔵 Área Técnica', cls: 'area-tec' }, humanistica: { label: '🟣 Área Humanística', cls: 'area-hum' } };
-  const orderedAreas = Object.keys(grupos).sort();
+  
+  const nivelOrder = {
+    'Nivel Básico': 1, 'Nivel Auxiliar': 2, 'Nivel Medio I': 3, 'Nivel Medio II': 4,
+    'Aplicados (Primer Año)': 1, 'Complementarios (Segundo Año)': 2, 'Especializados (Tercer Año)': 3
+  };
+  function sortNiveles([nA], [nB]) {
+    const oA = nivelOrder[nA] || 99;
+    const oB = nivelOrder[nB] || 99;
+    if (oA !== oB) return oA - oB;
+    return nA.localeCompare(nB);
+  }
+
+  const orderedAreas = Object.keys(grupos).sort((a,b) => {
+    if(a==='humanistica') return -1;
+    if(b==='humanistica') return 1;
+    return a.localeCompare(b);
+  });
 
   for (const area of orderedAreas) {
     if (areaFiltro && area !== areaFiltro) continue;
@@ -444,7 +460,7 @@ function renderDirectorio() {
       let totalCarrera = 0;
       let nivelesHtml = '';
 
-      for (const [nivel, data] of Object.entries(niveles).sort()) {
+      for (const [nivel, data] of Object.entries(niveles).sort(sortNiveles)) {
         const alumnos = data.alumnos.filter(a => {
           if (!query) return true;
           return `${a.nombre} ${a.apellido} ${a.carnet}`.toLowerCase().includes(query);
@@ -651,29 +667,54 @@ async function resetPassword(id, carnet) {
 
 // ── Exportar Excel Pro ───────────────────────────
 function exportarExcelPro() {
-  if(!dirData) return alert("Espera a que carguen los datos del directorio.");
+  if(!dirData || !dirData.grupos) return alert("Espera a que carguen los datos del directorio.");
   const wb = XLSX.utils.book_new();
 
-  // Hoja resumen por carrera
-  const resumen = (dirData.resumen_carreras || []).map(r => ({
-    'Área': r.area, 'Carrera/Especialidad': r.carrera, 'Total Estudiantes': r.total
-  }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumen), "Resumen por Carrera");
+  const nivelOrder = {
+    'Nivel Básico': 1, 'Nivel Auxiliar': 2, 'Nivel Medio I': 3, 'Nivel Medio II': 4,
+    'Aplicados (Primer Año)': 1, 'Complementarios (Segundo Año)': 2, 'Especializados (Tercer Año)': 3
+  };
 
-  // Hoja estudiantes completa
-  const ests = (dirData.estudiantes || []).map(e => ({
-    'CI': e.carnet, 'Apellidos': e.apellido, 'Nombres': e.nombre, 'Email': e.email,
-    'Área': e.area, 'Carrera': e.carrera, 'Nivel': e.nivel,
-    'Estado': e.estado, 'Fecha Inscripción': e.fecha_inscripcion
-  }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ests), "Estudiantes");
+  // Crear una hoja por cada Carrera (ordenada por niveles lógicamente)
+  for (const area in dirData.grupos) {
+    for (const carrera in dirData.grupos[area]) {
+      const niveles = dirData.grupos[area][carrera];
+      
+      const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => {
+        return (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99);
+      });
+
+      const data = [];
+      sortedNiveles.forEach(([nivel, d]) => {
+        d.alumnos.forEach((a) => {
+          data.push({
+            'Nivel/Curso': nivel,
+            'CI': a.carnet || 'S/N',
+            'Apellidos': a.apellido,
+            'Nombres': a.nombre,
+            'Paralelo': a.paralelo || 'A',
+            'Estado': a.estado,
+            'Fecha Inscripción': a.fecha_inscripcion || ''
+          });
+        });
+      });
+
+      if (data.length > 0) {
+        let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31);
+        if(!sheetName) sheetName = "Estudiantes";
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), sheetName);
+      }
+    }
+  }
 
   // Hoja docentes
-  const docs = (dirData.docentes || []).map(d => ({
-    'CI': d.carnet, 'Apellidos': d.apellido, 'Nombres': d.nombre, 'Email': d.email,
-    'Especialidad': d.especialidad, 'Estado': d.estado, 'Fecha Ingreso': d.fecha_ingreso
-  }));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docs), "Plantel Docente");
+  if (dirData.docentes && dirData.docentes.length > 0) {
+      const docs = dirData.docentes.map(d => ({
+        'CI': d.carnet, 'Apellidos': d.apellido, 'Nombres': d.nombre, 'Email': d.email,
+        'Especialidad': d.especialidad, 'Estado': d.estado, 'Fecha Ingreso': d.fecha_ingreso
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docs), "Plantel Docente");
+  }
 
   XLSX.writeFile(wb, `Directorio_CEA_Pailon_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
 }
@@ -735,8 +776,24 @@ async function modalAsignarEspecialidad(id, nombre) {
         }
     }
     
+    const nivelOrder = {
+      'Nivel Básico': 1, 'Nivel Auxiliar': 2, 'Nivel Medio I': 3, 'Nivel Medio II': 4,
+      'Aplicados (Primer Año)': 1, 'Complementarios (Segundo Año)': 2, 'Especializados (Tercer Año)': 3
+    };
+    function getOrder(str) {
+      if (!str.includes(' - ')) return 0;
+      const parts = str.split(' - ');
+      const n = parts[parts.length - 1];
+      return nivelOrder[n] || 99;
+    }
+
     let datalistHtml = '<datalist id="niveles-list">';
-    [...opcionesExtra].sort().forEach(op => {
+    [...opcionesExtra].sort((a, b) => {
+      const cA = a.split(' - ')[0];
+      const cB = b.split(' - ')[0];
+      if (cA !== cB) return cA.localeCompare(cB);
+      return getOrder(a) - getOrder(b);
+    }).forEach(op => {
         datalistHtml += `<option value="${op}">`;
     });
     datalistHtml += '</datalist>';
