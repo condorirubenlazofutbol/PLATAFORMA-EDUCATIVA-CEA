@@ -490,7 +490,7 @@ function renderDirectorio() {
         <div class="dir-carrera">
           <div class="dir-carrera-header">
             <div>
-              <div class="dir-carrera-title">${carrera}</div>
+              <div class="dir-carrera-title">${area === 'humanistica' ? `📚 Especialidad: ${carrera}` : `🎓 ${carrera}`}</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
               <span class="dir-carrera-badge">${totalCarrera} estudiantes</span>

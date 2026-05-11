@@ -200,12 +200,13 @@ def descargar_plantilla_estudiantes():
     ws = wb.active
     ws.title = "Estudiantes"
     
-    headers = ["Carnet", "Nombres", "Apellidos", "Área (Técnica/Humanística)", "Nivel (Ej: 1er Semestre)"]
+    # Formato estandarizado: 3 columnas
+    headers = ["Nombres", "Apellidos", "Carnet / CI"]
     ws.append(headers)
     
-    # Algunos datos de ejemplo
-    ws.append(["12345678", "Juan Perez", "Gomez", "Técnica", "Sistemas Informáticos"])
-    ws.append(["87654321", "Maria", "Lopez", "Humanística", "Ciencias Naturales"])
+    # Datos de ejemplo
+    ws.append(["Juan", "Perez", "12345678"])
+    ws.append(["Maria", "Lopez", "87654321"])
 
     stream = io.BytesIO()
     wb.save(stream)
@@ -227,12 +228,13 @@ def descargar_plantilla_docentes():
     ws = wb.active
     ws.title = "Docentes"
     
-    headers = ["Nombres", "Apellidos", "Carnet", "Especialidad / Carrera Asignada"]
+    # Formato estandarizado: 3 columnas
+    headers = ["Nombres", "Apellidos", "Carnet / CI"]
     ws.append(headers)
     
     # Datos de ejemplo
-    ws.append(["Carlos", "Mamani", "8877665", "Sistemas Informáticos"])
-    ws.append(["Ana", "Suarez", "5544332", "Belleza Integral"])
+    ws.append(["Carlos", "Mamani", "8877665"])
+    ws.append(["Ana", "Suarez", "5544332"])
 
     stream = io.BytesIO()
     wb.save(stream)
@@ -572,35 +574,42 @@ async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = 
     conn = get_db_connection()
     cur = conn.cursor()
     
-    subsistema_id = current_user.get("subsistema_id")
+    subsistema_id = current_user.get("subsistema_id") or 1
     
     for row in sheet.iter_rows(min_row=2, values_only=True):
-        nombre = row[0]
-        carnet = row[2] if len(row) > 2 else None
+        nombre = str(row[0]).strip() if row[0] else ""
+        carnet = str(row[2]).strip() if len(row) > 2 and row[2] else ""
         if not nombre or not carnet: continue
         
-        apellido = row[1] if len(row) > 1 else ""
-        # Si el excel tiene una 4ta columna, usarla como nivel/especialidad, sino usar el default
-        actual_nivel = str(row[3]).strip() if len(row) > 3 and row[3] else nivel
+        apellido = str(row[1]).strip() if len(row) > 1 and row[1] else ""
         
         try:
-            # Limpieza profunda para email
-            clean_n = str(nombre).strip().split(' ')[0].lower()
-            clean_a = str(apellido).strip().split(' ')[0].lower()
+            clean_n = nombre.split(' ')[0].lower()
+            clean_a = apellido.split(' ')[0].lower()
             email = f"{clean_n}{clean_a}@ceapailon.com"
             
-            # Asegurar carnet como string y hash
             s_carnet = str(carnet).strip()
             hashed = auth.get_password_hash(s_carnet)
             
+            # Rol para docente: usar 'docente'
+            db_rol = 'docente' if rol in ('docente', 'profesor') else rol
+            
             cur.execute(
-                "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                (subsistema_id, str(nombre).strip(), str(apellido).strip(), email, hashed, rol, actual_nivel, s_carnet)
+                """INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                   ON CONFLICT (email) DO UPDATE SET
+                       nombre = EXCLUDED.nombre,
+                       apellido = EXCLUDED.apellido,
+                       nivel_asignado = EXCLUDED.nivel_asignado,
+                       carnet = EXCLUDED.carnet
+                   RETURNING id""",
+                (subsistema_id, nombre, apellido, email, hashed, db_rol, nivel, s_carnet)
             )
-            conn.commit() # Commit per row
+            new_id = cur.fetchone()[0]
+            conn.commit()
             registrados += 1
         except Exception as e:
-            conn.rollback() # Rollback solo esta fila
+            conn.rollback()
             errores.append(f"Error en fila {nombre}: {str(e)}")
             continue
 
