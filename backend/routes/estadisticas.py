@@ -1,4 +1,4 @@
-﻿"""
+"""
 estadisticas.py â€” Dashboard de estadÃ­sticas institucionales CEA
 KPIs en tiempo real: matriculados, aprobados, deserciÃ³n, por carrera/nivel/Ã¡rea.
 """
@@ -132,19 +132,18 @@ def directorio_exportar(current_user: dict = Depends(get_current_user)):
     try:
         cur = conn.cursor()
         # Estudiantes
+        # Multi-inscripción: JOIN directo sin DISTINCT para que aparezca en cada carrera inscrita
         cur.execute("""
-            SELECT u.id, u.nombre, u.apellido, u.carnet, u.email, u.estado, u.fecha_registro::date as fecha_inscripcion,
+            SELECT u.id, u.nombre, u.apellido, u.carnet, u.email, u.estado,
+                   COALESCE(i.fecha_inscripcion::date, u.fecha_registro::date) as fecha_inscripcion,
                    COALESCE(c.nombre, 'Sin Carrera Asignada') as carrera,
-                   COALESCE(c.area, 'humanistica') as area,
+                   LOWER(COALESCE(c.area, 'humanistica')) as area,
                    COALESCE(i.nivel, u.nivel_asignado, 'Sin Nivel') as nivel,
                    COALESCE(i.paralelo, 'A') as paralelo
             FROM usuarios u
-            LEFT JOIN (
-                SELECT DISTINCT ON (usuario_id) usuario_id, carrera_id, nivel, paralelo
-                FROM inscripciones ORDER BY usuario_id, id DESC
-            ) i ON i.usuario_id = u.id
-            LEFT JOIN carreras c ON i.carrera_id = c.id
-            WHERE u.rol = 'estudiante'
+            JOIN inscripciones i ON i.usuario_id = u.id
+            JOIN carreras c ON c.id = i.carrera_id
+            WHERE u.rol = 'estudiante' AND i.estado = 'activo'
             ORDER BY area, carrera, nivel, paralelo, u.apellido
         """)
         estudiantes = rows_to_dicts(cur, cur.fetchall())
@@ -170,7 +169,7 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     try:
         cur = conn.cursor()
-        # Estudiantes con su carrera y nivel (por inscripciÃ³n o por nivel_asignado)
+        # Multi-inscripción: un estudiante aparece en CADA carrera donde esté inscrito
         cur.execute("""
             SELECT 
                 u.id,
@@ -179,18 +178,15 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
                 u.carnet,
                 u.email,
                 u.estado,
-                u.fecha_registro::date as fecha_inscripcion,
+                COALESCE(i.fecha_inscripcion::date, u.fecha_registro::date) as fecha_inscripcion,
                 COALESCE(c.nombre, 'Sin Carrera Asignada') as carrera,
-                COALESCE(c.area, 'humanistica') as area,
+                LOWER(COALESCE(c.area, 'humanistica')) as area,
                 COALESCE(i.nivel, u.nivel_asignado, 'Sin Nivel') as nivel,
                 COALESCE(i.paralelo, 'A') as paralelo
             FROM usuarios u
-            LEFT JOIN (
-                SELECT DISTINCT ON (usuario_id) usuario_id, carrera_id, nivel, paralelo
-                FROM inscripciones ORDER BY usuario_id, id DESC
-            ) i ON i.usuario_id = u.id
-            LEFT JOIN carreras c ON i.carrera_id = c.id
-            WHERE u.rol = 'estudiante'
+            JOIN inscripciones i ON i.usuario_id = u.id
+            JOIN carreras c ON c.id = i.carrera_id
+            WHERE u.rol = 'estudiante' AND i.estado = 'activo'
             ORDER BY area, carrera, nivel, paralelo, u.apellido
         """)
         rows = rows_to_dicts(cur, cur.fetchall())
