@@ -136,6 +136,31 @@ def get_carreras(current_user: dict = Depends(get_current_user)):
         cur.close(); conn.close()
 
 
+@router.delete("/carreras/{carrera_id}")
+def delete_carrera(carrera_id: int, current_user: dict = Depends(get_current_user)):
+    """Elimina una carrera específica (solo Director/Admin)."""
+    if current_user["rol"] not in ["admin", "administrador", "director"]:
+        raise HTTPException(403, "Solo el Director puede eliminar carreras")
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT nombre FROM carreras WHERE id = %s", (carrera_id,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(404, "Carrera no encontrada")
+        nombre = row[0]
+        # Eliminar inscripciones y módulos relacionados primero (CASCADE debería manejarlo)
+        cur.execute("DELETE FROM carreras WHERE id = %s", (carrera_id,))
+        conn.commit()
+        return {"mensaje": f"Carrera '{nombre}' eliminada correctamente"}
+    except HTTPException: raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(500, f"Error al eliminar carrera: {str(e)}")
+    finally:
+        cur.close(); conn.close()
+
+
 @router.get("/{carrera_id}/estructura")
 def get_estructura(carrera_id: int):
     """Estructura completa de una carrera: niveles → módulos → temas."""
