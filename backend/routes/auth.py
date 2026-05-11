@@ -650,8 +650,8 @@ def promover_alta_direccion(data: PromoverDirectorRequest, current_user: dict = 
 
 class PromoverJefeRequest(BaseModel):
     usuario_id: int
-    carrera_id: Opt[int] = None
-    especialidad_nombre: Opt[str] = None  # Nombre de la especialidad si no hay carrera_id
+    carrera_id: Optional[int] = None
+    especialidad_nombre: Optional[str] = None  # Nombre de la especialidad si no hay carrera_id
 
 @router.post("/promover-jefe-carrera", dependencies=[Depends(get_current_user)])
 def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depends(get_current_user)):
