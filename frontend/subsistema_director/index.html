@@ -816,7 +816,10 @@ async function modalNombrarJefe(id, especialidad) {
                 document.directorioLoaded = false;
                 loadDirectorio();
             } else {
-                Swal.fire('Error', d2.detail || 'Error al promover', 'error');
+                const msg = r2.status === 403
+                    ? '⚠️ Solo el Director puede nombrar Jefes de Carrera.\n\nCierre sesión e ingrese con las credenciales del Director.'
+                    : (d2.detail || 'Error al promover');
+                Swal.fire('Sin permiso', msg, r2.status === 403 ? 'warning' : 'error');
             }
         } catch(e) {
             Swal.fire('Error', 'Error inesperado: ' + e.message, 'error');
