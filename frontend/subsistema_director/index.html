@@ -816,19 +816,18 @@ async function modalNombrarJefe(id, especialidad) {
 
 // ── Asignar Nivel/Curso al docente (Nivel Pro) ───────────────────────────
 async function modalAsignarNivel(id, nombre) {
-    // Detectar área del docente buscando su especialidad en los grupos de estudiantes
     const docente = (dirData.docentes || []).find(d => d.id === id);
     const espDocente = docente ? (docente.especialidad || '') : '';
+    const nivelActual = docente ? (docente.nivel_asignado || '') : '';
 
-    const areaDeEsp = {};
-    if (dirData.grupos) {
-        for (const area in dirData.grupos) {
-            for (const carrera in dirData.grupos[area]) {
-                areaDeEsp[carrera] = area;
-            }
-        }
-    }
-    const areaDocente = areaDeEsp[espDocente] || 'tecnica';
+    // Detección de área: es TÉCNICA solo si la especialidad coincide exactamente
+    // con una carrera en el grupo de técnica. En cualquier otro caso → Humanística.
+    const carrerasTecnicas = new Set(
+        dirData.grupos && dirData.grupos['tecnica']
+            ? Object.keys(dirData.grupos['tecnica'])
+            : []
+    );
+    const areaDocente = carrerasTecnicas.has(espDocente) ? 'tecnica' : 'humanistica';
 
     let htmlContenido = '';
     let titulo = '';
@@ -836,25 +835,62 @@ async function modalAsignarNivel(id, nombre) {
     if (areaDocente === 'humanistica') {
         // HUMANÍSTICA: checkboxes multi-select — puede dar 1, 2 o los 3 cursos
         titulo = '📚 Asignar Cursos — Área Humanística';
+
+        // Detectar los cursos disponibles con sus paralelos (si hay >40 inscritos)
+        const cursosHum = [
+            { id: 'ap', base: 'Aplicados (Primer Año)',        emoji: '📗', color: '139,92,246' },
+            { id: 'co', base: 'Complementarios (Segundo Año)', emoji: '📘', color: '14,165,233' },
+            { id: 'es', base: 'Especializados (Tercer Año)',   emoji: '📙', color: '72,209,142' }
+        ];
+
+        let checkboxesHtml = '';
+        cursosHum.forEach(c => {
+            // Buscar si este curso tiene paralelos en los grupos de estudiantes
+            const paralelosEnCurso = new Set();
+            if (dirData.grupos && dirData.grupos['humanistica']) {
+                for (const carrera in dirData.grupos['humanistica']) {
+                    const niveles = dirData.grupos['humanistica'][carrera];
+                    for (const nivelKey in niveles) {
+                        // La clave puede ser "Aplicados..." o "Aplicados... - Paralelo A"
+                        if (nivelKey.startsWith(c.base)) {
+                            const match = nivelKey.match(/Paralelo ([A-Z])$/);
+                            if (match) paralelosEnCurso.add(match[1]);
+                        }
+                    }
+                }
+            }
+
+            if (paralelosEnCurso.size > 1) {
+                // Hay paralelos: mostrar opción por paralelo
+                [...paralelosEnCurso].sort().forEach(p => {
+                    const val = `${c.base} - Paralelo ${p}`;
+                    const checked = nivelActual.includes(c.base) && nivelActual.includes(`Paralelo ${p}`) ? 'checked' : '';
+                    checkboxesHtml += `
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
+                        <input type="checkbox" id="ch-${c.id}-${p.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
+                        <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — Paralelo ${p}</span>
+                    </label>`;
+                });
+            } else {
+                // Solo un grupo: mostrar el curso normal
+                const checked = nivelActual.includes(c.base) ? 'checked' : '';
+                checkboxesHtml += `
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
+                    <input type="checkbox" id="ch-${c.id}" value="${c.base}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
+                    <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${c.base.split('(')[1]?.replace(')','') || ''}</span>
+                </label>`;
+            }
+        });
+
         htmlContenido = `
             <p style="font-size:.85rem;color:#94a3b8;margin-bottom:12px;">
                 Prof. <strong>${nombre}</strong> · Materia: <strong>${espDocente}</strong><br>
-                <small>Selecciona los cursos que impartirá (puede ser más de uno).</small>
+                <small>Selecciona los cursos que impartirá (puede ser 1, 2 o los 3).</small>
             </p>
             <div style="display:flex;flex-direction:column;gap:10px;text-align:left;">
-                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.3);border-radius:10px;cursor:pointer;">
-                    <input type="checkbox" id="ch-ap" value="Aplicados (Primer Año)" style="width:18px;height:18px;accent-color:#8b5cf6;">
-                    <span>📗 <strong>Aplicados</strong> — Primer Año</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(14,165,233,0.08);border:1px solid rgba(14,165,233,0.3);border-radius:10px;cursor:pointer;">
-                    <input type="checkbox" id="ch-co" value="Complementarios (Segundo Año)" style="width:18px;height:18px;accent-color:#0ea5e9;">
-                    <span>📘 <strong>Complementarios</strong> — Segundo Año</span>
-                </label>
-                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(72,209,142,0.08);border:1px solid rgba(72,209,142,0.3);border-radius:10px;cursor:pointer;">
-                    <input type="checkbox" id="ch-es" value="Especializados (Tercer Año)" style="width:18px;height:18px;accent-color:#48d18e;">
-                    <span>📙 <strong>Especializados</strong> — Tercer Año</span>
-                </label>
+                ${checkboxesHtml}
             </div>`;
+
     } else {
         // TÉCNICA: un solo nivel + paralelo si existe
         titulo = '🎓 Asignar Nivel — Área Técnica';
@@ -907,9 +943,8 @@ async function modalAsignarNivel(id, nombre) {
         focusConfirm: false,
         preConfirm: () => {
             if (areaDocente === 'humanistica') {
-                const sel = ['ch-ap','ch-co','ch-es']
-                    .map(id => document.getElementById(id))
-                    .filter(el => el && el.checked)
+                // Recoger TODOS los checkboxes marcados del contenedor (IDs dinámicos)
+                const sel = [...document.querySelectorAll('.swal2-html-container input[type="checkbox"]:checked')]
                     .map(el => el.value);
                 if (sel.length === 0) {
                     Swal.showValidationMessage('Debes seleccionar al menos un curso.');
