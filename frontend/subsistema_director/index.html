@@ -787,34 +787,51 @@ function descargarExcelCurso(area, carrera, nivel) {
 
     const isHum = area === 'humanistica';
     
-    // Nombres de columnas según área
-    const headers = isHum 
-        ? ["Área", "Especialidad", "Nivel/Curso", "Paralelo", "Carnet/CI", "Apellidos", "Nombres", "Estado"]
-        : ["Área", "Carrera", "Nivel/Curso", "Paralelo", "Carnet/CI", "Apellidos", "Nombres", "Estado"];
+    // Encabezado Pro
+    const data = [
+        ["CENTRO DE EDUCACIÓN ALTERNATIVA 'PAILÓN'"],
+        ["LISTA OFICIAL DE ESTUDIANTES"],
+        [""],
+        ["ÁREA:", isHum ? "Humanística" : "Técnica"],
+        [isHum ? "ESPECIALIDAD:" : "CARRERA:", carrera],
+        ["NIVEL / CURSO:", nivel],
+        ["FECHA DE REPORTE:", new Date().toLocaleDateString()],
+        [""],
+        ["N°", "Carnet / CI", "Apellidos", "Nombres", "Paralelo", "Estado", "Fecha Inscripción"]
+    ];
 
-    const data = [headers];
-
-    alumnos.forEach(a => {
+    alumnos.forEach((a, index) => {
         data.push([
-            isHum ? "Humanística" : "Técnica",
-            carrera,
-            nivel,
-            a.paralelo || 'A',
+            index + 1,
             a.carnet || 'S/N',
             a.apellido,
             a.nombre,
-            a.estado
+            a.paralelo || 'A',
+            a.estado,
+            a.fecha_inscripcion || ''
         ]);
     });
 
     const ws = XLSX.utils.aoa_to_sheet(data);
+    
+    // Combinar celdas para el título
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // CEA Pailon
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }  // Lista Oficial
+    ];
+
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Estudiantes");
+    XLSX.utils.book_append_sheet(wb, ws, "Lista Curso");
     
     // Auto-ajustar ancho de columnas
     const colWidths = [
-        { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 10 }, 
-        { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 10 }
+        { wch: 5 },  // N°
+        { wch: 15 }, // CI
+        { wch: 25 }, // Apellidos
+        { wch: 25 }, // Nombres
+        { wch: 10 }, // Paralelo
+        { wch: 12 }, // Estado
+        { wch: 15 }  // Fecha
     ];
     ws['!cols'] = colWidths;
 
