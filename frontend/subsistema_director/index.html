@@ -820,14 +820,25 @@ async function modalAsignarNivel(id, nombre) {
     const espDocente = docente ? (docente.especialidad || '') : '';
     const nivelActual = docente ? (docente.nivel_asignado || '') : '';
 
-    // Detección de área: es TÉCNICA solo si la especialidad coincide exactamente
-    // con una carrera en el grupo de técnica. En cualquier otro caso → Humanística.
-    const carrerasTecnicas = new Set(
-        dirData.grupos && dirData.grupos['tecnica']
-            ? Object.keys(dirData.grupos['tecnica'])
-            : []
-    );
-    const areaDocente = carrerasTecnicas.has(espDocente) ? 'tecnica' : 'humanistica';
+    // Detección de área — usa el catálogo oficial del backend (independiente de inscripciones)
+    // Si la carrera del docente está en el catálogo con area='técnica' → técnica
+    // Si está como 'humanística' o no está en el catálogo → humanística
+    const catalogo = dirData.catalogo_areas || {};
+    let areaDocente = catalogo[espDocente] || null;
+
+    if (!areaDocente) {
+        // Fallback: buscar en grupos de estudiantes
+        const carrerasTecnicas = new Set(
+            dirData.grupos && dirData.grupos['tecnica']
+                ? Object.keys(dirData.grupos['tecnica'])
+                : []
+        );
+        areaDocente = carrerasTecnicas.has(espDocente) ? 'tecnica' : 'humanistica';
+    }
+    // Normalizar (puede venir como 'Técnica' con mayúscula del backend)
+    areaDocente = areaDocente.toLowerCase().replace('é','e').replace('á','a').replace('ó','o');
+    const esTecnica = areaDocente.includes('tecnica') || areaDocente.includes('técnica');
+    areaDocente = esTecnica ? 'tecnica' : 'humanistica';
 
     let htmlContenido = '';
     let titulo = '';

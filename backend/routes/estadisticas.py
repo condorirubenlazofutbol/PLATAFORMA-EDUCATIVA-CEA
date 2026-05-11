@@ -238,6 +238,10 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
         """)
         resumen_carreras = rows_to_dicts(cur, cur.fetchall())
 
+        # Catálogo completo de carreras con su área (independiente de inscripciones)
+        cur.execute("SELECT nombre, LOWER(area) as area FROM carreras WHERE estado = 'activo' ORDER BY area, nombre")
+        catalogo_areas = {r["nombre"]: r["area"] for r in rows_to_dicts(cur, cur.fetchall())}
+
         return {
             "estudiantes": rows,
             "grupos": {
@@ -254,7 +258,8 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
                 for area, carreras in grupos.items()
             },
             "docentes": docentes,
-            "resumen_carreras": resumen_carreras
+            "resumen_carreras": resumen_carreras,
+            "catalogo_areas": catalogo_areas
         }
     finally: cur.close(); conn.close()
 
