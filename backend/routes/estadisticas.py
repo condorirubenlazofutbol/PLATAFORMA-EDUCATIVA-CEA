@@ -348,3 +348,27 @@ def eliminar_inscripciones(data: EliminarBody, current_user: dict = Depends(get_
         raise HTTPException(500, f"Error al eliminar: {str(e)}")
     finally:
         cur.close(); conn.close()
+
+
+@router.delete("/purgar-carreras-invalidas")
+def purgar_carreras_invalidas(current_user: dict = Depends(get_current_user)):
+    """Elimina carreras cuyo nombre es igual al nombre de un área (basura de datos)."""
+    if current_user["rol"] not in ["admin", "administrador", "director"]:
+        raise HTTPException(403, "Solo el Director puede purgar carreras")
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        nombres_invalidos = ['tecnica', 'humanistica', 'técnica', 'humanística', 'general', 'sin carrera asignada']
+        cur.execute("""
+            DELETE FROM carreras
+            WHERE LOWER(TRIM(nombre)) = ANY(%s)
+            RETURNING id, nombre
+        """, (nombres_invalidos,))
+        eliminadas = cur.fetchall()
+        conn.commit()
+        return {"eliminadas": [{"id": r[0], "nombre": r[1]} for r in eliminadas], "total": len(eliminadas)}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(500, f"Error al purgar: {str(e)}")
+    finally:
+        cur.close(); conn.close()
