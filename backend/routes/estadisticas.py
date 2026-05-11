@@ -195,25 +195,34 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
         """)
         rows = rows_to_dicts(cur, cur.fetchall())
 
-        # Organizar en estructura agrupada
+        # Organizar en estructura agrupada — incluye paralelo en la clave si hay más de uno
         from collections import defaultdict
+        # Primero contar cuántos paralelos hay por (área, carrera, nivel)
+        paralelo_counts = defaultdict(set)
+        for r in rows:
+            area = (r["area"] or "humanistica").lower()
+            carrera = r["carrera"] or "Sin Carrera"
+            nivel = r["nivel"] or "Sin Nivel"
+            paralelo_counts[(area, carrera, nivel)].add(r["paralelo"] or "A")
+
         grupos = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-        conteos = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 
         for r in rows:
             area = (r["area"] or "humanistica").lower()
             carrera = r["carrera"] or "Sin Carrera Asignada"
             nivel = r["nivel"] or "Sin Nivel"
-            grupos[area][carrera][nivel].append(r)
-            conteos[area][carrera][nivel] += 1
+            paralelo = r["paralelo"] or "A"
+            # Si hay más de un paralelo en este curso, añadir el paralelo a la clave
+            clave_nivel = f"{nivel} - Paralelo {paralelo}" if len(paralelo_counts[(area, carrera, nivel)]) > 1 else nivel
+            grupos[area][carrera][clave_nivel].append(r)
 
-        # Docentes también
+        # Docentes (incluye jefe_carrera para mostrar su rol correcto)
         cur.execute("""
-            SELECT id, nombre, apellido, carnet, email, estado,
+            SELECT id, nombre, apellido, carnet, email, estado, rol,
                    COALESCE(nivel_asignado, 'Sin Especialidad') as especialidad,
                    fecha_registro::date as fecha_ingreso
             FROM usuarios 
-            WHERE rol IN ('docente','profesor')
+            WHERE rol IN ('docente','profesor','jefe_carrera')
             ORDER BY especialidad, apellido
         """)
         docentes = rows_to_dicts(cur, cur.fetchall())
