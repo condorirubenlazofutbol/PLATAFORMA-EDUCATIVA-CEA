@@ -5,6 +5,8 @@ KPIs en tiempo real: matriculados, aprobados, deserción, por carrera/nivel/áre
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db_connection
 from routes.auth import get_current_user
+from pydantic import BaseModel
+from typing import Optional
 
 router = APIRouter()
 
@@ -253,18 +255,18 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
 
 
 from pydantic import BaseModel
-from typing import Optional as Opt
+from typing import Optional
 
-class EliminarBody(BaseModel):
-    tipo: str  # "individual" | "carrera" | "nivel" | "area" | "todos"
-    usuario_id: Opt[int] = None
-    carrera: Opt[str] = None
-    nivel: Opt[str] = None
-    area: Opt[str] = None
-    rol: Opt[str] = "estudiante"  # "estudiante" | "docente" | "todos"
+class EliminarInscripcionesRequest(BaseModel):
+    tipo: str  # 'individual', 'carrera', 'nivel', 'area', 'todos'
+    usuario_id: Optional[int] = None
+    carrera: Optional[str] = None
+    nivel: Optional[str] = None
+    area: Optional[str] = None
+    rol: Optional[str] = "estudiante"  # "estudiante" | "docente" | "todos"
 
 @router.delete("/eliminar-inscripciones")
-def eliminar_inscripciones(data: EliminarBody, current_user: dict = Depends(get_current_user)):
+def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dict = Depends(get_current_user)):
     """Elimina inscripciones de estudiantes/docentes por tipo (individual, carrera, nivel, área, todos)."""
     if current_user["rol"] not in ["director", "administrador"]:
         raise HTTPException(403, "Solo el Director o Administrador puede realizar esta acción")
