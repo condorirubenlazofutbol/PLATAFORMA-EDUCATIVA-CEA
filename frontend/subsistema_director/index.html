@@ -467,9 +467,10 @@ function renderDirectorio() {
         nivelesHtml += `
           <div class="dir-nivel">
             <div class="dir-nivel-header">
-              <span class="dir-nivel-title">${nivel}</span>
+              <span class="dir-nivel-title">${area === 'humanistica' ? `Especialidad ${carrera} - ${nivel}` : nivel}</span>
               <div style="display:flex;gap:6px;align-items:center;">
                 <span class="dir-nivel-count">${alumnos.length} alumnos</span>
+                <button class="btn-sm" style="background:#10b981; color:white; border:none;" onclick="descargarExcelCurso('${area}', '${carrera}', '${nivel}')">📥 Excel</button>
                 <button class="btn-del btn-del-grp" onclick="eliminarPorNivel('${nivel.replace(/'/g,"\\'")}','${carrera.replace(/'/g,"\\'")}')">🗑 Eliminar Nivel</button>
               </div>
             </div>
@@ -777,6 +778,49 @@ async function modalAsignarEspecialidad(id, nombre) {
             Swal.fire('Error', 'Error de red: ' + e.message, 'error');
         }
     }
+}
+
+function descargarExcelCurso(area, carrera, nivel) {
+    if (!dirData || !dirData.grupos) return;
+    const alumnos = dirData.grupos[area][carrera][nivel]?.alumnos;
+    if (!alumnos || alumnos.length === 0) return alert("No hay alumnos en este curso.");
+
+    const isHum = area === 'humanistica';
+    
+    // Nombres de columnas según área
+    const headers = isHum 
+        ? ["Área", "Especialidad", "Nivel/Curso", "Paralelo", "Carnet/CI", "Apellidos", "Nombres", "Estado"]
+        : ["Área", "Carrera", "Nivel/Curso", "Paralelo", "Carnet/CI", "Apellidos", "Nombres", "Estado"];
+
+    const data = [headers];
+
+    alumnos.forEach(a => {
+        data.push([
+            isHum ? "Humanística" : "Técnica",
+            carrera,
+            nivel,
+            a.paralelo || 'A',
+            a.carnet || 'S/N',
+            a.apellido,
+            a.nombre,
+            a.estado
+        ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Estudiantes");
+    
+    // Auto-ajustar ancho de columnas
+    const colWidths = [
+        { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 10 }, 
+        { wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 10 }
+    ];
+    ws['!cols'] = colWidths;
+
+    const safeCarrera = carrera.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const safeNivel = nivel.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    XLSX.writeFile(wb, `Lista_${safeCarrera}_${safeNivel}.xlsx`);
 }
 
 init();

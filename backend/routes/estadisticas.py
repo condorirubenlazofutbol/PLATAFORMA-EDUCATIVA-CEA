@@ -129,27 +129,21 @@ def directorio_exportar(current_user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     try:
         cur = conn.cursor()
-        # Estudiantes (inferimos carrera por su último progreso o sub-consulta rápida)
+        # Estudiantes
         cur.execute("""
             SELECT u.id, u.nombre, u.apellido, u.carnet, u.email, u.estado, u.fecha_registro::date as fecha_inscripcion,
-                   COALESCE((
-                       SELECT c.nombre 
-                       FROM progreso p 
-                       JOIN modulos m ON p.modulo_id = m.id 
-                       JOIN carreras c ON m.carrera_id = c.id 
-                       WHERE p.usuario_id = u.id 
-                       ORDER BY p.id DESC LIMIT 1
-                   ), 'Sin Carrera Asignada') as carrera,
-                   COALESCE((
-                       SELECT m.nivel 
-                       FROM progreso p 
-                       JOIN modulos m ON p.modulo_id = m.id 
-                       WHERE p.usuario_id = u.id 
-                       ORDER BY p.id DESC LIMIT 1
-                   ), u.nivel_asignado) as nivel
+                   COALESCE(c.nombre, 'Sin Carrera Asignada') as carrera,
+                   COALESCE(c.area, 'humanistica') as area,
+                   COALESCE(i.nivel, u.nivel_asignado, 'Sin Nivel') as nivel,
+                   COALESCE(i.paralelo, 'A') as paralelo
             FROM usuarios u
+            LEFT JOIN (
+                SELECT DISTINCT ON (usuario_id) usuario_id, carrera_id, nivel, paralelo
+                FROM inscripciones ORDER BY usuario_id, id DESC
+            ) i ON i.usuario_id = u.id
+            LEFT JOIN carreras c ON i.carrera_id = c.id
             WHERE u.rol = 'estudiante'
-            ORDER BY carrera, nivel, u.apellido
+            ORDER BY area, carrera, nivel, paralelo, u.apellido
         """)
         estudiantes = rows_to_dicts(cur, cur.fetchall())
         
@@ -186,20 +180,16 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
                 u.fecha_registro::date as fecha_inscripcion,
                 COALESCE(c.nombre, 'Sin Carrera Asignada') as carrera,
                 COALESCE(c.area, 'humanistica') as area,
-                COALESCE(
-                    (SELECT m.nivel FROM progreso p JOIN modulos m ON p.modulo_id=m.id WHERE p.usuario_id=u.id ORDER BY p.id DESC LIMIT 1),
-                    u.nivel_asignado, 'Sin Nivel'
-                ) as nivel
+                COALESCE(i.nivel, u.nivel_asignado, 'Sin Nivel') as nivel,
+                COALESCE(i.paralelo, 'A') as paralelo
             FROM usuarios u
             LEFT JOIN (
-                SELECT DISTINCT ON (p.usuario_id) p.usuario_id, c.nombre, c.area
-                FROM progreso p
-                JOIN modulos m ON p.modulo_id = m.id
-                JOIN carreras c ON m.carrera_id = c.id
-                ORDER BY p.usuario_id, p.id DESC
-            ) c ON c.usuario_id = u.id
+                SELECT DISTINCT ON (usuario_id) usuario_id, carrera_id, nivel, paralelo
+                FROM inscripciones ORDER BY usuario_id, id DESC
+            ) i ON i.usuario_id = u.id
+            LEFT JOIN carreras c ON i.carrera_id = c.id
             WHERE u.rol = 'estudiante'
-            ORDER BY area, carrera, nivel, u.apellido
+            ORDER BY area, carrera, nivel, paralelo, u.apellido
         """)
         rows = rows_to_dicts(cur, cur.fetchall())
 
@@ -232,10 +222,10 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
                    COUNT(DISTINCT u.id) as total
             FROM usuarios u
             LEFT JOIN (
-                SELECT DISTINCT ON (p.usuario_id) p.usuario_id, c.nombre, c.area
-                FROM progreso p JOIN modulos m ON p.modulo_id=m.id JOIN carreras c ON m.carrera_id=c.id
-                ORDER BY p.usuario_id, p.id DESC
-            ) c ON c.usuario_id=u.id
+                SELECT DISTINCT ON (usuario_id) usuario_id, carrera_id
+                FROM inscripciones ORDER BY usuario_id, id DESC
+            ) i ON i.usuario_id = u.id
+            LEFT JOIN carreras c ON i.carrera_id = c.id
             WHERE u.rol='estudiante'
             GROUP BY carrera, area ORDER BY area, carrera
         """)
@@ -309,12 +299,10 @@ def eliminar_inscripciones(data: EliminarBody, current_user: dict = Depends(get_
                     RETURNING id
                 """, (data.carrera, roles_objetivo))
             else:
-                # Para estudiantes, buscar por progreso/inscripción en módulos de la carrera
                 cur.execute("""
                     DELETE FROM usuarios WHERE id IN (
-                        SELECT DISTINCT p.usuario_id FROM progreso p
-                        JOIN modulos m ON p.modulo_id = m.id
-                        JOIN carreras c ON m.carrera_id = c.id
+                        SELECT DISTINCT i.usuario_id FROM inscripciones i
+                        JOIN carreras c ON i.carrera_id = c.id
                         WHERE c.nombre = %s
                     ) AND rol = ANY(%s) RETURNING id
                 """, (data.carrera, roles_objetivo))
@@ -325,9 +313,8 @@ def eliminar_inscripciones(data: EliminarBody, current_user: dict = Depends(get_
                 raise HTTPException(400, "Se requiere el nivel")
             cur.execute("""
                 DELETE FROM usuarios WHERE id IN (
-                    SELECT DISTINCT p.usuario_id FROM progreso p
-                    JOIN modulos m ON p.modulo_id = m.id
-                    WHERE m.nivel = %s
+                    SELECT DISTINCT i.usuario_id FROM inscripciones i
+                    WHERE i.nivel = %s
                 ) AND rol = ANY(%s) RETURNING id
             """, (data.nivel, roles_objetivo))
             eliminados = cur.rowcount
@@ -335,14 +322,14 @@ def eliminar_inscripciones(data: EliminarBody, current_user: dict = Depends(get_
         elif data.tipo == "area":
             if not data.area:
                 raise HTTPException(400, "Se requiere el área")
+            db_area = "Técnica" if data.area.lower() == "tecnica" else "Humanística"
             cur.execute("""
                 DELETE FROM usuarios WHERE id IN (
-                    SELECT DISTINCT p.usuario_id FROM progreso p
-                    JOIN modulos m ON p.modulo_id = m.id
-                    JOIN carreras c ON m.carrera_id = c.id
+                    SELECT DISTINCT i.usuario_id FROM inscripciones i
+                    JOIN carreras c ON i.carrera_id = c.id
                     WHERE LOWER(c.area) = LOWER(%s)
                 ) AND rol = ANY(%s) RETURNING id
-            """, (data.area, roles_objetivo))
+            """, (db_area, roles_objetivo))
             eliminados = cur.rowcount
 
         elif data.tipo == "todos":
