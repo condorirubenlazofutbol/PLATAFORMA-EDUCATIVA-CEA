@@ -665,9 +665,9 @@
         // ======= Descargar Plantilla Excel =======
         function downloadExcelTemplate() {
             const data = [
-                ["Nombre", "Apellido", "Carnet/CI", "Área (humanistica/tecnica)", "Nivel"],
-                ["Juan", "Perez", "1234567", "humanistica", "Primer Semestre"],
-                ["Maria", "Lopez", "7654321", "tecnica", "Sistemas Informáticos"]
+                ["Nombres", "Apellidos", "Carnet / CI"],
+                ["Juan", "Perez", "1234567"],
+                ["Maria", "Lopez", "7654321"]
             ];
             const ws = XLSX.utils.aoa_to_sheet(data);
             const wb = XLSX.utils.book_new();
@@ -677,9 +677,9 @@
 
         function downloadDocenteTemplate() {
             const data = [
-                ["Nombre", "Apellido", "Carnet", "Especialidad"],
-                ["Carlos", "Mamani", "8877665", "Ciencias Naturales"],
-                ["Ana", "Suarez", "5544332", "Sistemas Informáticos"]
+                ["Nombres", "Apellidos", "Carnet / CI"],
+                ["Carlos", "Mamani", "8877665"],
+                ["Ana", "Suarez", "5544332"]
             ];
             const ws = XLSX.utils.aoa_to_sheet(data);
             const wb = XLSX.utils.book_new();
@@ -1047,6 +1047,11 @@
             const file = input.files[0];
             if (!file) return;
 
+            let nivel_final = document.getElementById('ins_nivel').value;
+            if (currentArea === 'tecnica') {
+                nivel_final = document.getElementById('ins_carrera').value + ' - ' + nivel_final;
+            }
+
             const formData = new FormData();
             formData.append('file', file);
             input.value = ""; // Limpiar para permitir re-seleccionar
@@ -1054,7 +1059,7 @@
             Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
-                const r = await fetch(`${API_URL}/auth/importar-estudiantes-excel`, {
+                const r = await fetch(`${API_URL}/auth/importar-estudiantes-excel?nivel=${encodeURIComponent(nivel_final)}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData

@@ -245,7 +245,7 @@ def descargar_plantilla_docentes():
     )
 
 @router.post("/importar-estudiantes-excel")
-async def importar_estudiantes_excel(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+async def importar_estudiantes_excel(nivel: str, file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
     if current_user["rol"] not in ["admin", "director", "secretaria"]:
         raise HTTPException(403, "No autorizado")
     
@@ -260,7 +260,7 @@ async def importar_estudiantes_excel(file: UploadFile = File(...), current_user:
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Columnas: Nombre | Apellido | Carnet | Área | Nivel (mismo orden que plantilla docentes)
+        # Columnas: Nombre | Apellido | Carnet (3 columnas)
         for row in ws.iter_rows(min_row=2, values_only=True):
             # Ignorar filas completamente vacías
             if not row or not row[0]: continue
@@ -268,8 +268,6 @@ async def importar_estudiantes_excel(file: UploadFile = File(...), current_user:
             nombres   = str(row[0]).strip() if len(row) > 0 and row[0] else ""
             apellidos = str(row[1]).strip() if len(row) > 1 and row[1] else ""
             carnet    = str(row[2]).strip() if len(row) > 2 and row[2] else ""
-            area      = str(row[3]).lower().strip() if len(row) > 3 and row[3] else "humanistica"
-            nivel     = str(row[4]).strip() if len(row) > 4 and row[4] else "Primer Semestre"
             
             # Validar que al menos tenga nombre y carnet
             if not nombres or not carnet:
@@ -280,18 +278,6 @@ async def importar_estudiantes_excel(file: UploadFile = File(...), current_user:
             password = auth.get_password_hash(carnet)
             
             try:
-                # Buscar carrera por nombre (Especialidad / Area)
-                cur.execute("SELECT id, area FROM carreras WHERE nombre ILIKE %s LIMIT 1", (f"%{area}%",))
-                c_row = cur.fetchone()
-                if not c_row:
-                    # Crear carrera si no existe
-                    db_area = 'Humanística' if 'human' in area.lower() else 'Técnica'
-                    cur.execute("INSERT INTO carreras (nombre, area, subsistema_id) VALUES (%s, %s, 1) RETURNING id, area", (area, db_area))
-                    c_row = cur.fetchone()
-                
-                carrera_id = c_row[0]
-                db_area = c_row[1]
-                
                 # Insertar usuario — ON CONFLICT actualiza en vez de fallar si ya existe
                 cur.execute(
                     """INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet)
@@ -306,14 +292,42 @@ async def importar_estudiantes_excel(file: UploadFile = File(...), current_user:
                 )
                 new_id = cur.fetchone()[0]
                 
-                # Calcular paralelo
-                paralelo = obtener_paralelo_disponible(cur, carrera_id, nivel, db_area)
-                
-                # Insertar en inscripciones
-                cur.execute(
-                    "INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo",
-                    (new_id, carrera_id, nivel, paralelo)
-                )
+                # --- Lógica de Inscripción Inteligente Pro ---
+                if " - " in nivel:
+                    # Área Técnica
+                    parts = nivel.split(" - ")
+                    carrera_nombre = parts[0].strip()
+                    nivel_nombre = parts[1].strip()
+                    
+                    cur.execute("SELECT id, area FROM carreras WHERE nombre = %s AND area = 'Técnica'", (carrera_nombre,))
+                    c_row = cur.fetchone()
+                    if c_row:
+                        c_id = c_row[0]
+                        db_area = c_row[1]
+                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area)
+                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo))
+                        
+                        # Matricular en módulos
+                        cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
+                        modulos = cur.fetchall()
+                        for mod in modulos:
+                            cur.execute("INSERT INTO progreso (usuario_id, modulo_id, estado) VALUES (%s, %s, 'cursando') ON CONFLICT DO NOTHING", (new_id, mod[0]))
+                else:
+                    # Área Humanística
+                    nivel_nombre = nivel.strip()
+                    cur.execute("SELECT id, area FROM carreras WHERE area = 'Humanística'")
+                    carreras_hum = cur.fetchall()
+                    for c_row in carreras_hum:
+                        c_id = c_row[0]
+                        db_area = c_row[1]
+                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area)
+                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo))
+                        
+                        # Matricular en módulos
+                        cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
+                        modulos = cur.fetchall()
+                        for mod in modulos:
+                            cur.execute("INSERT INTO progreso (usuario_id, modulo_id, estado) VALUES (%s, %s, 'cursando') ON CONFLICT DO NOTHING", (new_id, mod[0]))
                 
                 conn.commit() # Commit PER ROW to prevent losing previous rows on error
                 registrados += 1
