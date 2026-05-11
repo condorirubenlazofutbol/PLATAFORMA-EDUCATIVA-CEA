@@ -371,7 +371,7 @@
                         <button class="btn-action btn-outline" onclick="downloadExcelTemplate()">
                             <span>📥</span> Descargar Plantilla
                         </button>
-                        <button class="btn-action btn-outline" onclick="document.getElementById('excel-input').click()">
+                        <button class="btn-action btn-outline" onclick="confirmarImportacionExcel('estudiante')">
                             <span>📊</span> Importar Excel
                         </button>
                         <input type="file" id="excel-input" hidden accept=".xlsx, .xls" onchange="handleExcelImport(this)">
@@ -434,7 +434,7 @@
                         <button class="btn-action btn-outline" onclick="downloadDocenteTemplate()">
                             <span>📥</span> Descargar Plantilla
                         </button>
-                        <button class="btn-action btn-outline" onclick="document.getElementById('doc-excel-input').click()">
+                        <button class="btn-action btn-outline" onclick="confirmarImportacionExcel('docente')">
                             <span>📊</span> Importar Excel
                         </button>
                         <input type="file" id="doc-excel-input" hidden accept=".xlsx, .xls" onchange="handleDocenteExcelImport(this)">
@@ -1042,6 +1042,39 @@
                 }
             } catch(e) {}
         });
+
+        async function confirmarImportacionExcel(tipo) {
+            let mensaje = "";
+            let confirmText = "Sí, importar";
+            
+            if (tipo === 'estudiante') {
+                let nivel = document.getElementById('ins_nivel').value;
+                let area_carrera = currentArea === 'tecnica' ? document.getElementById('ins_carrera').value : "Área Humanística";
+                mensaje = `¿Ya configuraste la inscripción a <b>${area_carrera}</b> - <b>${nivel}</b> en el formulario? Todos los estudiantes del Excel se inscribirán allí.`;
+            } else if (tipo === 'docente') {
+                let especialidad = document.getElementById('doc_especialidad').value;
+                mensaje = `¿Ya seleccionaste la especialidad <b>${especialidad}</b>? Todos los docentes del Excel se registrarán bajo esa área.`;
+            }
+
+            const result = await Swal.fire({
+                title: 'Nivel Pro: ¿Todo listo?',
+                html: mensaje,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0ea5e9',
+                cancelButtonColor: '#f43f5e',
+                confirmButtonText: confirmText,
+                cancelButtonText: 'No, revisar formulario'
+            });
+
+            if (result.isConfirmed) {
+                if (tipo === 'estudiante') {
+                    document.getElementById('excel-input').click();
+                } else {
+                    document.getElementById('doc-excel-input').click();
+                }
+            }
+        }
 
         async function handleExcelImport(input) {
             const file = input.files[0];
