@@ -1,6 +1,6 @@
-"""
-estadisticas.py — Dashboard de estadísticas institucionales CEA
-KPIs en tiempo real: matriculados, aprobados, deserción, por carrera/nivel/área.
+﻿"""
+estadisticas.py â€” Dashboard de estadÃ­sticas institucionales CEA
+KPIs en tiempo real: matriculados, aprobados, deserciÃ³n, por carrera/nivel/Ã¡rea.
 """
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db_connection
@@ -164,13 +164,13 @@ def directorio_exportar(current_user: dict = Depends(get_current_user)):
 
 @router.get("/directorio-agrupado")
 def directorio_agrupado(current_user: dict = Depends(get_current_user)):
-    """Devuelve estudiantes agrupados por área > carrera/especialidad > nivel con conteo."""
+    """Devuelve estudiantes agrupados por Ã¡rea > carrera/especialidad > nivel con conteo."""
     if current_user["rol"] not in ["director", "administrador", "secretaria"]:
         raise HTTPException(403, "Sin permisos")
     conn = get_db_connection()
     try:
         cur = conn.cursor()
-        # Estudiantes con su carrera y nivel (por inscripción o por nivel_asignado)
+        # Estudiantes con su carrera y nivel (por inscripciÃ³n o por nivel_asignado)
         cur.execute("""
             SELECT 
                 u.id,
@@ -195,9 +195,9 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
         """)
         rows = rows_to_dicts(cur, cur.fetchall())
 
-        # Organizar en estructura agrupada — incluye paralelo en la clave si hay más de uno
+        # Organizar en estructura agrupada â€” incluye paralelo en la clave si hay mÃ¡s de uno
         from collections import defaultdict
-        # Primero contar cuántos paralelos hay por (área, carrera, nivel)
+        # Primero contar cuÃ¡ntos paralelos hay por (Ã¡rea, carrera, nivel)
         paralelo_counts = defaultdict(set)
         for r in rows:
             area = (r["area"] or "humanistica").lower()
@@ -212,7 +212,7 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
             carrera = r["carrera"] or "Sin Carrera Asignada"
             nivel = r["nivel"] or "Sin Nivel"
             paralelo = r["paralelo"] or "A"
-            # Si hay más de un paralelo en este curso, añadir el paralelo a la clave
+            # Si hay mÃ¡s de un paralelo en este curso, aÃ±adir el paralelo a la clave
             clave_nivel = f"{nivel} - Paralelo {paralelo}" if len(paralelo_counts[(area, carrera, nivel)]) > 1 else nivel
             grupos[area][carrera][clave_nivel].append(r)
 
@@ -276,9 +276,9 @@ class EliminarInscripcionesRequest(BaseModel):
 
 @router.delete("/eliminar-inscripciones")
 def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dict = Depends(get_current_user)):
-    """Elimina inscripciones de estudiantes/docentes por tipo (individual, carrera, nivel, área, todos)."""
+    """Elimina inscripciones de estudiantes/docentes por tipo (individual, carrera, nivel, Ã¡rea, todos)."""
     if current_user["rol"] not in ["director", "administrador"]:
-        raise HTTPException(403, "Solo el Director o Administrador puede realizar esta acción")
+        raise HTTPException(403, "Solo el Director o Administrador puede realizar esta acciÃ³n")
     conn = get_db_connection()
     try:
         cur = conn.cursor()
@@ -294,7 +294,7 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
 
         if data.tipo == "individual":
             if not data.usuario_id:
-                raise HTTPException(400, "Se requiere usuario_id para eliminación individual")
+                raise HTTPException(400, "Se requiere usuario_id para eliminaciÃ³n individual")
             cur.execute("DELETE FROM usuarios WHERE id = %s RETURNING id", (data.usuario_id,))
             eliminados = cur.rowcount
 
@@ -332,8 +332,8 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
 
         elif data.tipo == "area":
             if not data.area:
-                raise HTTPException(400, "Se requiere el área")
-            db_area = "Técnica" if data.area.lower() == "tecnica" else "Humanística"
+                raise HTTPException(400, "Se requiere el Ã¡rea")
+            db_area = "TÃ©cnica" if data.area.lower() == "tecnica" else "HumanÃ­stica"
             cur.execute("""
                 DELETE FROM usuarios WHERE id IN (
                     SELECT DISTINCT i.usuario_id FROM inscripciones i
@@ -348,7 +348,7 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
             eliminados = cur.rowcount
 
         else:
-            raise HTTPException(400, f"Tipo de eliminación no válido: {data.tipo}")
+            raise HTTPException(400, f"Tipo de eliminaciÃ³n no vÃ¡lido: {data.tipo}")
 
         conn.commit()
         return {"eliminados": eliminados, "mensaje": f"Se eliminaron {eliminados} registros correctamente."}
@@ -363,13 +363,13 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
 
 @router.delete("/purgar-carreras-invalidas")
 def purgar_carreras_invalidas(current_user: dict = Depends(get_current_user)):
-    """Elimina carreras cuyo nombre es igual al nombre de un área (basura de datos)."""
+    """Elimina carreras cuyo nombre es igual al nombre de un Ã¡rea (basura de datos)."""
     if current_user["rol"] not in ["admin", "administrador", "director"]:
         raise HTTPException(403, "Solo el Director puede purgar carreras")
     conn = get_db_connection()
     try:
         cur = conn.cursor()
-        nombres_invalidos = ['tecnica', 'humanistica', 'técnica', 'humanística', 'general', 'sin carrera asignada']
+        nombres_invalidos = ['tecnica', 'humanistica', 'tÃ©cnica', 'humanÃ­stica', 'general', 'sin carrera asignada']
         cur.execute("""
             DELETE FROM carreras
             WHERE LOWER(TRIM(nombre)) = ANY(%s)
@@ -383,3 +383,4 @@ def purgar_carreras_invalidas(current_user: dict = Depends(get_current_user)):
         raise HTTPException(500, f"Error al purgar: {str(e)}")
     finally:
         cur.close(); conn.close()
+

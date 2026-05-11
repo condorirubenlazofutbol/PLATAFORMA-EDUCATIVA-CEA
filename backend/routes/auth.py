@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+﻿from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from typing import Optional
@@ -40,7 +40,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
             
         estado = row[6]
         if estado == 'pausado':
-            raise HTTPException(status_code=403, detail="Tu cuenta está suspendida por falta de pago o por el administrador.")
+            raise HTTPException(status_code=403, detail="Tu cuenta estÃ¡ suspendida por falta de pago o por el administrador.")
             
         is_valid = False
         try:
@@ -49,7 +49,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
             raise HTTPException(status_code=500, detail=f"Error verificando password: {str(ve)}")
 
         if not is_valid:
-            raise HTTPException(status_code=401, detail="Contraseña incorrecta")
+            raise HTTPException(status_code=401, detail="ContraseÃ±a incorrecta")
 
         token = auth.create_access_token(data={"sub": row[2]})
         rol_retornado = row[4]
@@ -71,7 +71,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 def get_current_user(token: str = Depends(oauth2_scheme)):
     payload = auth.decode_token(token)
     if not payload:
-        raise HTTPException(status_code=401, detail="Token inválido")
+        raise HTTPException(status_code=401, detail="Token invÃ¡lido")
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Database error")
@@ -90,7 +90,7 @@ def generate_cea_email(nombre: str, apellido: str):
     return f"{clean_n}{clean_a}" + "@ceapailon.com"
 
 def obtener_paralelo_disponible(cur, carrera_id, nivel, area):
-    limite = 30 if str(area).lower() == 'técnica' else 40
+    limite = 30 if str(area).lower() == 'tÃ©cnica' else 40
     cur.execute('''
         SELECT paralelo, COUNT(*) 
         FROM inscripciones 
@@ -119,7 +119,7 @@ def register_usuario(data: RegistroUsuario):
         # Verificar si ya existe el carnet
         cur.execute("SELECT id FROM usuarios WHERE carnet=%s", (str(data.carnet).strip(),))
         if cur.fetchone():
-            raise HTTPException(status_code=400, detail="El carnet ya está registrado.")
+            raise HTTPException(status_code=400, detail="El carnet ya estÃ¡ registrado.")
 
         cur.execute(
             "INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id",
@@ -127,17 +127,17 @@ def register_usuario(data: RegistroUsuario):
         )
         new_id = cur.fetchone()[0]
         
-        # --- Lógica de Inscripción Inteligente Pro ---
+        # --- LÃ³gica de InscripciÃ³n Inteligente Pro ---
         if data.rol == "estudiante" and data.nivel_asignado:
             nivel_str = data.nivel_asignado
             
-            # Área Técnica (formato: "Carrera - Nivel")
+            # Ãrea TÃ©cnica (formato: "Carrera - Nivel")
             if " - " in nivel_str:
                 parts = nivel_str.split(" - ")
                 carrera_nombre = parts[0].strip()
                 nivel_nombre = parts[1].strip()
                 
-                cur.execute("SELECT id, area FROM carreras WHERE nombre = %s AND area = 'Técnica'", (carrera_nombre,))
+                cur.execute("SELECT id, area FROM carreras WHERE nombre = %s AND area = 'TÃ©cnica'", (carrera_nombre,))
                 c_row = cur.fetchone()
                 if c_row:
                     c_id = c_row[0]
@@ -145,16 +145,16 @@ def register_usuario(data: RegistroUsuario):
                     paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area)
                     cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo))
                     
-                    # Matricular automáticamente en sus 5 módulos
+                    # Matricular automÃ¡ticamente en sus 5 mÃ³dulos
                     cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
                     modulos = cur.fetchall()
                     for mod in modulos:
                         cur.execute("INSERT INTO progreso (usuario_id, modulo_id, estado) VALUES (%s, %s, 'cursando') ON CONFLICT DO NOTHING", (new_id, mod[0]))
             
-            # Área Humanística (formato: "Nivel")
+            # Ãrea HumanÃ­stica (formato: "Nivel")
             else:
                 nivel_nombre = nivel_str.strip()
-                cur.execute("SELECT id, area FROM carreras WHERE area = 'Humanística'")
+                cur.execute("SELECT id, area FROM carreras WHERE area = 'HumanÃ­stica'")
                 carreras_hum = cur.fetchall()
                 for c_row in carreras_hum:
                     c_id = c_row[0]
@@ -162,7 +162,7 @@ def register_usuario(data: RegistroUsuario):
                     paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area)
                     cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo))
                     
-                    # Matricular automáticamente en sus 2 módulos por materia
+                    # Matricular automÃ¡ticamente en sus 2 mÃ³dulos por materia
                     cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
                     modulos = cur.fetchall()
                     for mod in modulos:
@@ -171,7 +171,7 @@ def register_usuario(data: RegistroUsuario):
         if data.carrera_id:
             cur.execute("SELECT area FROM carreras WHERE id = %s", (data.carrera_id,))
             c_area_row = cur.fetchone()
-            area = c_area_row[0] if c_area_row else 'Humanística'
+            area = c_area_row[0] if c_area_row else 'HumanÃ­stica'
             paralelo = obtener_paralelo_disponible(cur, data.carrera_id, data.nivel_asignado, area)
             cur.execute(
                 "INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo",
@@ -248,7 +248,7 @@ def descargar_plantilla_docentes():
 
 @router.post("/importar-estudiantes-excel")
 async def importar_estudiantes_excel(nivel: str, file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
-    if current_user["rol"] not in ["admin", "director", "secretaria"]:
+    if current_user["rol"] not in ["admin", "administrador", "director", "secretaria"]:
         raise HTTPException(403, "No autorizado")
     
     try:
@@ -264,7 +264,7 @@ async def importar_estudiantes_excel(nivel: str, file: UploadFile = File(...), c
         
         # Columnas: Nombre | Apellido | Carnet (3 columnas)
         for row in ws.iter_rows(min_row=2, values_only=True):
-            # Ignorar filas completamente vacías
+            # Ignorar filas completamente vacÃ­as
             if not row or not row[0]: continue
             
             nombres   = str(row[0]).strip() if len(row) > 0 and row[0] else ""
@@ -273,14 +273,14 @@ async def importar_estudiantes_excel(nivel: str, file: UploadFile = File(...), c
             
             # Validar que al menos tenga nombre y carnet
             if not nombres or not carnet:
-                errores.append(f"Fila ignorada: nombre o carnet vacío")
+                errores.append(f"Fila ignorada: nombre o carnet vacÃ­o")
                 continue
             
             email = generate_cea_email(nombres, apellidos)
             password = auth.get_password_hash(carnet)
             
             try:
-                # Insertar usuario — ON CONFLICT actualiza en vez de fallar si ya existe
+                # Insertar usuario â€” ON CONFLICT actualiza en vez de fallar si ya existe
                 cur.execute(
                     """INSERT INTO usuarios (subsistema_id, nombre, apellido, email, password, rol, nivel_asignado, carnet)
                        VALUES (1,%s,%s,%s,%s,'estudiante',%s,%s)
@@ -294,14 +294,14 @@ async def importar_estudiantes_excel(nivel: str, file: UploadFile = File(...), c
                 )
                 new_id = cur.fetchone()[0]
                 
-                # --- Lógica de Inscripción Inteligente Pro ---
+                # --- LÃ³gica de InscripciÃ³n Inteligente Pro ---
                 if " - " in nivel:
-                    # Área Técnica
+                    # Ãrea TÃ©cnica
                     parts = nivel.split(" - ")
                     carrera_nombre = parts[0].strip()
                     nivel_nombre = parts[1].strip()
                     
-                    cur.execute("SELECT id, area FROM carreras WHERE nombre = %s AND area = 'Técnica'", (carrera_nombre,))
+                    cur.execute("SELECT id, area FROM carreras WHERE nombre = %s AND area = 'TÃ©cnica'", (carrera_nombre,))
                     c_row = cur.fetchone()
                     if c_row:
                         c_id = c_row[0]
@@ -309,15 +309,15 @@ async def importar_estudiantes_excel(nivel: str, file: UploadFile = File(...), c
                         paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area)
                         cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo))
                         
-                        # Matricular en módulos
+                        # Matricular en mÃ³dulos
                         cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
                         modulos = cur.fetchall()
                         for mod in modulos:
                             cur.execute("INSERT INTO progreso (usuario_id, modulo_id, estado) VALUES (%s, %s, 'cursando') ON CONFLICT DO NOTHING", (new_id, mod[0]))
                 else:
-                    # Área Humanística
+                    # Ãrea HumanÃ­stica
                     nivel_nombre = nivel.strip()
-                    cur.execute("SELECT id, area FROM carreras WHERE area = 'Humanística'")
+                    cur.execute("SELECT id, area FROM carreras WHERE area = 'HumanÃ­stica'")
                     carreras_hum = cur.fetchall()
                     for c_row in carreras_hum:
                         c_id = c_row[0]
@@ -325,7 +325,7 @@ async def importar_estudiantes_excel(nivel: str, file: UploadFile = File(...), c
                         paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area)
                         cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo))
                         
-                        # Matricular en módulos
+                        # Matricular en mÃ³dulos
                         cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
                         modulos = cur.fetchall()
                         for mod in modulos:
@@ -334,7 +334,7 @@ async def importar_estudiantes_excel(nivel: str, file: UploadFile = File(...), c
                 conn.commit() # Commit PER ROW to prevent losing previous rows on error
                 registrados += 1
             except Exception as e:
-                conn.rollback() # Solo deshace esta iteración porque las anteriores ya se hicieron commit
+                conn.rollback() # Solo deshace esta iteraciÃ³n porque las anteriores ya se hicieron commit
                 errores.append(f"Error en CI {carnet}: {str(e)}")
                 continue
             
@@ -376,7 +376,7 @@ def get_profesores():
 
 @router.get("/usuarios")
 def get_usuarios(current_user: dict = Depends(get_current_user)):
-    """Lista todos los usuarios para la Secretaría/Director/Admin."""
+    """Lista todos los usuarios para la SecretarÃ­a/Director/Admin."""
     if current_user["rol"] not in ["admin", "administrador", "director", "secretaria"]:
         raise HTTPException(status_code=403, detail="No autorizado")
     conn = get_db_connection()
@@ -424,7 +424,7 @@ def get_inscripciones(current_user: dict = Depends(get_current_user)):
 
 @router.put("/inscripciones/{inscripcion_id}/estado")
 def cambiar_estado_inscripcion(inscripcion_id: int, current_user: dict = Depends(get_current_user)):
-    """Cambia el estado de una inscripción (activo/pausado/retirado)."""
+    """Cambia el estado de una inscripciÃ³n (activo/pausado/retirado)."""
     if current_user["rol"] not in ["admin", "administrador", "director", "secretaria"]:
         raise HTTPException(status_code=403, detail="No autorizado")
     conn = get_db_connection()
@@ -437,7 +437,7 @@ def cambiar_estado_inscripcion(inscripcion_id: int, current_user: dict = Depends
         cur.execute("SELECT estado FROM inscripciones WHERE id=%s", (inscripcion_id,))
         row = cur.fetchone()
         if not row:
-            raise HTTPException(404, "Inscripción no encontrada")
+            raise HTTPException(404, "InscripciÃ³n no encontrada")
         next_state = {"activo": "pausado", "pausado": "retirado", "retirado": "activo"}.get(row[0], "activo")
         cur.execute("UPDATE inscripciones SET estado=%s WHERE id=%s", (next_state, inscripcion_id))
         conn.commit()
@@ -447,7 +447,7 @@ def cambiar_estado_inscripcion(inscripcion_id: int, current_user: dict = Depends
 
 @router.get("/personal")
 def get_personal(current_user: dict = Depends(get_current_user)):
-    if current_user["rol"] not in ["admin", "director", "secretaria"]:
+    if current_user["rol"] not in ["admin", "administrador", "director", "secretaria"]:
         raise HTTPException(status_code=403, detail="No autorizado")
     conn = get_db_connection()
     if not conn:
@@ -494,7 +494,7 @@ def reset_password(usuario_id: int, data: PasswordResetBody):
         if cur.rowcount == 0:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
         conn.commit()
-        return {"mensaje": "Contraseña restablecida correctamente"}
+        return {"mensaje": "ContraseÃ±a restablecida correctamente"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -506,7 +506,7 @@ class EstadoUpdateBody(BaseModel):
 @router.put("/usuarios/{usuario_id}/estado", dependencies=[Depends(get_current_user)])
 def update_estado(usuario_id: int, data: EstadoUpdateBody):
     if data.estado not in ['activo', 'pausado']:
-        raise HTTPException(status_code=400, detail="Estado inválido")
+        raise HTTPException(status_code=400, detail="Estado invÃ¡lido")
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Error de base de datos")
@@ -545,14 +545,14 @@ def update_especialidad(usuario_id: int, data: EspecialidadUpdateBody):
 
 @router.put("/update-password")
 def update_my_password(data: PasswordResetBody, current_user: dict = Depends(get_current_user)):
-    """Permite al usuario logueado cambiar su propia contraseña."""
+    """Permite al usuario logueado cambiar su propia contraseÃ±a."""
     conn = get_db_connection()
     try:
         cur = conn.cursor()
         hashed = auth.get_password_hash(data.new_password)
         cur.execute("UPDATE usuarios SET password = %s WHERE id = %s", (hashed, current_user["id"]))
         conn.commit()
-        return {"mensaje": "Tu contraseña ha sido actualizada correctamente"}
+        return {"mensaje": "Tu contraseÃ±a ha sido actualizada correctamente"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
@@ -628,9 +628,9 @@ class PromoverDirectorRequest(BaseModel):
 @router.post("/promover-alta-direccion", dependencies=[Depends(get_current_user)])
 def promover_alta_direccion(data: PromoverDirectorRequest, current_user: dict = Depends(get_current_user)):
     if current_user["rol"] != "admin":
-        raise HTTPException(status_code=403, detail="Solo el Súper Admin puede realizar esta acción")
+        raise HTTPException(status_code=403, detail="Solo el SÃºper Admin puede realizar esta acciÃ³n")
     if data.nuevo_rol not in ["director", "secretaria"]:
-        raise HTTPException(status_code=400, detail="Rol inválido")
+        raise HTTPException(status_code=400, detail="Rol invÃ¡lido")
         
     conn = get_db_connection()
     if not conn: raise HTTPException(status_code=500, detail="Error DB")
@@ -655,8 +655,8 @@ class PromoverJefeRequest(BaseModel):
 
 @router.post("/promover-jefe-carrera", dependencies=[Depends(get_current_user)])
 def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depends(get_current_user)):
-    if current_user["rol"] not in ["admin", "director"]:
-        raise HTTPException(status_code=403, detail="Solo la Dirección puede nombrar Jefes de Carrera")
+    if current_user["rol"] not in ["admin", "administrador", "director"]:
+        raise HTTPException(status_code=403, detail="Solo la DirecciÃ³n puede nombrar Jefes de Carrera")
         
     conn = get_db_connection()
     if not conn: raise HTTPException(status_code=500, detail="Error DB")
@@ -672,7 +672,7 @@ def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depend
             if c_row:
                 carrera_id = c_row[0]
             else:
-                # Crear la carrera automáticamente sin subsistema_id estricto
+                # Crear la carrera automÃ¡ticamente sin subsistema_id estricto
                 cur.execute(
                     "INSERT INTO carreras (nombre, area, subsistema_id) VALUES (%s, 'General', NULL) RETURNING id",
                     (nombre_esp,)
@@ -683,7 +683,7 @@ def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depend
         if not carrera_id:
             raise HTTPException(status_code=400, detail="Debe especificar una carrera o especialidad")
         
-        # 1. Encontrar quién era el jefe de esta carrera antes
+        # 1. Encontrar quiÃ©n era el jefe de esta carrera antes
         cur.execute("SELECT jefe_id FROM carreras WHERE id = %s", (carrera_id,))
         c_row = cur.fetchone()
         if not c_row:
@@ -708,3 +708,5 @@ def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depend
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
     finally:
         if conn: conn.close()
+
+
