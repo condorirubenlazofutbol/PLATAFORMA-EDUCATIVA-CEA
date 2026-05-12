@@ -437,9 +437,21 @@ function renderDirectorio() {
     'Aplicados (Primer Año)': 1, 'Complementarios (Segundo Año)': 2, 'Especializados (Tercer Año)': 3
   };
   function sortNiveles([nA], [nB]) {
-    const oA = nivelOrder[nA] || 99;
-    const oB = nivelOrder[nB] || 99;
+    const getBase = k => k.replace(/ \(.*$/, '').trim();
+    const getTurnoOrder = k => {
+        if (k.includes('Mañana')) return 1;
+        if (k.includes('Tarde')) return 2;
+        return 3;
+    };
+    
+    const oA = nivelOrder[getBase(nA)] || 99;
+    const oB = nivelOrder[getBase(nB)] || 99;
     if (oA !== oB) return oA - oB;
+    
+    const ta = getTurnoOrder(nA);
+    const tb = getTurnoOrder(nB);
+    if (ta !== tb) return ta - tb;
+    
     return nA.localeCompare(nB);
   }
 
@@ -1062,37 +1074,51 @@ async function modalAsignarNivel(id, nombre) {
         titulo = '🎓 Asignar Nivel — Área Técnica';
 
         // Recolectar niveles y paralelos disponibles de la carrera
-        const nivelesDisponibles = [];
+        const nivelesDisponiblesMap = new Map();
+        
+        // Agregar siempre las 12 combinaciones por defecto (4 niveles x 3 turnos)
+        const nivelesBase = ['Nivel Básico', 'Nivel Auxiliar', 'Nivel Medio I', 'Nivel Medio II'];
+        const turnosBase = ['Mañana', 'Tarde', 'Noche'];
+        nivelesBase.forEach(n => {
+            turnosBase.forEach(t => {
+                const val = `${n} (${t})`;
+                nivelesDisponiblesMap.set(val, val);
+            });
+        });
+
         if (dirData.grupos && dirData.grupos['tecnica'] && dirData.grupos['tecnica'][espDocente]) {
             const nivelesCarrera = dirData.grupos['tecnica'][espDocente];
-            // El backend ya entrega las claves como:
-            //   "Nivel Básico (Turno Noche)"          → único paralelo o sin división
-            //   "Nivel Básico (Turno Mañana) - Paralelo A" → dividido por >30
-            // Ordenar por nivel base primero, luego paralelo
-            const nivelOrder = {'Nivel Básico':1,'Nivel Auxiliar':2,'Nivel Medio I':3,'Nivel Medio II':4};
-            const getNivelBase = k => k.replace(/ \(Turno.*$/, '').trim();
-            Object.keys(nivelesCarrera)
-              .sort((a, b) => {
-                  const oa = nivelOrder[getNivelBase(a)] || 9;
-                  const ob = nivelOrder[getNivelBase(b)] || 9;
-                  if (oa !== ob) return oa - ob;
-                  return a.localeCompare(b);
-              })
-              .forEach(nivelKey => {
-                  // Mostrar la clave formateada
-                  let label = nivelKey;
-                  if (label.includes('Paralelo')) {
-                      label = label.replace(' - Paralelo ', ' — Paralelo ');
-                  }
-                  nivelesDisponibles.push({ label, value: nivelKey });
-              });
-        }
-        // Si no hay datos de estudiantes, mostrar los 4 niveles estándar
-        if (nivelesDisponibles.length === 0) {
-            ['Nivel Básico (Turno Mañana)','Nivel Básico (Turno Tarde)','Nivel Básico (Turno Noche)'].forEach(n => {
-                nivelesDisponibles.push({ label: n, value: n });
+            Object.keys(nivelesCarrera).forEach(nivelKey => {
+                // Si la clave ya contiene "Paralelo", usarla directamente
+                let label = nivelKey;
+                if (label.includes('Paralelo')) {
+                    label = label.replace(' - Paralelo ', ' — Paralelo ');
+                }
+                nivelesDisponiblesMap.set(nivelKey, label);
             });
         }
+
+        const nivelOrder = {'Nivel Básico':1,'Nivel Auxiliar':2,'Nivel Medio I':3,'Nivel Medio II':4};
+        const getNivelBase = k => k.replace(/ \(.*$/, '').trim();
+        const getTurnoOrder = k => {
+            if (k.includes('Mañana')) return 1;
+            if (k.includes('Tarde')) return 2;
+            return 3;
+        };
+
+        const nivelesDisponibles = Array.from(nivelesDisponiblesMap.entries())
+            .map(([value, label]) => ({ value, label }))
+            .sort((a, b) => {
+                const oa = nivelOrder[getNivelBase(a.value)] || 9;
+                const ob = nivelOrder[getNivelBase(b.value)] || 9;
+                if (oa !== ob) return oa - ob;
+                
+                const ta = getTurnoOrder(a.value);
+                const tb = getTurnoOrder(b.value);
+                if (ta !== tb) return ta - tb;
+
+                return a.value.localeCompare(b.value);
+            });
 
         const opciones = nivelesDisponibles.map(n =>
             `<option value="${n.value}">${n.label}</option>`
