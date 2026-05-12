@@ -612,10 +612,31 @@
                 <div class="card-header">
                     <h3 class="card-title">Nuevo Comunicado</h3>
                 </div>
-                <form id="form-comunicado" class="form-grid">
+                <form id="form-comunicado" class="form-grid" onsubmit="event.preventDefault(); publicarComunicado();">
                     <div class="form-full form-group">
                         <label>Título</label>
                         <input type="text" id="com_titulo" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Dirigido a: Área (Opcional)</label>
+                        <select id="com_area">
+                            <option value="">Todas las Áreas</option>
+                            <option value="Técnica">Técnica</option>
+                            <option value="Humanística">Humanística</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Dirigido a: Nivel (Opcional)</label>
+                        <input type="text" id="com_nivel" placeholder="Ej: Básico, Primer Año, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label>Dirigido a: Paralelo (Opcional)</label>
+                        <select id="com_paralelo">
+                            <option value="">Todos</option>
+                            <option value="A">Paralelo A</option>
+                            <option value="B">Paralelo B</option>
+                            <option value="C">Paralelo C</option>
+                        </select>
                     </div>
                     <div class="form-full form-group">
                         <label>Contenido</label>
@@ -627,6 +648,17 @@
                         </button>
                     </div>
                 </form>
+            </div>
+            <div class="card" style="margin-top: 1rem;">
+                <div class="card-header">
+                    <h3 class="card-title">Comunicados Recientes</h3>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Título</th><th>Contenido</th><th>Dirigido a</th><th>Fecha</th><th>Acciones</th></tr></thead>
+                        <tbody id="comunicados-tbody"></tbody>
+                    </table>
+                </div>
             </div>
         </section>
 
@@ -859,21 +891,45 @@
                 tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted);">Sin inscripciones registradas.</td></tr>`;
                 return;
             }
+            
+            // Agrupar por estudiante, nivel y paralelo
+            const groups = {};
+            list.forEach(i => {
+                const key = `${i.carnet || i.email}-${i.nivel}-${i.paralelo}`;
+                if (!groups[key]) {
+                    groups[key] = { ...i, materias: [], ids: [] };
+                }
+                if (!groups[key].materias.includes(i.carrera_nombre)) {
+                    groups[key].materias.push(i.carrera_nombre);
+                }
+                groups[key].ids.push(i.id);
+            });
+            
+            const groupedList = Object.values(groups);
             const estadoColors = { activo: '#22c55e', pausado: '#f59e0b', retirado: '#f43f5e' };
-            tbody.innerHTML = list.map(i => `
+            
+            tbody.innerHTML = groupedList.map(i => {
+                let carreraHtml = i.carrera_nombre || '-';
+                if (i.carrera_area === 'Humanística' && i.materias.length > 0) {
+                    carreraHtml = '<div style="display:flex;gap:4px;flex-wrap:wrap;max-width:250px;">' + 
+                        i.materias.map(m => `<span class="badge" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:0.65rem;">${m}</span>`).join('') +
+                        '</div>';
+                }
+                return `
                 <tr>
                     <td><b>${i.nombre} ${i.apellido}</b><br><small style="color:var(--muted);">${i.email}</small></td>
                     <td style="font-family:monospace;">${i.carnet || '-'}</td>
                     <td><span class="badge" style="background:rgba(139,92,246,0.2); color:#c4b5fd; font-size:0.7rem;">${i.carrera_area || '-'}</span></td>
-                    <td>${i.carrera_nombre || '-'}</td>
+                    <td>${carreraHtml}</td>
                     <td>${i.nivel || '-'}</td>
                     <td><span class="badge" style="background:rgba(14,165,233,0.2); color:var(--primary); font-weight:800;">Paralelo ${i.paralelo || 'A'}</span></td>
                     <td><span class="badge" style="background:${estadoColors[i.estado]||'#22c55e'}22; color:${estadoColors[i.estado]||'#22c55e'}; text-transform:capitalize;">${i.estado || 'activo'}</span></td>
                     <td>
-                        <button onclick="toggleEstadoInscripcion(${i.id})" style="background:transparent; border:1px solid var(--border); color:var(--muted); padding:4px 8px; border-radius:6px; cursor:pointer; font-size:0.75rem;">Cambiar Estado</button>
+                        <button onclick="toggleEstadoGrupo('${i.ids.join(',')}')" style="background:transparent; border:1px solid var(--border); color:var(--muted); padding:4px 8px; border-radius:6px; cursor:pointer; font-size:0.75rem;">Cambiar Estado</button>
                     </td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function filtrarInscritos(val) {
@@ -883,15 +939,22 @@
             ));
         }
 
-        async function toggleEstadoInscripcion(id) {
+        async function toggleEstadoGrupo(idsString) {
+            const ids = idsString.split(',');
+            let success = true;
             try {
-                const r = await fetch(`${API_URL}/auth/inscripciones/${id}/estado`, {
-                    method: 'PUT',
-                    headers: {'Authorization': `Bearer ${token}`}
-                });
-                if(r.ok) { loadInscritos(); }
-                else { Swal.fire('Error', 'No se pudo cambiar el estado', 'error'); }
-            } catch(e) {}
+                for (let id of ids) {
+                    const r = await fetch(`${API_URL}/auth/inscripciones/${id}/estado`, {
+                        method: 'PUT',
+                        headers: {'Authorization': `Bearer ${token}`}
+                    });
+                    if(!r.ok) success = false;
+                }
+                if(success) { loadInscritos(); }
+                else { Swal.fire('Aviso', 'Algunos estados no se pudieron cambiar', 'warning'); loadInscritos(); }
+            } catch(e) {
+                Swal.fire('Error', 'Error de red al cambiar estado', 'error');
+            }
         }
 
         function exportarInscritos() {
@@ -1161,9 +1224,86 @@
             } catch(e) {}
         }
 
+        // --- LÓGICA DE COMUNICADOS DIRIGIDOS ---
+        async function loadComunicados() {
+            try {
+                const r = await fetch(`${API_URL}/comunicados/avisos`, { headers: {'Authorization': `Bearer ${token}`} });
+                const data = await r.json();
+                const tbody = document.getElementById('comunicados-tbody');
+                if(!data.avisos || data.avisos.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--muted)">No hay comunicados publicados.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.avisos.map(a => {
+                    let tags = [];
+                    if(a.target_area) tags.push(`Área: ${a.target_area}`);
+                    if(a.target_nivel) tags.push(`Nivel: ${a.target_nivel}`);
+                    if(a.target_paralelo) tags.push(`Paralelo: ${a.target_paralelo}`);
+                    const badgeHtml = tags.length > 0 
+                        ? tags.map(t => `<span class="badge" style="background:rgba(14,165,233,0.2); color:var(--primary); font-size:0.7rem;">${t}</span>`).join(' ') 
+                        : `<span class="badge" style="background:rgba(34,197,94,0.2); color:#22c55e; font-size:0.7rem;">Todos</span>`;
+                    
+                    return `
+                    <tr>
+                        <td><b>${a.titulo}</b></td>
+                        <td style="white-space: pre-wrap; max-width: 300px; font-size:0.85rem;">${a.contenido}</td>
+                        <td>${badgeHtml}</td>
+                        <td><span style="font-size:0.8rem; color:var(--muted);">${new Date(a.fecha_creacion).toLocaleDateString()}</span></td>
+                        <td>
+                            <button onclick="eliminarComunicado(${a.id})" style="background:transparent; border:none; color:var(--rose); cursor:pointer;" title="Eliminar">❌</button>
+                        </td>
+                    </tr>
+                    `;
+                }).join('');
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function publicarComunicado() {
+            const titulo = document.getElementById('com_titulo').value;
+            const contenido = document.getElementById('com_contenido').value;
+            const area = document.getElementById('com_area').value;
+            const nivel = document.getElementById('com_nivel').value;
+            const paralelo = document.getElementById('com_paralelo').value;
+            
+            try {
+                const r = await fetch(`${API_URL}/comunicados/avisos`, {
+                    method: 'POST',
+                    headers: {'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        titulo: titulo,
+                        contenido: contenido,
+                        target_area: area || null,
+                        target_nivel: nivel || null,
+                        target_paralelo: paralelo || null
+                    })
+                });
+                if(r.ok) {
+                    Swal.fire({title: 'Éxito', text:'Comunicado publicado correctamente.', icon:'success', timer: 1500, showConfirmButton:false});
+                    document.getElementById('form-comunicado').reset();
+                    loadComunicados();
+                } else {
+                    const data = await r.json();
+                    Swal.fire('Error', data.detail || 'No se pudo publicar', 'error');
+                }
+            } catch(e) {
+                Swal.fire('Error', 'Fallo de red.', 'error');
+            }
+        }
+
+        async function eliminarComunicado(id) {
+            const r = await Swal.fire({ title: '¿Eliminar Comunicado?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#f43f5e', confirmButtonText: 'Sí, eliminar' });
+            if (!r.isConfirmed) return;
+            try {
+                const res = await fetch(`${API_URL}/comunicados/avisos/${id}`, { method: 'DELETE', headers: {'Authorization': `Bearer ${token}`} });
+                if(res.ok) loadComunicados();
+            } catch(e) {}
+        }
+
         // Init
         loadCarreras();
         loadStats();
+        loadComunicados(); // Load comunicados on init so the tab is ready
     </script>
-</body>
 </html>

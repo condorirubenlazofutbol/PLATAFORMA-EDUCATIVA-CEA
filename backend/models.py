@@ -90,6 +90,9 @@ class TokenData(BaseModel):
 class AvisoCreate(BaseModel):
     titulo: str
     contenido: str
+    target_area: Optional[str] = None
+    target_nivel: Optional[str] = None
+    target_paralelo: Optional[str] = None
 
 class AvisoResponse(BaseModel):
     id: int

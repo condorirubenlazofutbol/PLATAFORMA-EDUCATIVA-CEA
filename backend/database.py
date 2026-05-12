@@ -183,11 +183,17 @@ def init_db():
                 autor_id INT NOT NULL,
                 titulo VARCHAR(200) NOT NULL,
                 contenido TEXT NOT NULL,
+                target_area VARCHAR(50),
+                target_nivel VARCHAR(100),
+                target_paralelo VARCHAR(5),
                 fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (subsistema_id) REFERENCES subsistemas(id) ON DELETE CASCADE,
                 FOREIGN KEY (autor_id) REFERENCES usuarios(id) ON DELETE CASCADE
             )
         ''')
+        cursor.execute("ALTER TABLE avisos_institucionales ADD COLUMN IF NOT EXISTS target_area VARCHAR(50)")
+        cursor.execute("ALTER TABLE avisos_institucionales ADD COLUMN IF NOT EXISTS target_nivel VARCHAR(100)")
+        cursor.execute("ALTER TABLE avisos_institucionales ADD COLUMN IF NOT EXISTS target_paralelo VARCHAR(5)")
 
         # 4. Nuevas tablas Pro: Planificaciones (Registro Pedagógico)
         cursor.execute('''

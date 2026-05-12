@@ -18,8 +18,8 @@ def create_aviso(aviso: AvisoCreate, current_user: dict = Depends(get_current_us
     try:
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO avisos_institucionales (subsistema_id, autor_id, titulo, contenido) VALUES (%s, %s, %s, %s) RETURNING id",
-            (current_user.get("subsistema_id"), current_user["id"], aviso.titulo, aviso.contenido)
+            "INSERT INTO avisos_institucionales (subsistema_id, autor_id, titulo, contenido, target_area, target_nivel, target_paralelo) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id",
+            (current_user.get("subsistema_id"), current_user["id"], aviso.titulo, aviso.contenido, aviso.target_area, aviso.target_nivel, aviso.target_paralelo)
         )
         new_id = cur.fetchone()[0]
         conn.commit()
@@ -37,22 +37,42 @@ def get_avisos(current_user: dict = Depends(get_current_user)):
         cur = conn.cursor()
         subsistema_id = current_user.get("subsistema_id")
         
-        if subsistema_id:
+        if current_user["rol"] == "estudiante":
             cur.execute("""
-                SELECT a.id, a.titulo, a.contenido, a.fecha_creacion, u.nombre || ' ' || u.apellido as autor 
+                SELECT a.id, a.titulo, a.contenido, a.target_area, a.target_nivel, a.target_paralelo, a.fecha_creacion, u.nombre || ' ' || u.apellido as autor 
                 FROM avisos_institucionales a 
                 JOIN usuarios u ON a.autor_id = u.id 
-                WHERE a.subsistema_id = %s 
+                WHERE (a.subsistema_id = %s OR a.subsistema_id IS NULL)
+                AND (
+                    (a.target_area IS NULL AND a.target_nivel IS NULL AND a.target_paralelo IS NULL)
+                    OR EXISTS (
+                        SELECT 1 FROM inscripciones i 
+                        JOIN carreras c ON i.carrera_id = c.id
+                        WHERE i.usuario_id = %s AND i.estado = 'activo'
+                        AND (a.target_area IS NULL OR a.target_area = '' OR c.area = a.target_area)
+                        AND (a.target_nivel IS NULL OR a.target_nivel = '' OR i.nivel = a.target_nivel)
+                        AND (a.target_paralelo IS NULL OR a.target_paralelo = '' OR i.paralelo = a.target_paralelo)
+                    )
+                )
                 ORDER BY a.fecha_creacion DESC
-            """, (subsistema_id,))
+            """, (subsistema_id, current_user["id"]))
         else:
-            cur.execute("""
-                SELECT a.id, a.titulo, a.contenido, a.fecha_creacion, u.nombre || ' ' || u.apellido as autor 
-                FROM avisos_institucionales a 
-                JOIN usuarios u ON a.autor_id = u.id 
-                WHERE a.subsistema_id IS NULL
-                ORDER BY a.fecha_creacion DESC
-            """)
+            if subsistema_id:
+                cur.execute("""
+                    SELECT a.id, a.titulo, a.contenido, a.target_area, a.target_nivel, a.target_paralelo, a.fecha_creacion, u.nombre || ' ' || u.apellido as autor 
+                    FROM avisos_institucionales a 
+                    JOIN usuarios u ON a.autor_id = u.id 
+                    WHERE a.subsistema_id = %s 
+                    ORDER BY a.fecha_creacion DESC
+                """, (subsistema_id,))
+            else:
+                cur.execute("""
+                    SELECT a.id, a.titulo, a.contenido, a.target_area, a.target_nivel, a.target_paralelo, a.fecha_creacion, u.nombre || ' ' || u.apellido as autor 
+                    FROM avisos_institucionales a 
+                    JOIN usuarios u ON a.autor_id = u.id 
+                    WHERE a.subsistema_id IS NULL
+                    ORDER BY a.fecha_creacion DESC
+                """)
         
         return {"avisos": rows_to_dicts(cur, cur.fetchall())}
     except Exception as e:
