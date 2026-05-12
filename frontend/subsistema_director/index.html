@@ -473,7 +473,9 @@ function renderDirectorio() {
             <td><strong>${a.carnet || 'S/N'}</strong></td>
             <td>${a.apellido} ${a.nombre}</td>
             <td><span class="badge ${a.estado==='activo'?'b-ok':'b-err'}">${a.estado}</span></td>
-            <td>${a.fecha_inscripcion || '—'}</td>
+            <td><span class="badge" style="background:rgba(14,165,233,0.1);color:var(--primary);">${a.turno || 'Noche'}</span></td>
+            <td style="font-weight:700;color:var(--violet);">${a.paralelo || 'A'}</td>
+            <td>${(a.fecha_inscripcion || '').split('T')[0]}</td>
             <td style="white-space:nowrap;">
               <button class="btn-del btn-del-ind" onclick="eliminarIndividual(${a.id},'${(a.apellido+' '+a.nombre).replace(/'/g,"\\'")}')">🗑 Eliminar</button>
               <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${a.id},'${a.carnet}')">🔑 Clave</button>
@@ -492,7 +494,7 @@ function renderDirectorio() {
             </div>
             <div class="tbl-wrap">
               <table class="tbl">
-                <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Estado</th><th>Inscrito</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Estado</th><th>Turno</th><th>P.</th><th>Inscrito</th><th>Acciones</th></tr></thead>
                 <tbody>${alumnosRows}</tbody>
               </table>
             </div>
@@ -992,9 +994,31 @@ async function modalAsignarNivel(id, nombre) {
             });
             const d = await r.json();
             if (r.ok) {
-                Swal.fire('✅ Asignado', `El nivel <b>${result.value}</b> fue asignado correctamente al docente.`, 'success');
+                Swal.fire({
+                    title: '✅ Asignado',
+                    html: `El nivel <b>${result.value}</b> fue asignado correctamente al docente.`,
+                    icon: 'success',
+                    timer: 2500,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
                 document.directorioLoaded = false;
                 loadDirectorio();
+            } else if (r.status === 409) {
+                // Conflicto: ya existe otro docente con ese nivel/materia
+                Swal.fire({
+                    title: '⚠️ Conflicto de Asignación',
+                    html: `<div style="text-align:left;font-size:.9rem;line-height:1.6;">
+                        ${d.detail || 'Este nivel ya está ocupado por otro docente.'}
+                        <br><br>
+                        <small style="color:#94a3b8;">💡 Para reasignar, primero retire la asignación al docente actual usando el botón <b>"Cambiar Nivel"</b> y luego asigne el nuevo.</small>
+                    </div>`,
+                    icon: 'warning',
+                    confirmButtonColor: '#f59e0b',
+                    confirmButtonText: 'Entendido'
+                });
+            } else if (r.status === 403) {
+                Swal.fire('Sin permiso', '⚠️ Solo el Director puede designar niveles a docentes.', 'warning');
             } else {
                 Swal.fire('Error', d.detail || 'Error al guardar', 'error');
             }

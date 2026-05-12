@@ -16,6 +16,7 @@ class RegistroUsuario(BaseModel):
     subsistema_id: int
     nivel_asignado: Optional[str] = None
     carrera_id: Optional[int] = None
+    turno: Optional[str] = "Noche"
 
 class TokenData(BaseModel):
     username: str | None = None
@@ -89,15 +90,15 @@ def generate_cea_email(nombre: str, apellido: str):
     clean_a = apellido.strip().split(" ")[0].lower()
     return f"{clean_n}{clean_a}" + "@ceapailon.com"
 
-def obtener_paralelo_disponible(cur, carrera_id, nivel, area):
+def obtener_paralelo_disponible(cur, carrera_id, nivel, area, turno):
     limite = 30 if str(area).lower() == 'tÃ©cnica' else 40
     cur.execute('''
         SELECT paralelo, COUNT(*) 
         FROM inscripciones 
-        WHERE carrera_id = %s AND nivel = %s
+        WHERE carrera_id = %s AND nivel = %s AND turno = %s
         GROUP BY paralelo
         ORDER BY paralelo ASC
-    ''', (carrera_id, nivel))
+    ''', (carrera_id, nivel, turno))
     paralelos = cur.fetchall()
     
     if not paralelos: return 'A'
@@ -142,8 +143,8 @@ def register_usuario(data: RegistroUsuario):
                 if c_row:
                     c_id = c_row[0]
                     area = c_row[1]
-                    paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area)
-                    cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo))
+                    paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, data.turno)
+                    cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, data.turno))
                     
                     # Matricular automÃ¡ticamente en sus 5 mÃ³dulos
                     cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -159,8 +160,8 @@ def register_usuario(data: RegistroUsuario):
                 for c_row in carreras_hum:
                     c_id = c_row[0]
                     area = c_row[1]
-                    paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area)
-                    cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo))
+                    paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, data.turno)
+                    cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, data.turno))
                     
                     # Matricular automÃ¡ticamente en sus 2 mÃ³dulos por materia
                     cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -172,10 +173,10 @@ def register_usuario(data: RegistroUsuario):
             cur.execute("SELECT area FROM carreras WHERE id = %s", (data.carrera_id,))
             c_area_row = cur.fetchone()
             area = c_area_row[0] if c_area_row else 'HumanÃ­stica'
-            paralelo = obtener_paralelo_disponible(cur, data.carrera_id, data.nivel_asignado, area)
+            paralelo = obtener_paralelo_disponible(cur, data.carrera_id, data.nivel_asignado, area, data.turno)
             cur.execute(
-                "INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo",
-                (new_id, data.carrera_id, data.nivel_asignado, paralelo)
+                "INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo",
+                (new_id, data.carrera_id, data.nivel_asignado, paralelo, data.turno)
             )
             
         conn.commit()
@@ -247,7 +248,7 @@ def descargar_plantilla_docentes():
     )
 
 @router.post("/importar-estudiantes-excel")
-async def importar_estudiantes_excel(nivel: str, file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+async def importar_estudiantes_excel(nivel: str, turno: str = "Noche", file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
     if current_user["rol"] not in ["admin", "administrador", "director", "secretaria"]:
         raise HTTPException(403, "No autorizado")
     
@@ -306,8 +307,8 @@ async def importar_estudiantes_excel(nivel: str, file: UploadFile = File(...), c
                     if c_row:
                         c_id = c_row[0]
                         db_area = c_row[1]
-                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area)
-                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo))
+                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area, turno)
+                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, turno))
                         
                         # Matricular en mÃ³dulos
                         cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -322,8 +323,8 @@ async def importar_estudiantes_excel(nivel: str, file: UploadFile = File(...), c
                     for c_row in carreras_hum:
                         c_id = c_row[0]
                         db_area = c_row[1]
-                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area)
-                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo) VALUES (%s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo))
+                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area, turno)
+                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, turno))
                         
                         # Matricular en mÃ³dulos
                         cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -525,23 +526,84 @@ def update_estado(usuario_id: int, data: EstadoUpdateBody):
 class EspecialidadUpdateBody(BaseModel):
     especialidad: str
 
-@router.put("/usuarios/{usuario_id}/especialidad", dependencies=[Depends(get_current_user)])
-def update_especialidad(usuario_id: int, data: EspecialidadUpdateBody):
+@router.put("/usuarios/{usuario_id}/especialidad")
+def update_especialidad(usuario_id: int, data: EspecialidadUpdateBody, current_user: dict = Depends(get_current_user)):
+    """Asigna un curso/nivel a un docente con validación de unicidad:
+    - Área Técnica: Solo un docente por nivel dentro de la misma especialidad (carrera).
+    - Área Humanística: Solo un docente por materia/nivel.
+    """
+    if current_user["rol"] not in ["director", "admin", "administrador"]:
+        raise HTTPException(status_code=403, detail="Solo el Director puede designar niveles a docentes.")
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Error de base de datos")
     try:
         cur = conn.cursor()
-        # Guarda en curso_asignado (no toca nivel_asignado que es la materia/especialidad del docente)
+
+        # 1. Obtener datos del docente que se quiere asignar
+        cur.execute(
+            "SELECT nivel_asignado, curso_asignado FROM usuarios WHERE id = %s AND rol IN ('docente', 'profesor', 'jefe_carrera')",
+            (usuario_id,)
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Docente no encontrado")
+
+        especialidad_docente = row[0] or ""  # Ej: "Sistemas Informáticos" o "Aplicados"
+        nuevo_nivel = data.especialidad.strip()
+
+        # 2. Determinar el área del docente buscando su especialidad en el catálogo de carreras
+        cur.execute("SELECT area FROM carreras WHERE nombre = %s AND estado = 'activo' LIMIT 1", (especialidad_docente,))
+        carrera_row = cur.fetchone()
+        area_docente = (carrera_row[0] or "").lower() if carrera_row else "humanistica"
+        # Fallback: si no está en carreras, es humanística (su especialidad es la materia)
+        is_tecnica = "cnica" in area_docente  # cubre "Técnica" con encoding
+
+        # 3. Validar conflicto de asignación
+        if is_tecnica:
+            # Área Técnica: El nivel pertenece a la carrera del docente.
+            # Verificar que ningún OTRO docente ya tenga ese nivel EN ESA MISMA CARRERA.
+            cur.execute("""
+                SELECT u.id, u.nombre, u.apellido
+                FROM usuarios u
+                WHERE u.id != %s
+                  AND u.rol IN ('docente', 'profesor', 'jefe_carrera')
+                  AND u.nivel_asignado = %s
+                  AND u.curso_asignado = %s
+                  AND u.estado = 'activo'
+            """, (usuario_id, especialidad_docente, nuevo_nivel))
+        else:
+            # Área Humanística: La especialidad del docente ES la materia (ej. "Aplicados").
+            # Verificar que ningún OTRO docente ya esté asignado al mismo nivel/materia.
+            cur.execute("""
+                SELECT u.id, u.nombre, u.apellido
+                FROM usuarios u
+                WHERE u.id != %s
+                  AND u.rol IN ('docente', 'profesor', 'jefe_carrera')
+                  AND u.curso_asignado = %s
+                  AND u.estado = 'activo'
+            """, (usuario_id, nuevo_nivel))
+
+        conflicto = cur.fetchone()
+        if conflicto:
+            nombre_conflicto = f"{conflicto[1]} {conflicto[2]}"
+            if is_tecnica:
+                detalle = f"El nivel '{nuevo_nivel}' en {especialidad_docente} ya está asignado al docente {nombre_conflicto}. Primero debe reasignar o liberar ese nivel."
+            else:
+                detalle = f"La materia '{nuevo_nivel}' ya está asignada al docente {nombre_conflicto}. Cada materia humanística solo puede tener un docente."
+            raise HTTPException(status_code=409, detail=detalle)
+
+        # 4. Sin conflicto: guardar la asignación
         cur.execute(
             "UPDATE usuarios SET curso_asignado = %s WHERE id = %s AND rol IN ('docente', 'profesor', 'jefe_carrera')",
-            (data.especialidad, usuario_id)
+            (nuevo_nivel, usuario_id)
         )
-        if cur.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Docente no encontrado")
         conn.commit()
-        return {"mensaje": f"Nivel/Curso asignado: {data.especialidad}"}
+        return {"mensaje": f"Nivel/Curso asignado: {nuevo_nivel}"}
+    except HTTPException:
+        raise
     except Exception as e:
+        conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         conn.close()
@@ -563,7 +625,7 @@ def update_my_password(data: PasswordResetBody, current_user: dict = Depends(get
         conn.close()
 
 @router.post("/bulk-register", dependencies=[Depends(get_current_user)])
-async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
+async def bulk_register(nivel: str, turno: str = "Noche", rol: str = "estudiante", file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
     """Carga masiva de usuarios (estudiante o profesor) desde Excel (.xlsx)."""
     if not file.filename.endswith('.xlsx'):
         raise HTTPException(status_code=400, detail="El archivo debe ser .xlsx")
@@ -610,6 +672,29 @@ async def bulk_register(nivel: str, rol: str = "estudiante", file: UploadFile = 
                 (subsistema_id, nombre, apellido, email, hashed, db_rol, nivel, s_carnet)
             )
             new_id = cur.fetchone()[0]
+
+            # --- Lógica de Inscripción Inteligente Pro (Carga Masiva) ---
+            if db_rol == "estudiante" and nivel:
+                nivel_str = nivel
+                # Área Técnica
+                if " - " in nivel_str:
+                    parts = nivel_str.split(" - ")
+                    carrera_nombre = parts[0].strip()
+                    nivel_nombre = parts[1].strip()
+                    cur.execute("SELECT id, area FROM carreras WHERE nombre = %s AND area = 'TÃ©cnica'", (carrera_nombre,))
+                    c_row = cur.fetchone()
+                    if c_row:
+                        c_id, area = c_row
+                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, turno)
+                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, turno))
+                # Ã rea HumanÃ­stica
+                else:
+                    nivel_nombre = nivel_str.strip()
+                    cur.execute("SELECT id, area FROM carreras WHERE area = 'HumanÃ­stica'")
+                    for c_id, area in cur.fetchall():
+                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, turno)
+                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, turno))
+
             conn.commit()
             registrados += 1
         except Exception as e:
