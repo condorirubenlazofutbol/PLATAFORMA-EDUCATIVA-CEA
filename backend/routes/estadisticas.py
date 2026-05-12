@@ -317,17 +317,17 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
                 # Para docentes, la especialidad se guarda en nivel_asignado
                 cur.execute("""
                     DELETE FROM usuarios 
-                    WHERE nivel_asignado = %s AND rol = ANY(%s) 
+                    WHERE nivel_asignado = %s AND rol IN %s 
                     RETURNING id
-                """, (data.carrera, roles_objetivo))
+                """, (data.carrera, tuple(roles_objetivo)))
             else:
                 cur.execute("""
                     DELETE FROM usuarios WHERE id IN (
                         SELECT DISTINCT i.usuario_id FROM inscripciones i
                         JOIN carreras c ON i.carrera_id = c.id
                         WHERE c.nombre = %s
-                    ) AND rol = ANY(%s) RETURNING id
-                """, (data.carrera, roles_objetivo))
+                    ) AND rol IN %s RETURNING id
+                """, (data.carrera, tuple(roles_objetivo)))
             eliminados = cur.rowcount
 
         elif data.tipo == "nivel":
@@ -339,15 +339,15 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
                     DELETE FROM usuarios WHERE id IN (
                         SELECT DISTINCT i.usuario_id FROM inscripciones i
                         WHERE i.nivel = %s AND i.turno = %s
-                    ) AND rol = ANY(%s) RETURNING id
-                """, (data.nivel, data.turno, roles_objetivo))
+                    ) AND rol IN %s RETURNING id
+                """, (data.nivel, data.turno, tuple(roles_objetivo)))
             else:
                 cur.execute("""
                     DELETE FROM usuarios WHERE id IN (
                         SELECT DISTINCT i.usuario_id FROM inscripciones i
                         WHERE i.nivel = %s
-                    ) AND rol = ANY(%s) RETURNING id
-                """, (data.nivel, roles_objetivo))
+                    ) AND rol IN %s RETURNING id
+                """, (data.nivel, tuple(roles_objetivo)))
             eliminados = cur.rowcount
 
         elif data.tipo == "area":
@@ -359,12 +359,12 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
                     SELECT DISTINCT i.usuario_id FROM inscripciones i
                     JOIN carreras c ON i.carrera_id = c.id
                     WHERE LOWER(c.area) = LOWER(%s)
-                ) AND rol = ANY(%s) RETURNING id
-            """, (db_area, roles_objetivo))
+                ) AND rol IN %s RETURNING id
+            """, (db_area, tuple(roles_objetivo)))
             eliminados = cur.rowcount
 
         elif data.tipo == "todos":
-            cur.execute("DELETE FROM usuarios WHERE rol = ANY(%s) RETURNING id", (roles_objetivo,))
+            cur.execute("DELETE FROM usuarios WHERE rol IN %s RETURNING id", (tuple(roles_objetivo),))
             eliminados = cur.rowcount
 
         else:
