@@ -313,12 +313,12 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
             if not data.carrera:
                 raise HTTPException(400, "Se requiere el nombre de la carrera/especialidad")
             if data.rol == "docente":
-                cur.execute("SELECT id FROM usuarios WHERE nivel_asignado = %s AND rol IN %s", (data.carrera, tuple(roles_objetivo)))
+                cur.execute("SELECT id FROM usuarios WHERE nivel_asignado = %s AND rol = ANY(%s)", (data.carrera, list(roles_objetivo)))
             else:
                 cur.execute("""
                     SELECT DISTINCT u.id FROM usuarios u JOIN inscripciones i ON i.usuario_id = u.id JOIN carreras c ON c.id = i.carrera_id
-                    WHERE c.nombre = %s AND u.rol IN %s
-                """, (data.carrera, tuple(roles_objetivo)))
+                    WHERE c.nombre = %s AND u.rol = ANY(%s)
+                """, (data.carrera, list(roles_objetivo)))
             target_ids = [row[0] for row in cur.fetchall()]
 
         elif data.tipo == "nivel":
@@ -327,13 +327,13 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
             if data.turno:
                 cur.execute("""
                     SELECT DISTINCT u.id FROM usuarios u JOIN inscripciones i ON i.usuario_id = u.id
-                    WHERE i.nivel = %s AND i.turno = %s AND u.rol IN %s
-                """, (data.nivel, data.turno, tuple(roles_objetivo)))
+                    WHERE i.nivel = %s AND i.turno = %s AND u.rol = ANY(%s)
+                """, (data.nivel, data.turno, list(roles_objetivo)))
             else:
                 cur.execute("""
                     SELECT DISTINCT u.id FROM usuarios u JOIN inscripciones i ON i.usuario_id = u.id
-                    WHERE i.nivel = %s AND u.rol IN %s
-                """, (data.nivel, tuple(roles_objetivo)))
+                    WHERE i.nivel = %s AND u.rol = ANY(%s)
+                """, (data.nivel, list(roles_objetivo)))
             target_ids = [row[0] for row in cur.fetchall()]
 
         elif data.tipo == "area":
@@ -342,12 +342,12 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
             db_area = "TÃ©cnica" if data.area.lower() == "tecnica" else "HumanÃ­stica"
             cur.execute("""
                 SELECT DISTINCT u.id FROM usuarios u JOIN inscripciones i ON i.usuario_id = u.id JOIN carreras c ON c.id = i.carrera_id
-                WHERE LOWER(c.area) = LOWER(%s) AND u.rol IN %s
-            """, (db_area, tuple(roles_objetivo)))
+                WHERE LOWER(c.area) = LOWER(%s) AND u.rol = ANY(%s)
+            """, (db_area, list(roles_objetivo)))
             target_ids = [row[0] for row in cur.fetchall()]
 
         elif data.tipo == "todos":
-            cur.execute("SELECT id FROM usuarios WHERE rol IN %s", (tuple(roles_objetivo),))
+            cur.execute("SELECT id FROM usuarios WHERE rol = ANY(%s)", (list(roles_objetivo),))
             target_ids = [row[0] for row in cur.fetchall()]
 
         else:
@@ -356,17 +356,17 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
         eliminados = 0
         if target_ids:
             # Eliminar dependencias manualmente en caso de que la BD no tenga ON DELETE CASCADE
-            t_ids = tuple(target_ids)
-            cur.execute("DELETE FROM progreso WHERE usuario_id IN %s", (t_ids,))
-            cur.execute("DELETE FROM inscripciones WHERE usuario_id IN %s", (t_ids,))
-            cur.execute("DELETE FROM certificados WHERE usuario_id IN %s", (t_ids,))
+            t_ids = list(target_ids)
+            cur.execute("DELETE FROM progreso WHERE usuario_id = ANY(%s)", (t_ids,))
+            cur.execute("DELETE FROM inscripciones WHERE usuario_id = ANY(%s)", (t_ids,))
+            cur.execute("DELETE FROM certificados WHERE usuario_id = ANY(%s)", (t_ids,))
             
             # Si hay docentes entre los eliminados, desvincularlos de los cursos (set null en vez de borrar el curso)
-            cur.execute("UPDATE modulos SET docente_id = NULL WHERE docente_id IN %s", (t_ids,))
-            cur.execute("UPDATE usuarios SET curso_asignado = NULL WHERE id IN %s", (t_ids,))
+            cur.execute("UPDATE modulos SET docente_id = NULL WHERE docente_id = ANY(%s)", (t_ids,))
+            cur.execute("UPDATE usuarios SET curso_asignado = NULL WHERE id = ANY(%s)", (t_ids,))
             
             # Finalmente, eliminar los usuarios
-            cur.execute("DELETE FROM usuarios WHERE id IN %s", (t_ids,))
+            cur.execute("DELETE FROM usuarios WHERE id = ANY(%s)", (t_ids,))
             eliminados = cur.rowcount
 
         conn.commit()
