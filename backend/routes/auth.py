@@ -455,7 +455,31 @@ def get_personal(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Error DB")
     try:
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, apellido, email, rol, nivel_asignado, carnet, estado FROM usuarios WHERE rol IN ('profesor', 'jefe_carrera', 'secretaria', 'director') ORDER BY rol, nombre")
+        if current_user["rol"] in ("admin", "administrador"):
+            # Admin ve TODOS excepto otros admins
+            cur.execute("""
+                SELECT id, nombre, apellido, email, rol, nivel_asignado, carnet, estado,
+                       COALESCE(es_jefe, FALSE) as es_jefe
+                FROM usuarios
+                WHERE rol NOT IN ('admin', 'administrador')
+                ORDER BY
+                    CASE rol
+                        WHEN 'director' THEN 1
+                        WHEN 'secretaria' THEN 2
+                        WHEN 'jefe_carrera' THEN 3
+                        WHEN 'docente' THEN 4
+                        WHEN 'profesor' THEN 4
+                        ELSE 5
+                    END, apellido, nombre
+            """)
+        else:
+            cur.execute("""
+                SELECT id, nombre, apellido, email, rol, nivel_asignado, carnet, estado,
+                       COALESCE(es_jefe, FALSE) as es_jefe
+                FROM usuarios
+                WHERE rol IN ('profesor','docente','jefe_carrera','secretaria','director')
+                ORDER BY rol, nombre
+            """)
         return {"personal": rows_to_dicts(cur, cur.fetchall())}
     finally:
         conn.close()
@@ -732,28 +756,62 @@ async def bulk_register(nivel: str, turno: str = "Noche", rol: str = "estudiante
 
 class PromoverDirectorRequest(BaseModel):
     usuario_id: int
-    nuevo_rol: str # 'director' o 'secretaria'
+    nuevo_rol: str  # 'director', 'secretaria', 'jefe_carrera', 'docente'
 
-@router.post("/promover-alta-direccion", dependencies=[Depends(get_current_user)])
+@router.post("/promover-alta-direccion")
 def promover_alta_direccion(data: PromoverDirectorRequest, current_user: dict = Depends(get_current_user)):
-    if current_user["rol"] != "admin":
-        raise HTTPException(status_code=403, detail="Solo el SÃºper Admin puede realizar esta acciÃ³n")
-    if data.nuevo_rol not in ["director", "secretaria"]:
-        raise HTTPException(status_code=400, detail="Rol invÃ¡lido")
-        
+    """Admin puede asignar director, secretaria, jefe_carrera, docente.
+    - Solo 1 director y 1 secretaria en todo el sistema.
+    - Si ya existe uno, se degrada a 'docente' automáticamente.
+    """
+    if current_user["rol"] not in ["admin", "administrador"]:
+        raise HTTPException(status_code=403, detail="Solo el Súper Admin puede realizar esta acción")
+    if data.nuevo_rol not in ["director", "secretaria", "jefe_carrera", "docente", "profesor"]:
+        raise HTTPException(status_code=400, detail="Rol inválido")
+
     conn = get_db_connection()
-    if not conn: raise HTTPException(status_code=500, detail="Error DB")
+    if not conn:
+        raise HTTPException(status_code=500, detail="Error DB")
     try:
         cur = conn.cursor()
-        
-        # 1. Identificar si ya hay alguien con este rol y degradarlo a profesor
-        cur.execute("UPDATE usuarios SET rol = 'profesor' WHERE rol = %s", (data.nuevo_rol,))
-        
-        # 2. Ascender al nuevo usuario
-        cur.execute("UPDATE usuarios SET rol = %s WHERE id = %s", (data.nuevo_rol, data.usuario_id))
-        
+
+        # Verificar que el usuario objetivo existe y no es admin
+        cur.execute("SELECT nombre, apellido, rol FROM usuarios WHERE id = %s", (data.usuario_id,))
+        target = cur.fetchone()
+        if not target:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        if target[2] in ("admin", "administrador"):
+            raise HTTPException(status_code=403, detail="No se puede modificar el rol de un Administrador")
+
+        anterior_nombre = None
+
+        # Para director y secretaria: solo puede haber 1
+        if data.nuevo_rol in ("director", "secretaria"):
+            cur.execute(
+                "SELECT id, nombre, apellido FROM usuarios WHERE rol = %s AND id != %s",
+                (data.nuevo_rol, data.usuario_id)
+            )
+            anterior = cur.fetchone()
+            if anterior:
+                anterior_nombre = f"{anterior[1]} {anterior[2]}"
+                # Degradar al anterior a docente
+                cur.execute("UPDATE usuarios SET rol = 'docente' WHERE id = %s", (anterior[0],))
+
+        # Si el usuario era jefe y cambia a otro rol, retirar es_jefe
+        cur.execute("UPDATE usuarios SET rol = %s, es_jefe = FALSE WHERE id = %s",
+                    (data.nuevo_rol, data.usuario_id))
+
         conn.commit()
-        return {"mensaje": f"Usuario ascendido a {data.nuevo_rol} exitosamente. El anterior fue degradado a profesor."}
+
+        msg = f"{target[0]} {target[1]} ahora es {data.nuevo_rol}."
+        if anterior_nombre:
+            msg += f" {anterior_nombre} fue degradado/a a docente."
+        return {"mensaje": msg}
+    except HTTPException:
+        raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         conn.close()
 

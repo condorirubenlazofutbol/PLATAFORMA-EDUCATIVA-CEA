@@ -1,280 +1,406 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Súper Admin - CEA Pailón</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        :root {
-            --primary: #10b981;
-            --primary-hover: #059669;
-            --bg-color: #0f172a;
-            --panel-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: #334155;
-            --rojo: #ef4444;
-            --violet: #8b5cf6;
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
-
-        /* Sidebar */
-        .sidebar { width: 260px; background: var(--panel-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
-        .brand { padding: 1.5rem; font-size: 1.25rem; font-weight: 700; color: white; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; }
-        .brand span { color: var(--primary); }
-        .nav-menu { padding: 1.5rem 1rem; flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
-        .nav-btn { background: transparent; border: none; padding: 0.875rem 1rem; border-radius: 8px; color: var(--text-muted); cursor: pointer; text-align: left; font-size: 0.95rem; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.75rem; }
-        .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
-        .nav-btn.active { background: var(--primary); color: white; }
-        .logout-btn { margin: 1rem; background: rgba(239, 68, 68, 0.1); color: var(--rojo); padding: 0.875rem; text-align: center; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; font-weight: 600; transition: all 0.2s; }
-        .logout-btn:hover { background: var(--rojo); color: white; }
-
-        /* Main Content */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-color); }
-        .header { background: var(--glass-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--glass-border); padding: 1.5rem 2.5rem; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
-        .header h2 { font-size: 1.5rem; font-weight: 700; color: white; }
-        .header-profile { display: flex; align-items: center; gap: 1rem; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--violet)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; }
-
-        .content-body { padding: 2.5rem; max-width: 1200px; margin: 0 auto; width: 100%; }
-
-        /* Dashboard Cards */
-        .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
-        .card { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: transform 0.2s; }
-        .card:hover { transform: translateY(-3px); }
-        .card-title { color: var(--text-muted); font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
-        .card-value { font-size: 2rem; font-weight: 700; color: white; }
-        .card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; margin-bottom: 1rem; }
-
-        /* Table */
-        .panel-box { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-        .panel-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .panel-title { font-size: 1.1rem; font-weight: 600; color: white; }
-        .search-input { background: var(--bg-color); border: 1px solid var(--border); color: white; padding: 0.6rem 1rem; border-radius: 8px; width: 250px; outline: none; transition: border-color 0.2s; }
-        .search-input:focus { border-color: var(--primary); }
-
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th { padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); }
-        td { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); font-size: 0.95rem; color: var(--text-main); }
-        tbody tr:hover { background: rgba(255,255,255,0.02); }
-        
-        .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
-        .b-admin { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-        .b-director { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; }
-        .b-secretaria { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
-        .b-jefe { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
-        .b-prof { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
-
-        .action-btn { background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: background 0.2s; }
-        .action-btn:hover { background: var(--primary-hover); }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            body { flex-direction: column; }
-            .sidebar { width: 100%; height: auto; flex-direction: row; align-items: center; padding: 0.5rem; overflow-x: auto; }
-            .nav-menu { flex-direction: row; padding: 0; }
-            .logout-btn { margin: 0 0.5rem; padding: 0.5rem 1rem; }
-            .brand span:nth-child(2) { display: none; }
-            .content-body { padding: 1rem; }
-            .table-wrap { overflow-x: auto; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Súper Admin — CEA Pailón</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+:root{--p:#0ea5e9;--v:#8b5cf6;--g:#10b981;--r:#f43f5e;--bg:#080f1a;--card:#0d1b2e;--border:rgba(255,255,255,0.08);--text:#f1f5f9;--muted:#64748b}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:rgba(13,27,46,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.brand{font-size:1.1rem;font-weight:800;background:linear-gradient(90deg,var(--p),var(--v));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-right{display:flex;align-items:center;gap:1rem}
+#userName{font-size:.85rem;color:var(--muted)}
+.btn-logout{background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.3);color:var(--r);padding:.4rem .9rem;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600;transition:all .2s}
+.btn-logout:hover{background:var(--r);color:#fff}
+.main{padding:2rem;max-width:1300px;margin:0 auto;width:100%}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.5rem;display:flex;align-items:center;gap:1rem}
+.stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.stat-label{font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.stat-val{font-size:1.4rem;font-weight:800;line-height:1.2}
+.panel{background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:2rem}
+.panel-head{padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem}
+.panel-title{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.5rem}
+.controls{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center}
+.search{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:.5rem 1rem;border-radius:8px;width:230px;outline:none;font-size:.85rem}
+.search:focus{border-color:var(--p)}
+.filter-sel{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text);padding:.5rem .75rem;border-radius:8px;outline:none;font-size:.85rem;cursor:pointer}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{padding:.75rem 1rem;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);background:rgba(0,0,0,.2);white-space:nowrap}
+td{padding:.8rem 1rem;border-bottom:1px solid var(--border);font-size:.85rem;vertical-align:middle}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+.badge{padding:.2rem .6rem;border-radius:6px;font-size:.72rem;font-weight:700;text-transform:uppercase;white-space:nowrap}
+.r-director{background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.3)}
+.r-secretaria{background:rgba(14,165,233,.15);color:#38bdf8;border:1px solid rgba(14,165,233,.3)}
+.r-docente,.r-profesor{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3)}
+.r-jefe_carrera{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.r-estudiante{background:rgba(100,116,139,.15);color:#94a3b8;border:1px solid rgba(100,116,139,.3)}
+.r-activo{background:rgba(16,185,129,.1);color:#34d399}
+.r-pausado{background:rgba(244,63,94,.1);color:#fb7185}
+.actions{display:flex;gap:.4rem;flex-wrap:wrap}
+.btn{border:none;padding:.35rem .7rem;border-radius:7px;cursor:pointer;font-size:.75rem;font-weight:700;transition:all .2s;white-space:nowrap}
+.btn-dir{background:rgba(139,92,246,.15);color:#a78bfa;border:1px solid rgba(139,92,246,.4)}
+.btn-dir:hover{background:#8b5cf6;color:#fff}
+.btn-sec{background:rgba(14,165,233,.15);color:#38bdf8;border:1px solid rgba(14,165,233,.4)}
+.btn-sec:hover{background:#0ea5e9;color:#fff}
+.btn-doc{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.3)}
+.btn-doc:hover{background:#10b981;color:#fff}
+.btn-del{background:rgba(244,63,94,.1);color:#fb7185;border:1px solid rgba(244,63,94,.3)}
+.btn-del:hover{background:#f43f5e;color:#fff}
+.btn-pwd{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.btn-pwd:hover{background:#f59e0b;color:#fff}
+.btn-jefe{background:rgba(245,158,11,.12);color:#fbbf24;border:1px solid rgba(245,158,11,.3)}
+.btn-jefe:hover{background:#f59e0b;color:#fff}
+.cur-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.15rem .5rem;border-radius:5px;font-size:.68rem;font-weight:700}
+.cur-dir{background:rgba(139,92,246,.2);color:#a78bfa}
+.cur-sec{background:rgba(14,165,233,.2);color:#38bdf8}
+.empty{text-align:center;padding:2.5rem;color:var(--muted);font-size:.9rem}
+</style>
 </head>
 <body>
+<div class="topbar">
+  <div class="brand">🛡️ Admin Central — CEA Pailón</div>
+  <div class="topbar-right">
+    <span id="userName">Cargando...</span>
+    <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+  </div>
+</div>
 
-    <aside class="sidebar">
-        <div class="brand">
-            <span>🛡️</span> <span>Admin Central</span>
-        </div>
-        <div class="nav-menu">
-            <button class="nav-btn active">👥 Control de Personal</button>
-        </div>
-        <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
-    </aside>
+<div class="main">
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(139,92,246,.15);color:#a78bfa">👑</div>
+      <div><div class="stat-label">Director</div><div class="stat-val" id="sDir" style="font-size:1rem;color:#a78bfa">--</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(14,165,233,.15);color:#38bdf8">📝</div>
+      <div><div class="stat-label">Secretaria</div><div class="stat-val" id="sSec" style="font-size:1rem;color:#38bdf8">--</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(16,185,129,.15);color:#34d399">👨‍🏫</div>
+      <div><div class="stat-label">Docentes</div><div class="stat-val" id="sDoc">0</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(100,116,139,.15);color:#94a3b8">🎓</div>
+      <div><div class="stat-label">Estudiantes</div><div class="stat-val" id="sEst">0</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(245,158,11,.15);color:#fbbf24">🏅</div>
+      <div><div class="stat-label">Jefes de Carrera</div><div class="stat-val" id="sJefe">0</div></div>
+    </div>
+  </div>
 
-    <main class="main-content">
-        <header class="header">
-            <h2>Gestión Jerárquica</h2>
-            <div class="header-profile">
-                <div style="text-align: right;">
-                    <p style="font-weight: 600; font-size: 0.95rem;" id="adminNombre">Cargando...</p>
-                    <p style="color: var(--primary); font-size: 0.8rem; font-weight: 600;">SÚPER ADMIN</p>
-                </div>
-                <div class="avatar" id="adminInitial">A</div>
-            </div>
-        </header>
+  <!-- Panel de personal -->
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">👥 Gestión de Personal y Usuarios</div>
+      <div class="controls">
+        <input class="search" id="q" placeholder="🔍 Buscar nombre, CI, email..." oninput="render()">
+        <select class="filter-sel" id="fRol" onchange="render()">
+          <option value="">Todos los roles</option>
+          <option value="director">Director</option>
+          <option value="secretaria">Secretaria</option>
+          <option value="jefe_carrera">Jefe de Carrera</option>
+          <option value="docente">Docente</option>
+          <option value="estudiante">Estudiante</option>
+        </select>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Nombre Completo</th>
+          <th>CI / Carnet</th>
+          <th>Email</th>
+          <th>Rol Actual</th>
+          <th>Estado</th>
+          <th>Acciones de Jerarquía</th>
+        </tr></thead>
+        <tbody id="tb"><tr><td colspan="6" class="empty">Cargando usuarios...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-        <div class="content-body">
-            <div class="grid-cards">
-                <div class="card">
-                    <div class="card-icon" style="background: rgba(139, 92, 246, 0.2); color: #c4b5fd;">👑</div>
-                    <div class="card-title">Director Actual</div>
-                    <div class="card-value" id="dirActual" style="font-size: 1.3rem;">--</div>
-                </div>
-                <div class="card">
-                    <div class="card-icon" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd;">📝</div>
-                    <div class="card-title">Secretaría Actual</div>
-                    <div class="card-value" id="secActual" style="font-size: 1.3rem;">--</div>
-                </div>
-                <div class="card">
-                    <div class="card-icon" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7;">👨‍🏫</div>
-                    <div class="card-title">Total Personal</div>
-                    <div class="card-value" id="totalPersonal">--</div>
-                </div>
-            </div>
+<script>
+const API = 'https://va-cea.onrender.com';
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-            <div class="panel-box">
-                <div class="panel-header">
-                    <h3 class="panel-title">Directorio del Personal</h3>
-                    <input type="text" id="searchPersonal" class="search-input" placeholder="🔍 Buscar por nombre o CI..." onkeyup="renderTable()">
-                </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nombre Completo</th>
-                                <th>CI / Carnet</th>
-                                <th>Rol Actual</th>
-                                <th>Acciones de Jerarquía</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbPersonal">
-                            <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Cargando personal...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </main>
+if (!token || !['admin','administrador'].includes(user.rol)) {
+  window.location.href = '../login.html';
+}
 
-    <script>
-        const API_URL = 'https://va-cea.onrender.com';
-        const token = localStorage.getItem('token');
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
+document.getElementById('userName').textContent = `Admin: ${user.nombre || ''}`;
 
-        if(!token || user.rol !== 'admin') {
-            window.location.href = '../login.html';
-        }
+let allUsers = [];
 
-        document.getElementById('adminNombre').textContent = user.nombre || 'Administrador';
-        document.getElementById('adminInitial').textContent = (user.nombre || 'A').charAt(0).toUpperCase();
+async function loadAll() {
+  try {
+    const r = await fetch(`${API}/auth/personal`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const d = await r.json();
+    allUsers = d.personal || [];
+    updateStats();
+    render();
+  } catch(e) {
+    document.getElementById('tb').innerHTML = `<tr><td colspan="6" class="empty" style="color:#f43f5e">Error al cargar datos: ${e.message}</td></tr>`;
+  }
+}
 
-        let personalData = [];
+function updateStats() {
+  const dir = allUsers.find(u => u.rol === 'director');
+  const sec = allUsers.find(u => u.rol === 'secretaria');
+  document.getElementById('sDir').textContent = dir ? `${dir.nombre} ${dir.apellido}` : 'Sin Asignar';
+  document.getElementById('sSec').textContent = sec ? `${sec.nombre} ${sec.apellido}` : 'Sin Asignar';
+  document.getElementById('sDoc').textContent = allUsers.filter(u => ['docente','profesor','jefe_carrera'].includes(u.rol)).length;
+  document.getElementById('sEst').textContent = allUsers.filter(u => u.rol === 'estudiante').length;
+  document.getElementById('sJefe').textContent = allUsers.filter(u => u.es_jefe).length;
+}
 
-        async function loadPersonal() {
-            try {
-                const res = await fetch(`${API_URL}/auth/personal`, {
-                    headers: {'Authorization': `Bearer ${token}`}
-                });
-                if(!res.ok) throw new Error('Error de red');
-                const data = await res.json();
-                personalData = data.personal || [];
-                
-                // Actualizar contadores
-                document.getElementById('totalPersonal').textContent = personalData.length;
-                const dir = personalData.find(p => p.rol === 'director');
-                const sec = personalData.find(p => p.rol === 'secretaria');
-                document.getElementById('dirActual').textContent = dir ? `${dir.nombre} ${dir.apellido}` : 'Sin Asignar';
-                document.getElementById('secActual').textContent = sec ? `${sec.nombre} ${sec.apellido}` : 'Sin Asignar';
+function render() {
+  const q = (document.getElementById('q').value || '').toLowerCase();
+  const fRol = document.getElementById('fRol').value;
+  const tb = document.getElementById('tb');
 
-                renderTable();
-            } catch(e) {
-                document.getElementById('tbPersonal').innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--rojo);">Error al cargar datos.</td></tr>`;
-            }
-        }
+  let list = allUsers.filter(u => {
+    const match = `${u.nombre} ${u.apellido} ${u.carnet || ''} ${u.email || ''}`.toLowerCase().includes(q);
+    const rolMatch = !fRol || u.rol === fRol || (fRol === 'docente' && u.rol === 'profesor');
+    return match && rolMatch;
+  });
 
-        function renderTable() {
-            const query = document.getElementById('searchPersonal').value.toLowerCase();
-            const tb = document.getElementById('tbPersonal');
-            tb.innerHTML = '';
+  if (!list.length) {
+    tb.innerHTML = `<tr><td colspan="6" class="empty">Sin resultados</td></tr>`;
+    return;
+  }
 
-            const filtered = personalData.filter(p => 
-                `${p.nombre} ${p.apellido} ${p.carnet}`.toLowerCase().includes(query)
-            );
+  const hasDir = allUsers.some(u => u.rol === 'director');
+  const hasSec = allUsers.some(u => u.rol === 'secretaria');
 
-            if(filtered.length === 0) {
-                tb.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No se encontraron resultados.</td></tr>`;
-                return;
-            }
+  tb.innerHTML = list.map(u => {
+    const isDir = u.rol === 'director';
+    const isSec = u.rol === 'secretaria';
+    const isJefe = u.es_jefe;
+    const rolNorm = u.rol === 'profesor' ? 'docente' : u.rol;
 
-            const badges = {
-                'admin': 'b-admin',
-                'director': 'b-director',
-                'secretaria': 'b-secretaria',
-                'jefe_carrera': 'b-jefe',
-                'profesor': 'b-prof'
-            };
+    const curBadge = isDir ? `<span class="cur-badge cur-dir">👑 ACTUAL</span>`
+                   : isSec ? `<span class="cur-badge cur-sec">📝 ACTUAL</span>`
+                   : isJefe ? `<span class="cur-badge" style="background:rgba(245,158,11,.2);color:#fbbf24">🏅 JEFE</span>` : '';
 
-            filtered.forEach(p => {
-                if(p.rol === 'admin') return; // No permitimos editar otros admins por seguridad
+    // Botones de acción
+    let btns = '';
 
-                const isDirector = p.rol === 'director';
-                const isSecretaria = p.rol === 'secretaria';
+    if (!isDir) btns += `<button class="btn btn-dir" onclick="promover(${u.id},'director','${u.nombre} ${u.apellido}')">
+      ${hasDir ? '🔄 Nuevo Dir.' : '👑 Dir.'}
+    </button>`;
+    else btns += `<span style="color:var(--muted);font-size:.75rem">✔ Director Actual</span>`;
 
-                tb.innerHTML += `
-                    <tr>
-                        <td>
-                            <div style="font-weight: 600;">${p.nombre} ${p.apellido}</div>
-                            <div style="font-size: 0.8rem; color: var(--text-muted);">${p.email}</div>
-                        </td>
-                        <td style="font-family: monospace;">${p.carnet}</td>
-                        <td><span class="badge ${badges[p.rol] || 'b-prof'}">${p.rol}</span></td>
-                        <td>
-                            <div style="display:flex; gap:0.5rem;">
-                                ${!isDirector ? `<button class="action-btn" style="background:var(--violet);" onclick="promover(${p.id}, 'director', '${p.nombre}')">Nombrar Director</button>` : `<span style="color:var(--text-muted);font-size:0.85rem;">✔ Director Actual</span>`}
-                                ${!isSecretaria && !isDirector ? `<button class="action-btn" style="background:var(--primary);" onclick="promover(${p.id}, 'secretaria', '${p.nombre}')">Nombrar Secretaria</button>` : ''}
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
+    if (!isSec && !isDir) btns += `<button class="btn btn-sec" onclick="promover(${u.id},'secretaria','${u.nombre} ${u.apellido}')">
+      ${hasSec ? '🔄 Nueva Sec.' : '📝 Sec.'}
+    </button>`;
 
-        async function promover(id, nuevoRol, nombre) {
-            const rolM = nuevoRol === 'director' ? 'Director/a' : 'Secretario/a';
-            const confirm = await Swal.fire({
-                title: `¿Nombrar como ${rolM}?`,
-                text: `El personal que ocupaba este cargo pasará a ser profesor. ¡Solo puede haber un ${rolM}!`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#10b981',
-                cancelButtonColor: '#334155',
-                confirmButtonText: 'Sí, ascender',
-                cancelButtonText: 'Cancelar'
-            });
+    if (['docente','profesor','jefe_carrera'].includes(u.rol)) {
+      if (isJefe) {
+        btns += `<button class="btn btn-jefe" onclick="retirarJefe(${u.id},'${u.nombre} ${u.apellido}')">🏅 Retirar Jefe</button>`;
+      } else {
+        btns += `<button class="btn btn-jefe" onclick="nombrarJefe(${u.id},'${u.nombre} ${u.apellido}')">🏅 Jefe</button>`;
+      }
+    }
 
-            if(!confirm.isConfirmed) return;
+    if (isDir || isSec) {
+      btns += `<button class="btn btn-doc" onclick="promover(${u.id},'docente','${u.nombre} ${u.apellido}')">↓ Docente</button>`;
+    }
 
-            try {
-                const res = await fetch(`${API_URL}/auth/promover-alta-direccion`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
-                    body: JSON.stringify({usuario_id: id, nuevo_rol: nuevoRol})
-                });
+    btns += `<button class="btn btn-pwd" onclick="resetPwd(${u.id},'${u.carnet || ''}')">🔑 Clave</button>`;
+    btns += `<button class="btn btn-del" onclick="eliminar(${u.id},'${u.nombre} ${u.apellido}',true)">🗑</button>`;
 
-                const data = await res.json();
-                if(res.ok) {
-                    Swal.fire('¡Éxito!', data.mensaje, 'success');
-                    loadPersonal();
-                } else {
-                    Swal.fire('Error', data.detail || 'Ocurrió un error', 'error');
-                }
-            } catch(e) {
-                Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
-            }
-        }
+    return `<tr>
+      <td>
+        <div style="font-weight:600">${u.nombre} ${u.apellido}</div>
+        ${curBadge}
+      </td>
+      <td style="font-family:monospace;font-size:.8rem">${u.carnet || '—'}</td>
+      <td style="font-size:.78rem;color:var(--muted)">${u.email || '—'}</td>
+      <td><span class="badge r-${u.rol}">${rolNorm}</span></td>
+      <td><span class="badge r-${u.estado || 'activo'}">${u.estado || 'activo'}</span></td>
+      <td><div class="actions">${btns}</div></td>
+    </tr>`;
+  }).join('');
+}
 
-        function logout() {
-            localStorage.clear();
-            window.location.href = '../login.html';
-        }
+async function promover(id, nuevoRol, nombre) {
+  const rolLabel = { director: 'Director/a', secretaria: 'Secretario/a', docente: 'Docente' }[nuevoRol] || nuevoRol;
+  const hasExisting = nuevoRol === 'director'
+    ? allUsers.some(u => u.rol === 'director' && u.id !== id)
+    : nuevoRol === 'secretaria'
+    ? allUsers.some(u => u.rol === 'secretaria' && u.id !== id)
+    : false;
 
-        loadPersonal();
-    </script>
+  const warn = hasExisting
+    ? `<br><br><small style="color:#fbbf24">⚠️ El ${rolLabel} actual será degradado a Docente automáticamente.</small>`
+    : '';
+
+  const conf = await Swal.fire({
+    title: `¿Designar como ${rolLabel}?`,
+    html: `<b>${nombre}</b> será asignado/a como <b>${rolLabel}</b>.${warn}`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#8b5cf6',
+    cancelButtonColor: '#334155',
+    confirmButtonText: `✅ Sí, designar`,
+    cancelButtonText: 'Cancelar',
+    background: '#0d1b2e',
+    color: '#f1f5f9'
+  });
+  if (!conf.isConfirmed) return;
+
+  try {
+    Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    const r = await fetch(`${API}/auth/promover-alta-direccion`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ usuario_id: id, nuevo_rol: nuevoRol })
+    });
+    const d = await r.json();
+    Swal.close();
+    if (r.ok) {
+      Swal.fire({ title: '✅ Listo', html: d.mensaje, icon: 'success', timer: 3000, timerProgressBar: true, showConfirmButton: false, background: '#0d1b2e', color: '#f1f5f9' });
+      await loadAll();
+    } else {
+      Swal.fire('Error', d.detail || 'Ocurrió un error', 'error');
+    }
+  } catch(e) {
+    Swal.fire('Error', e.message, 'error');
+  }
+}
+
+async function nombrarJefe(id, nombre) {
+  const conf = await Swal.fire({
+    title: '🏅 Nombrar Jefe de Carrera',
+    html: `¿Designar a <b>${nombre}</b> como Jefe de Carrera?<br><small style="color:#94a3b8">El Jefe será responsable de subir la malla curricular. Solo puede haber 1 por especialidad.</small>`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#f59e0b',
+    cancelButtonColor: '#334155',
+    confirmButtonText: '🏅 Designar',
+    cancelButtonText: 'Cancelar',
+    background: '#0d1b2e',
+    color: '#f1f5f9'
+  });
+  if (!conf.isConfirmed) return;
+  try {
+    const r = await fetch(`${API}/auth/promover-jefe-carrera`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ usuario_id: id })
+    });
+    const d = await r.json();
+    if (r.ok) {
+      Swal.fire({ title: '✅ Jefe Designado', html: d.mensaje, icon: 'success', timer: 2500, timerProgressBar: true, showConfirmButton: false, background: '#0d1b2e', color: '#f1f5f9' });
+      await loadAll();
+    } else {
+      Swal.fire('Error', d.detail || 'Error', 'error');
+    }
+  } catch(e) { Swal.fire('Error', e.message, 'error'); }
+}
+
+async function retirarJefe(id, nombre) {
+  const conf = await Swal.fire({
+    title: '🏅 Retirar Jefatura',
+    html: `¿Retirar la designación de Jefe a <b>${nombre}</b>?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#f59e0b',
+    cancelButtonColor: '#334155',
+    confirmButtonText: 'Sí, retirar',
+    cancelButtonText: 'Cancelar',
+    background: '#0d1b2e',
+    color: '#f1f5f9'
+  });
+  if (!conf.isConfirmed) return;
+  try {
+    const r = await fetch(`${API}/auth/retirar-jefe-carrera`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ usuario_id: id })
+    });
+    const d = await r.json();
+    if (r.ok) { Swal.fire({ title: '✅ Listo', html: d.mensaje, icon: 'success', timer: 2000, showConfirmButton: false }); await loadAll(); }
+    else Swal.fire('Error', d.detail, 'error');
+  } catch(e) { Swal.fire('Error', e.message, 'error'); }
+}
+
+async function eliminar(id, nombre) {
+  const c1 = await Swal.fire({
+    title: '🗑 Eliminar Usuario',
+    html: `¿Eliminar a <b>${nombre}</b>?<br><small style="color:#f43f5e">Esta acción es IRREVERSIBLE.</small>`,
+    icon: 'warning', showCancelButton: true,
+    confirmButtonColor: '#f43f5e', cancelButtonColor: '#334155',
+    confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar',
+    background: '#0d1b2e', color: '#f1f5f9'
+  });
+  if (!c1.isConfirmed) return;
+  const c2 = await Swal.fire({
+    title: '¿SEGURO?',
+    html: `Segunda confirmación requerida para eliminar <b>${nombre}</b>.`,
+    icon: 'error', showCancelButton: true,
+    confirmButtonColor: '#f43f5e', cancelButtonColor: '#334155',
+    confirmButtonText: 'ELIMINAR DEFINITIVAMENTE', cancelButtonText: 'Cancelar',
+    background: '#0d1b2e', color: '#f1f5f9'
+  });
+  if (!c2.isConfirmed) return;
+  try {
+    Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    const r = await fetch(`${API}/auth/usuarios/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const d = await r.json();
+    Swal.close();
+    if (r.ok) {
+      Swal.fire({ title: '✅ Eliminado', html: `<b>${nombre}</b> fue eliminado del sistema.`, icon: 'success', timer: 2000, showConfirmButton: false, background: '#0d1b2e', color: '#f1f5f9' });
+      await loadAll();
+    } else {
+      Swal.fire('Error', d.detail || 'No se pudo eliminar', 'error');
+    }
+  } catch(e) { Swal.fire('Error', e.message, 'error'); }
+}
+
+async function resetPwd(id, carnet) {
+  if (!carnet || carnet === 'null') return Swal.fire('Sin CI', 'El usuario no tiene CI registrado.', 'warning');
+  const conf = await Swal.fire({
+    title: '🔑 Restablecer Contraseña',
+    html: `¿Restablecer la contraseña al CI <b>${carnet}</b>?`,
+    icon: 'question', showCancelButton: true,
+    confirmButtonColor: '#f59e0b', cancelButtonColor: '#334155',
+    confirmButtonText: 'Sí, restablecer', cancelButtonText: 'Cancelar',
+    background: '#0d1b2e', color: '#f1f5f9'
+  });
+  if (!conf.isConfirmed) return;
+  try {
+    const r = await fetch(`${API}/auth/usuarios/${id}/password`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ new_password: carnet.trim() })
+    });
+    if (r.ok) Swal.fire({ title: '✅ Listo', text: 'Contraseña restablecida al CI del usuario.', icon: 'success', timer: 2000, showConfirmButton: false });
+    else Swal.fire('Error', 'No se pudo restablecer', 'error');
+  } catch(e) { Swal.fire('Error', e.message, 'error'); }
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = '../login.html';
+}
+
+loadAll();
+</script>
 </body>
 </html>

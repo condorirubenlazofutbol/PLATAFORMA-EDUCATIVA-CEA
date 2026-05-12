@@ -416,6 +416,14 @@
                             <!-- Dynamic -->
                         </select>
                     </div>
+                    <div class="form-full form-group">
+                        <label>Turno de Clases</label>
+                        <select id="ins_turno" required>
+                            <option value="Noche" selected>🌙 Noche (Principal)</option>
+                            <option value="Mañana">☀️ Mañana</option>
+                            <option value="Tarde">⛅ Tarde</option>
+                        </select>
+                    </div>
                     <div class="form-full">
                         <button type="submit" class="btn-action" style="width: 100%;">
                             <span>✅</span> Finalizar Inscripción
@@ -965,6 +973,7 @@
                 carnet: document.getElementById('ins_carnet').value,
                 rol: 'estudiante',
                 nivel_asignado: nivel_final,
+                turno: document.getElementById('ins_turno').value,
                 subsistema_id: 1
             };
             
@@ -1091,8 +1100,9 @@
 
             Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
+            const turno_final = document.getElementById('ins_turno').value;
             try {
-                const r = await fetch(`${API_URL}/auth/importar-estudiantes-excel?nivel=${encodeURIComponent(nivel_final)}`, {
+                const r = await fetch(`${API_URL}/auth/importar-estudiantes-excel?nivel=${encodeURIComponent(nivel_final)}&turno=${encodeURIComponent(turno_final)}`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
