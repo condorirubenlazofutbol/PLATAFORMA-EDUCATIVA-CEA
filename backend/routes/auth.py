@@ -144,8 +144,8 @@ def rebalancear_paralelos(cur, carrera_id, nivel, area, turno):
     if total == 0:
         return
         
-    limite = 30 if "cnica" in str(area).lower() else 40
-    num_paralelos = max(1, math.ceil(total / limite))
+    # Regla de habilitación: 15 estudiantes = 1 paralelo, 30 = 2 paralelos, 45 = 3 paralelos
+    num_paralelos = max(1, total // 15)
     
     # 2. Intercalar estudiantes en los paralelos (A, B, C...)
     for index, (insc_id,) in enumerate(inscritos):
