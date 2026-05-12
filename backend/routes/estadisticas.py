@@ -297,9 +297,9 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
 
         roles_objetivo = []
         if data.rol == "todos":
-            roles_objetivo = ['estudiante', 'docente', 'profesor']
+            roles_objetivo = ['estudiante', 'docente', 'profesor', 'jefe_carrera']
         elif data.rol == "docente":
-            roles_objetivo = ['docente', 'profesor']
+            roles_objetivo = ['docente', 'profesor', 'jefe_carrera']
         else:
             roles_objetivo = ['estudiante']
 
