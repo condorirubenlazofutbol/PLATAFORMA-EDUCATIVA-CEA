@@ -184,7 +184,7 @@ def register_usuario(data: RegistroUsuario):
                 carrera_nombre = parts[0].strip()
                 nivel_nombre = parts[1].strip()
                 
-                cur.execute("SELECT id, area FROM carreras WHERE nombre = %s AND area = 'TÃ©cnica'", (carrera_nombre,))
+                cur.execute("SELECT id, area FROM carreras WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(%s)) AND LOWER(area) LIKE 't%cnica'", (carrera_nombre,))
                 c_row = cur.fetchone()
                 if c_row:
                     c_id = c_row[0]
@@ -202,7 +202,7 @@ def register_usuario(data: RegistroUsuario):
             # Ã rea HumanÃ­stica (formato: "Nivel")
             else:
                 nivel_nombre = nivel_str.strip()
-                cur.execute("SELECT id, area FROM carreras WHERE area = 'HumanÃ­stica'")
+                cur.execute("SELECT id, area FROM carreras WHERE LOWER(area) LIKE 'human%stica'")
                 carreras_hum = cur.fetchall()
                 for c_row in carreras_hum:
                     c_id = c_row[0]
@@ -352,7 +352,7 @@ async def importar_estudiantes_excel(nivel: str, turno: str = "Noche", file: Upl
                     carrera_nombre = parts[0].strip()
                     nivel_nombre = parts[1].strip()
                     
-                    cur.execute("SELECT id, area FROM carreras WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(%s)) AND area = 'TÃ©cnica'", (carrera_nombre,))
+                    cur.execute("SELECT id, area FROM carreras WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(%s)) AND LOWER(area) LIKE 't%cnica'", (carrera_nombre,))
                     c_row = cur.fetchone()
                     if c_row:
                         c_id = c_row[0]
@@ -369,7 +369,7 @@ async def importar_estudiantes_excel(nivel: str, turno: str = "Noche", file: Upl
                 else:
                     # Ãrea HumanÃ­stica
                     nivel_nombre = nivel.strip()
-                    cur.execute("SELECT id, area FROM carreras WHERE area = 'HumanÃ­stica'")
+                    cur.execute("SELECT id, area FROM carreras WHERE LOWER(area) LIKE 'human%stica'")
                     carreras_hum = cur.fetchall()
                     for c_row in carreras_hum:
                         c_id = c_row[0]
@@ -795,7 +795,7 @@ async def bulk_register(nivel: str, turno: str = "Noche", rol: str = "estudiante
                     parts = nivel_str.split(" - ")
                     carrera_nombre = parts[0].strip()
                     nivel_nombre = parts[1].strip()
-                    cur.execute("SELECT id, area FROM carreras WHERE nombre = %s AND area = 'TÃ©cnica'", (carrera_nombre,))
+                    cur.execute("SELECT id, area FROM carreras WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(%s)) AND LOWER(area) LIKE 't%cnica'", (carrera_nombre,))
                     c_row = cur.fetchone()
                     if c_row:
                         c_id, area = c_row
@@ -805,7 +805,7 @@ async def bulk_register(nivel: str, turno: str = "Noche", rol: str = "estudiante
                 # Ã rea HumanÃ­stica
                 else:
                     nivel_nombre = nivel_str.strip()
-                    cur.execute("SELECT id, area FROM carreras WHERE area = 'HumanÃ­stica'")
+                    cur.execute("SELECT id, area FROM carreras WHERE LOWER(area) LIKE 'human%stica'")
                     for c_id, area in cur.fetchall():
                         paralelo = 'A'
                         cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, turno))
