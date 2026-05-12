@@ -604,38 +604,55 @@ def update_especialidad(usuario_id: int, data: EspecialidadUpdateBody, current_u
         is_tecnica = "cnica" in area_docente  # cubre "Técnica" con encoding
 
         # 3. Validar conflicto de asignación
+        # nuevo_nivel puede ser multi-materia: "Complementarios (Segundo Año), Especializados (Tercer Año)"
+        # Descomponer en lista de materias/niveles individuales
+        nuevos_niveles = [n.strip() for n in nuevo_nivel.split(",") if n.strip()]
+
         if is_tecnica:
-            # Área Técnica: El nivel pertenece a la carrera del docente.
-            # Verificar que ningún OTRO docente ya tenga ese nivel EN ESA MISMA CARRERA.
+            # Técnica: 1 docente por nivel dentro de la misma carrera
+            # Obtener todos los demás docentes de esa carrera
             cur.execute("""
-                SELECT u.id, u.nombre, u.apellido
+                SELECT u.id, u.nombre, u.apellido, u.curso_asignado
                 FROM usuarios u
                 WHERE u.id != %s
                   AND u.rol IN ('docente', 'profesor', 'jefe_carrera')
                   AND u.nivel_asignado = %s
-                  AND u.curso_asignado = %s
                   AND u.estado = 'activo'
-            """, (usuario_id, especialidad_docente, nuevo_nivel))
+                  AND u.curso_asignado IS NOT NULL
+            """, (usuario_id, especialidad_docente))
         else:
-            # Área Humanística: La especialidad del docente ES la materia (ej. "Aplicados").
-            # Verificar que ningún OTRO docente ya esté asignado al mismo nivel/materia.
+            # Humanística: 1 docente por materia DENTRO de la misma especialidad
             cur.execute("""
-                SELECT u.id, u.nombre, u.apellido
+                SELECT u.id, u.nombre, u.apellido, u.curso_asignado
                 FROM usuarios u
                 WHERE u.id != %s
                   AND u.rol IN ('docente', 'profesor', 'jefe_carrera')
-                  AND u.curso_asignado = %s
+                  AND u.nivel_asignado = %s
                   AND u.estado = 'activo'
-            """, (usuario_id, nuevo_nivel))
+                  AND u.curso_asignado IS NOT NULL
+            """, (usuario_id, especialidad_docente))
 
-        conflicto = cur.fetchone()
-        if conflicto:
-            nombre_conflicto = f"{conflicto[1]} {conflicto[2]}"
-            if is_tecnica:
-                detalle = f"El nivel '{nuevo_nivel}' en {especialidad_docente} ya está asignado al docente {nombre_conflicto}. Primero debe reasignar o liberar ese nivel."
-            else:
-                detalle = f"La materia '{nuevo_nivel}' ya está asignada al docente {nombre_conflicto}. Cada materia humanística solo puede tener un docente."
-            raise HTTPException(status_code=409, detail=detalle)
+        otros_docentes = cur.fetchall()
+
+        # Verificar intersección materia por materia
+        for otro in otros_docentes:
+            otro_id, otro_nom, otro_ap, otro_cursos = otro
+            if not otro_cursos:
+                continue
+            # Niveles ya asignados al otro docente (puede ser multi)
+            niveles_otro = [n.strip() for n in otro_cursos.split(",") if n.strip()]
+            # Encontrar solapamiento
+            solapamiento = [n for n in nuevos_niveles if n in niveles_otro]
+            if solapamiento:
+                nombre_conflicto = f"{otro_nom} {otro_ap}"
+                materias = ", ".join(solapamiento)
+                if is_tecnica:
+                    detalle = (f"El nivel '{materias}' en {especialidad_docente} ya está asignado "
+                               f"al docente {nombre_conflicto}. Libere ese nivel antes de asignarlo aquí.")
+                else:
+                    detalle = (f"La materia '{materias}' ya está asignada al docente {nombre_conflicto} "
+                               f"en {especialidad_docente}. Cada materia solo puede tener un docente por especialidad.")
+                raise HTTPException(status_code=409, detail=detalle)
 
         # 4. Sin conflicto: guardar la asignación
         cur.execute(
