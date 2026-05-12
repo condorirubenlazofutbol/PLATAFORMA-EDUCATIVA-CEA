@@ -198,7 +198,8 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
         # Primero contar cuántos paralelos hay por (área, carrera, nivel, turno)
         paralelo_counts = defaultdict(set)
         for r in rows:
-            area = (r["area"] or "humanistica").lower()
+            area_raw = (r["area"] or "humanistica").lower()
+            area = "tecnica" if "cnica" in area_raw else "humanistica"
             carrera = r["carrera"] or "Sin Carrera"
             nivel = r["nivel"] or "Sin Nivel"
             turno = r["turno"] or "Noche"
@@ -207,7 +208,8 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
         grupos = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
         for r in rows:
-            area = (r["area"] or "humanistica").lower()
+            area_raw = (r["area"] or "humanistica").lower()
+            area = "tecnica" if "cnica" in area_raw else "humanistica"
             carrera = r["carrera"] or "Sin Carrera Asignada"
             nivel = r["nivel"] or "Sin Nivel"
             paralelo = r["paralelo"] or "A"
