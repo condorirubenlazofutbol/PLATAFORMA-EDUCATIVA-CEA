@@ -1015,6 +1015,15 @@ async function modalAsignarNivel(id, nombre) {
 
         let checkboxesHtml = '';
         cursosHum.forEach(c => {
+            // FILTRO PRO: Solo mostrar el curso si coincide con la especialidad/materia del docente
+            // Si la especialidad está en blanco o es "Humanística" genérico, mostrar todos.
+            const keyword = c.base.split(' ')[0]; // "Aplicados", "Complementarios", "Especializados"
+            if (espDocente && espDocente.toLowerCase() !== 'humanística' && espDocente.toLowerCase() !== 'humanistica') {
+                if (!espDocente.includes(keyword)) {
+                    return; // El docente no está inscrito para impartir este nivel específico
+                }
+            }
+
             // Buscar si este curso tiene paralelos en los grupos de estudiantes
             const paralelosEnCurso = new Map(); // key -> {p, t}
             if (dirData.grupos && dirData.grupos['humanistica']) {
