@@ -1033,8 +1033,7 @@ async function modalAsignarNivel(id, nombre) {
                 }
             }
 
-            if (paralelosEnCurso.size > 1) {
-                // Hay paralelos o turnos múltiples: mostrar opción por paralelo y turno
+            if (paralelosEnCurso.size > 0) {
                 [...paralelosEnCurso.values()].sort((a,b) => (a.t + (a.p||'')).localeCompare(b.t + (b.p||''))).forEach(({p, t}) => {
                     const val = p ? `${c.base} (${t}) - Paralelo ${p}` : `${c.base} (${t})`;
                     const checked = nivelActual.includes(c.base) && (p ? nivelActual.includes(`Paralelo ${p}`) : true) && nivelActual.includes(t) ? 'checked' : '';
@@ -1044,32 +1043,15 @@ async function modalAsignarNivel(id, nombre) {
                         <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${p ? `Paralelo ${p}` : 'General'} <small style="color:var(--muted)">(${t})</small></span>
                     </label>`;
                 });
-            } else if (paralelosEnCurso.size === 1) {
-                const {p, t} = [...paralelosEnCurso.values()][0];
-                const val = p ? `${c.base} (${t}) - Paralelo ${p}` : `${c.base} (${t})`;
-                const checked = nivelActual.includes(c.base) && nivelActual.includes(t) ? 'checked' : '';
-                checkboxesHtml += `
-                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
-                    <input type="checkbox" id="ch-${c.id}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
-                    <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${c.base.split('(')[1]?.replace(')','') || ''} <small style="color:var(--muted)">(${t})</small></span>
-                </label>`;
-            } else {
-                // Fallback normal: mostrar los 3 turnos
-                ['Mañana', 'Tarde', 'Noche'].forEach(t => {
-                    const val = `${c.base} (${t})`;
-                    // Si nivelActual tiene el nivel pero no tiene turno (datos viejos), o si coincide nivel y turno
-                    const hasNivel = nivelActual.includes(c.base);
-                    const hasTurno = nivelActual.includes(t);
-                    const isLegacy = hasNivel && !nivelActual.includes('Mañana') && !nivelActual.includes('Tarde') && !nivelActual.includes('Noche');
-                    const checked = (hasNivel && hasTurno) || (isLegacy && t === 'Noche') ? 'checked' : '';
-                    checkboxesHtml += `
-                    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
-                        <input type="checkbox" id="ch-${c.id}-all-${t.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
-                        <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — General <small style="color:var(--muted)">(${t})</small></span>
-                    </label>`;
-                });
             }
         });
+
+        if (!checkboxesHtml) {
+            checkboxesHtml = `<div style="padding:15px;text-align:center;color:#f97316;background:rgba(249,115,22,0.1);border-radius:8px;font-size:.9rem;">
+                No hay cursos habilitados (sin estudiantes inscritos) para esta área.<br>
+                <small>Inscribe estudiantes primero para que el sistema genere los cursos y paralelos correspondientes.</small>
+            </div>`;
+        }
 
         htmlContenido = `
             <p style="font-size:.85rem;color:#94a3b8;margin-bottom:12px;">
@@ -1084,23 +1066,11 @@ async function modalAsignarNivel(id, nombre) {
         // TÉCNICA: un solo nivel + paralelo si existe
         titulo = '🎓 Asignar Nivel — Área Técnica';
 
-        // Recolectar niveles y paralelos disponibles de la carrera
         const nivelesDisponiblesMap = new Map();
-        
-        // Agregar siempre las 12 combinaciones por defecto (4 niveles x 3 turnos)
-        const nivelesBase = ['Nivel Básico', 'Nivel Auxiliar', 'Nivel Medio I', 'Nivel Medio II'];
-        const turnosBase = ['Mañana', 'Tarde', 'Noche'];
-        nivelesBase.forEach(n => {
-            turnosBase.forEach(t => {
-                const val = `${n} (${t})`;
-                nivelesDisponiblesMap.set(val, val);
-            });
-        });
 
         if (dirData.grupos && dirData.grupos['tecnica'] && dirData.grupos['tecnica'][espDocente]) {
             const nivelesCarrera = dirData.grupos['tecnica'][espDocente];
             Object.keys(nivelesCarrera).forEach(nivelKey => {
-                // Si la clave ya contiene "Paralelo", usarla directamente
                 let label = nivelKey;
                 if (label.includes('Paralelo')) {
                     label = label.replace(' - Paralelo ', ' — Paralelo ');
@@ -1131,27 +1101,37 @@ async function modalAsignarNivel(id, nombre) {
                 return a.value.localeCompare(b.value);
             });
 
-        const opciones = nivelesDisponibles.map(n => {
-            const hasTurno = nivelActual.includes('Mañana') || nivelActual.includes('Tarde') || nivelActual.includes('Noche');
-            let isSelected = false;
-            if (hasTurno) {
-                isSelected = nivelActual === n.value;
-            } else {
-                // Legacy support for older data
-                isSelected = n.value.startsWith(nivelActual) && n.value.includes('Noche');
-            }
-            return `<option value="${n.value}" ${isSelected ? 'selected' : ''}>${n.label}</option>`;
-        }).join('');
+        let selectorHtml = '';
+        if (nivelesDisponibles.length > 0) {
+            const opciones = nivelesDisponibles.map(n => {
+                const hasTurno = nivelActual.includes('Mañana') || nivelActual.includes('Tarde') || nivelActual.includes('Noche');
+                let isSelected = false;
+                if (hasTurno) {
+                    isSelected = nivelActual === n.value;
+                } else {
+                    isSelected = n.value.startsWith(nivelActual) && n.value.includes('Noche');
+                }
+                return `<option value="${n.value}" ${isSelected ? 'selected' : ''}>${n.label}</option>`;
+            }).join('');
+            
+            selectorHtml = `<select id="sel-nivel" style="width:100%;padding:12px;border-radius:10px;background:#1e2a3a;color:#f8fafc;border:1px solid rgba(14,165,233,0.4);font-size:0.95rem;">
+                <option value="">— Selecciona un Nivel habilitado —</option>
+                ${opciones}
+            </select>`;
+        } else {
+            selectorHtml = `<div style="padding:15px;text-align:center;color:#f97316;background:rgba(249,115,22,0.1);border-radius:8px;font-size:.9rem;">
+                No hay cursos habilitados para la carrera <b>${espDocente}</b>.<br>
+                <small>Debes inscribir estudiantes primero para que el sistema abra el curso en el turno correspondiente.</small>
+            </div>
+            <input type="hidden" id="sel-nivel" value="">`;
+        }
 
         htmlContenido = `
             <p style="font-size:.85rem;color:#94a3b8;margin-bottom:12px;">
                 Prof. <strong>${nombre}</strong> · Carrera: <strong>${espDocente}</strong><br>
-                <small>Selecciona el único nivel o paralelo que impartirá.</small>
+                <small>Selecciona el curso habilitado que impartirá.</small>
             </p>
-            <select id="sel-nivel" style="width:100%;padding:12px;border-radius:10px;background:#1e2a3a;color:#f8fafc;border:1px solid rgba(14,165,233,0.4);font-size:0.95rem;">
-                <option value="">— Selecciona un Nivel —</option>
-                ${opciones}
-            </select>`;
+            ${selectorHtml}`;
     }
 
     const result = await Swal.fire({
