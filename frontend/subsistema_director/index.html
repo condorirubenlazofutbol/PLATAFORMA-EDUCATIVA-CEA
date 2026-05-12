@@ -473,7 +473,7 @@ function renderDirectorio() {
       let nivelesHtml = '';
 
       for (const [nivel, data] of Object.entries(niveles).sort(sortNiveles)) {
-        const alumnos = data.filter(a => {
+        const alumnos = (data.alumnos || []).filter(a => {
           if (!query) return true;
           return `${a.nombre} ${a.apellido} ${a.carnet}`.toLowerCase().includes(query);
         });
