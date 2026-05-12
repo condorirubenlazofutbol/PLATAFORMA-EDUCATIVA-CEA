@@ -668,7 +668,7 @@ function renderDocentes() {
                 <td style="white-space:nowrap;">
                   <button class="btn-del btn-del-ind" onclick="eliminarDocente(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🗑 Eliminar</button>
                   <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">🔑 Clave</button>
-                  <button class="btn-sm" style="margin-left:4px;background:${esHuerfano?'linear-gradient(90deg,#f97316,#ef4444)':tieneNivel?'linear-gradient(90deg,#48d18e,#0ea5e9)':'var(--primary)'};color:white;border:none;" onclick="modalAsignarNivel(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')}">
+                  <button class="btn-sm" style="margin-left:4px;background:${esHuerfano?'linear-gradient(90deg,#f97316,#ef4444)':tieneNivel?'linear-gradient(90deg,#48d18e,#0ea5e9)':'var(--primary)'};color:white;border:none;" onclick="modalAsignarNivel(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">
                     ${esHuerfano ? '🔄 Reasignar Paralelo' : tieneNivel ? '✏️ Cambiar Nivel' : '📘 Asignar Nivel'}
                   </button>
                   ${esJefe
