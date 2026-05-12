@@ -609,25 +609,42 @@ function renderDocentes() {
             <button class="btn-del btn-del-grp" onclick="eliminarDocentesPorEsp('${esp.replace(/'/g,"\\'")}')" >🗑 Eliminar</button>
           </div>
         </div>
-        <div class="tbl-wrap">
-          <table class="tbl">
-            <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Curso/Nivel Designado</th><th>Estado</th><th>Acciones</th></tr></thead>
-            <tbody>${docs.map(d => {
-              const esJefe = d.es_jefe === true;
+                      const esJefe = d.es_jefe === true;
               const nivelAsig = d.nivel_asignado || '';
               const tieneNivel = nivelAsig && nivelAsig.trim() !== '';
-              const rowStyle = esJefe
+
+              // Detectar asignación «huérfana»: el docente tiene nivel sin paralelo
+              // pero el grupo ya se dividió en paralelos (la clave en grupos incluye "Paralelo")
+              let esHuerfano = false;
+              if (tieneNivel && areaActual === 'tecnica' && dirData.grupos?.tecnica?.[esp]) {
+                  const clavesGrupo = Object.keys(dirData.grupos.tecnica[esp]);
+                  // Verificar si TODAS las claves que empiezan con el nivel del docente tienen "Paralelo"
+                  // pero el nivel asignado NO tiene "Paralelo"
+                  const nivelBase = nivelAsig.replace(/ - Paralelo [A-Z]$/, '').trim();
+                  const clavesDelNivel = clavesGrupo.filter(k => k.startsWith(nivelBase));
+                  const todasConParalelo = clavesDelNivel.length > 1 && clavesDelNivel.every(k => k.includes('Paralelo'));
+                  const asignadoSinParalelo = !nivelAsig.includes('Paralelo');
+                  esHuerfano = todasConParalelo && asignadoSinParalelo;
+              }
+
+              const rowStyle = esHuerfano
+                ? 'background:linear-gradient(90deg,rgba(251,146,60,0.08),rgba(239,68,68,0.05));border-left:3px solid #f97316;'
+                : esJefe
                 ? 'background:linear-gradient(90deg,rgba(245,158,11,0.06),rgba(139,92,246,0.06));border-left:3px solid #f59e0b;'
                 : tieneNivel ? 'border-left:3px solid rgba(72,209,142,0.5);' : '';
+
               return `
               <tr style="${rowStyle}">
                 <td><strong>${d.carnet||'S/N'}</strong></td>
                 <td>
                   ${d.apellido} ${d.nombre}
                   ${esJefe ? '<br><span class="badge" style="background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;font-size:0.65rem;margin-top:3px;display:inline-block;">🏅 Jefe de Carrera</span>' : ''}
+                  ${esHuerfano ? '<br><span class="badge" style="background:rgba(251,146,60,0.2);color:#fb923c;border:1px solid #f97316;font-size:0.62rem;margin-top:3px;display:inline-block;">⚠️ REASIGNAR PARALELO</span>' : ''}
                 </td>
                 <td style="font-size:.78rem;">
-                  ${tieneNivel
+                  ${esHuerfano
+                    ? `<span style="color:#f97316;font-weight:700;">⚠️ ${nivelAsig} <small style="font-weight:400;opacity:.8">(curso dividido)</small></span>`
+                    : tieneNivel
                     ? `<span style="color:#48d18e;font-weight:700;">✅ ${nivelAsig}</span>`
                     : `<span style="color:var(--muted);font-style:italic;">Sin designar</span>`
                   }
@@ -636,8 +653,8 @@ function renderDocentes() {
                 <td style="white-space:nowrap;">
                   <button class="btn-del btn-del-ind" onclick="eliminarDocente(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🗑 Eliminar</button>
                   <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">🔑 Clave</button>
-                  <button class="btn-sm" style="margin-left:4px;background:${tieneNivel?'linear-gradient(90deg,#48d18e,#0ea5e9)':'var(--primary)'};color:white;border:none;" onclick="modalAsignarNivel(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">
-                    ${tieneNivel ? '✏️ Cambiar Nivel' : '📘 Asignar Nivel'}
+                  <button class="btn-sm" style="margin-left:4px;background:${esHuerfano?'linear-gradient(90deg,#f97316,#ef4444)':tieneNivel?'linear-gradient(90deg,#48d18e,#0ea5e9)':'var(--primary)'};color:white;border:none;" onclick="modalAsignarNivel(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')}">
+                    ${esHuerfano ? '🔄 Reasignar Paralelo' : tieneNivel ? '✏️ Cambiar Nivel' : '📘 Asignar Nivel'}
                   </button>
                   ${esJefe
                     ? `<button class="btn-sm" style="margin-left:4px;background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;border:none;" onclick="modalRetirarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🏅 Jefe Actual · Retirar</button>`
@@ -1032,15 +1049,28 @@ async function modalAsignarNivel(id, nombre) {
         const nivelesDisponibles = [];
         if (dirData.grupos && dirData.grupos['tecnica'] && dirData.grupos['tecnica'][espDocente]) {
             const nivelesCarrera = dirData.grupos['tecnica'][espDocente];
+            // El backend ya entrega las claves como:
+            //   "Nivel Básico"          → único paralelo o sin división
+            //   "Nivel Básico - Paralelo A" / "Nivel Básico - Paralelo B" → dividido por >30
+            // Ordenar por nivel base primero, luego paralelo
             const nivelOrder = {'Nivel Básico':1,'Nivel Auxiliar':2,'Nivel Medio I':3,'Nivel Medio II':4};
-            Object.entries(nivelesCarrera).sort(([a],[b])=>(nivelOrder[a]||9)-(nivelOrder[b]||9)).forEach(([nivel,data])=>{
-                const paralelos = [...new Set((data.alumnos||[]).map(a=>a.paralelo).filter(Boolean))];
-                if (paralelos.length > 1) {
-                    paralelos.forEach(p => nivelesDisponibles.push({ label: `${nivel} — Paralelo ${p}`, value: `${nivel} - Paralelo ${p}` }));
-                } else {
-                    nivelesDisponibles.push({ label: nivel, value: nivel });
-                }
-            });
+            const getNivelBase = k => k.replace(/ - Paralelo [A-Z]$/, '').trim();
+            Object.keys(nivelesCarrera)
+              .sort((a, b) => {
+                  const oa = nivelOrder[getNivelBase(a)] || 9;
+                  const ob = nivelOrder[getNivelBase(b)] || 9;
+                  if (oa !== ob) return oa - ob;
+                  return a.localeCompare(b);
+              })
+              .forEach(nivelKey => {
+                  // Si la clave ya contiene "Paralelo", usarla directamente
+                  if (nivelKey.includes('Paralelo')) {
+                      const label = nivelKey.replace(' - Paralelo ', ' — Paralelo ');
+                      nivelesDisponibles.push({ label, value: nivelKey });
+                  } else {
+                      nivelesDisponibles.push({ label: nivelKey, value: nivelKey });
+                  }
+              });
         }
         // Si no hay datos de estudiantes, mostrar los 4 niveles estándar
         if (nivelesDisponibles.length === 0) {
