@@ -303,72 +303,71 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
         else:
             roles_objetivo = ['estudiante']
 
+        target_ids = []
         if data.tipo == "individual":
             if not data.usuario_id:
                 raise HTTPException(400, "Se requiere usuario_id para eliminaciÃ³n individual")
-            cur.execute("DELETE FROM usuarios WHERE id = %s RETURNING id", (data.usuario_id,))
-            eliminados = cur.rowcount
+            target_ids = [data.usuario_id]
 
         elif data.tipo == "carrera":
             if not data.carrera:
                 raise HTTPException(400, "Se requiere el nombre de la carrera/especialidad")
-            
             if data.rol == "docente":
-                # Para docentes, la especialidad se guarda en nivel_asignado
-                cur.execute("""
-                    DELETE FROM usuarios 
-                    WHERE nivel_asignado = %s AND rol IN %s 
-                    RETURNING id
-                """, (data.carrera, tuple(roles_objetivo)))
+                cur.execute("SELECT id FROM usuarios WHERE nivel_asignado = %s AND rol IN %s", (data.carrera, tuple(roles_objetivo)))
             else:
                 cur.execute("""
-                    DELETE FROM usuarios WHERE id IN (
-                        SELECT DISTINCT i.usuario_id FROM inscripciones i
-                        JOIN carreras c ON i.carrera_id = c.id
-                        WHERE c.nombre = %s
-                    ) AND rol IN %s RETURNING id
+                    SELECT DISTINCT u.id FROM usuarios u JOIN inscripciones i ON i.usuario_id = u.id JOIN carreras c ON c.id = i.carrera_id
+                    WHERE c.nombre = %s AND u.rol IN %s
                 """, (data.carrera, tuple(roles_objetivo)))
-            eliminados = cur.rowcount
+            target_ids = [row[0] for row in cur.fetchall()]
 
         elif data.tipo == "nivel":
             if not data.nivel:
                 raise HTTPException(400, "Se requiere el nivel")
-            
             if data.turno:
                 cur.execute("""
-                    DELETE FROM usuarios WHERE id IN (
-                        SELECT DISTINCT i.usuario_id FROM inscripciones i
-                        WHERE i.nivel = %s AND i.turno = %s
-                    ) AND rol IN %s RETURNING id
+                    SELECT DISTINCT u.id FROM usuarios u JOIN inscripciones i ON i.usuario_id = u.id
+                    WHERE i.nivel = %s AND i.turno = %s AND u.rol IN %s
                 """, (data.nivel, data.turno, tuple(roles_objetivo)))
             else:
                 cur.execute("""
-                    DELETE FROM usuarios WHERE id IN (
-                        SELECT DISTINCT i.usuario_id FROM inscripciones i
-                        WHERE i.nivel = %s
-                    ) AND rol IN %s RETURNING id
+                    SELECT DISTINCT u.id FROM usuarios u JOIN inscripciones i ON i.usuario_id = u.id
+                    WHERE i.nivel = %s AND u.rol IN %s
                 """, (data.nivel, tuple(roles_objetivo)))
-            eliminados = cur.rowcount
+            target_ids = [row[0] for row in cur.fetchall()]
 
         elif data.tipo == "area":
             if not data.area:
                 raise HTTPException(400, "Se requiere el Ã¡rea")
             db_area = "TÃ©cnica" if data.area.lower() == "tecnica" else "HumanÃ­stica"
             cur.execute("""
-                DELETE FROM usuarios WHERE id IN (
-                    SELECT DISTINCT i.usuario_id FROM inscripciones i
-                    JOIN carreras c ON i.carrera_id = c.id
-                    WHERE LOWER(c.area) = LOWER(%s)
-                ) AND rol IN %s RETURNING id
+                SELECT DISTINCT u.id FROM usuarios u JOIN inscripciones i ON i.usuario_id = u.id JOIN carreras c ON c.id = i.carrera_id
+                WHERE LOWER(c.area) = LOWER(%s) AND u.rol IN %s
             """, (db_area, tuple(roles_objetivo)))
-            eliminados = cur.rowcount
+            target_ids = [row[0] for row in cur.fetchall()]
 
         elif data.tipo == "todos":
-            cur.execute("DELETE FROM usuarios WHERE rol IN %s RETURNING id", (tuple(roles_objetivo),))
-            eliminados = cur.rowcount
+            cur.execute("SELECT id FROM usuarios WHERE rol IN %s", (tuple(roles_objetivo),))
+            target_ids = [row[0] for row in cur.fetchall()]
 
         else:
             raise HTTPException(400, f"Tipo de eliminaciÃ³n no vÃ¡lido: {data.tipo}")
+
+        eliminados = 0
+        if target_ids:
+            # Eliminar dependencias manualmente en caso de que la BD no tenga ON DELETE CASCADE
+            t_ids = tuple(target_ids)
+            cur.execute("DELETE FROM progreso WHERE usuario_id IN %s", (t_ids,))
+            cur.execute("DELETE FROM inscripciones WHERE usuario_id IN %s", (t_ids,))
+            cur.execute("DELETE FROM certificados WHERE usuario_id IN %s", (t_ids,))
+            
+            # Si hay docentes entre los eliminados, desvincularlos de los cursos (set null en vez de borrar el curso)
+            cur.execute("UPDATE modulos SET docente_id = NULL WHERE docente_id IN %s", (t_ids,))
+            cur.execute("UPDATE usuarios SET curso_asignado = NULL WHERE id IN %s", (t_ids,))
+            
+            # Finalmente, eliminar los usuarios
+            cur.execute("DELETE FROM usuarios WHERE id IN %s", (t_ids,))
+            eliminados = cur.rowcount
 
         conn.commit()
         return {"eliminados": eliminados, "mensaje": f"Se eliminaron {eliminados} registros correctamente."}
