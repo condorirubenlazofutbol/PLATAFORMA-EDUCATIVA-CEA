@@ -598,7 +598,7 @@
                     <table>
                         <thead><tr>
                             <th>Estudiante</th><th>CI</th><th>Área</th><th>Carrera</th>
-                            <th>Nivel</th><th>Paralelo</th><th>Estado</th><th>Acciones</th>
+                            <th>Nivel</th><th>Paralelo</th><th>Turno</th><th>Estado</th><th>Acciones</th>
                         </tr></thead>
                         <tbody id="inscritos-tbody">
                             <tr><td colspan="8" style="text-align:center; color:var(--muted);">⏳ Cargando...</td></tr>
@@ -888,16 +888,17 @@
         function renderInscritosTable(list) {
             const tbody = document.getElementById('inscritos-tbody');
             if(!list.length) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted);">Sin inscripciones registradas.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--muted);">Sin inscripciones registradas.</td></tr>`;
                 return;
             }
             
-            // Agrupar por estudiante, nivel y paralelo
+            // Agrupar por estudiante, nivel, paralelo y turno
             const groups = {};
             list.forEach(i => {
-                const key = `${i.carnet || i.email}-${i.nivel}-${i.paralelo}`;
+                const turnoStr = i.turno || 'Noche';
+                const key = `${i.carnet || i.email}-${i.nivel}-${i.paralelo}-${turnoStr}`;
                 if (!groups[key]) {
-                    groups[key] = { ...i, materias: [], ids: [] };
+                    groups[key] = { ...i, materias: [], ids: [], turno: turnoStr };
                 }
                 if (!groups[key].materias.includes(i.carrera_nombre)) {
                     groups[key].materias.push(i.carrera_nombre);
@@ -923,6 +924,7 @@
                     <td>${carreraHtml}</td>
                     <td>${i.nivel || '-'}</td>
                     <td><span class="badge" style="background:rgba(14,165,233,0.2); color:var(--primary); font-weight:800;">Paralelo ${i.paralelo || 'A'}</span></td>
+                    <td><span class="badge" style="background:rgba(245,158,11,0.1); color:#f59e0b; font-weight:600;">${i.turno}</span></td>
                     <td><span class="badge" style="background:${estadoColors[i.estado]||'#22c55e'}22; color:${estadoColors[i.estado]||'#22c55e'}; text-transform:capitalize;">${i.estado || 'activo'}</span></td>
                     <td>
                         <button onclick="toggleEstadoGrupo('${i.ids.join(',')}')" style="background:transparent; border:1px solid var(--border); color:var(--muted); padding:4px 8px; border-radius:6px; cursor:pointer; font-size:0.75rem;">Cambiar Estado</button>

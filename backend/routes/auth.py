@@ -428,7 +428,7 @@ def get_inscripciones(current_user: dict = Depends(get_current_user)):
         cur = conn.cursor()
         cur.execute("""
             SELECT 
-                i.id, i.usuario_id, i.carrera_id, i.nivel, i.paralelo, i.estado, i.fecha_inscripcion,
+                i.id, i.usuario_id, i.carrera_id, i.nivel, i.paralelo, i.turno, i.estado, i.fecha_inscripcion,
                 u.nombre, u.apellido, u.carnet, u.email,
                 c.nombre AS carrera_nombre, c.area AS carrera_area
             FROM inscripciones i
