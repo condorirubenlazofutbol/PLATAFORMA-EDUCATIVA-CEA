@@ -1031,7 +1031,7 @@ async function modalAsignarNivel(id, nombre) {
 
             if (paralelosEnCurso.size > 1) {
                 // Hay paralelos o turnos múltiples: mostrar opción por paralelo y turno
-                [...paralelosEnCurso.values()].sort((a,b) => (a.t + a.p).localeCompare(b.t + b.p)).forEach(({p, t}) => {
+                [...paralelosEnCurso.values()].sort((a,b) => (a.t + (a.p||'')).localeCompare(b.t + (b.p||''))).forEach(({p, t}) => {
                     const val = p ? `${c.base} (${t}) - Paralelo ${p}` : `${c.base} (${t})`;
                     const checked = nivelActual.includes(c.base) && (p ? nivelActual.includes(`Paralelo ${p}`) : true) && nivelActual.includes(t) ? 'checked' : '';
                     checkboxesHtml += `
@@ -1050,13 +1050,20 @@ async function modalAsignarNivel(id, nombre) {
                     <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${c.base.split('(')[1]?.replace(')','') || ''} <small style="color:var(--muted)">(${t})</small></span>
                 </label>`;
             } else {
-                // Fallback normal
-                const checked = nivelActual.includes(c.base) ? 'checked' : '';
-                checkboxesHtml += `
-                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
-                    <input type="checkbox" id="ch-${c.id}" value="${c.base}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
-                    <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${c.base.split('(')[1]?.replace(')','') || ''}</span>
-                </label>`;
+                // Fallback normal: mostrar los 3 turnos
+                ['Mañana', 'Tarde', 'Noche'].forEach(t => {
+                    const val = `${c.base} (${t})`;
+                    // Si nivelActual tiene el nivel pero no tiene turno (datos viejos), o si coincide nivel y turno
+                    const hasNivel = nivelActual.includes(c.base);
+                    const hasTurno = nivelActual.includes(t);
+                    const isLegacy = hasNivel && !nivelActual.includes('Mañana') && !nivelActual.includes('Tarde') && !nivelActual.includes('Noche');
+                    const checked = (hasNivel && hasTurno) || (isLegacy && t === 'Noche') ? 'checked' : '';
+                    checkboxesHtml += `
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
+                        <input type="checkbox" id="ch-${c.id}-all-${t.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
+                        <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — General <small style="color:var(--muted)">(${t})</small></span>
+                    </label>`;
+                });
             }
         });
 
@@ -1120,9 +1127,17 @@ async function modalAsignarNivel(id, nombre) {
                 return a.value.localeCompare(b.value);
             });
 
-        const opciones = nivelesDisponibles.map(n =>
-            `<option value="${n.value}">${n.label}</option>`
-        ).join('');
+        const opciones = nivelesDisponibles.map(n => {
+            const hasTurno = nivelActual.includes('Mañana') || nivelActual.includes('Tarde') || nivelActual.includes('Noche');
+            let isSelected = false;
+            if (hasTurno) {
+                isSelected = nivelActual === n.value;
+            } else {
+                // Legacy support for older data
+                isSelected = n.value.startsWith(nivelActual) && n.value.includes('Noche');
+            }
+            return `<option value="${n.value}" ${isSelected ? 'selected' : ''}>${n.label}</option>`;
+        }).join('');
 
         htmlContenido = `
             <p style="font-size:.85rem;color:#94a3b8;margin-bottom:12px;">
