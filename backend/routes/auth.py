@@ -67,6 +67,38 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Login crash: {str(e)}")
 
+@router.get("/fix-db")
+def fix_db():
+    conn = get_db_connection()
+    if not conn: return {"error": "no db"}
+    try:
+        cur = conn.cursor()
+        # Drop old constraint if exists
+        try:
+            cur.execute("ALTER TABLE inscripciones DROP CONSTRAINT IF EXISTS inscripciones_usuario_id_carrera_id_key")
+        except:
+            pass
+        try:
+            cur.execute("ALTER TABLE inscripciones DROP CONSTRAINT IF EXISTS inscripciones_usuario_id_carrera_id_turno_key")
+        except:
+            pass
+        try:
+            cur.execute("ALTER TABLE inscripciones ADD CONSTRAINT inscripciones_usuario_id_carrera_id_turno_key UNIQUE(usuario_id, carrera_id, turno)")
+        except:
+            pass
+        
+        # Check Tarde students
+        cur.execute("SELECT u.nombre, u.apellido, i.turno FROM inscripciones i JOIN usuarios u ON u.id = i.usuario_id WHERE i.turno = 'Tarde'")
+        tarde_students = cur.fetchall()
+        
+        conn.commit()
+        return {"status": "ok", "tarde": tarde_students}
+    except Exception as e:
+        conn.rollback()
+        return {"error": str(e)}
+    finally:
+        conn.close()
+
 
 @router.get("/me")
 def get_current_user(token: str = Depends(oauth2_scheme)):
