@@ -607,9 +607,12 @@ function renderDocentes() {
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <span class="dir-carrera-badge">${docs.length} docentes</span>
             <button class="btn-del btn-del-grp" onclick="eliminarDocentesPorEsp('${esp.replace(/'/g,"\\'")}')" >🗑 Eliminar</button>
-          </div>
         </div>
-                      const esJefe = d.es_jefe === true;
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Curso/Nivel Designado</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>${docs.map(d => {
+              const esJefe = d.es_jefe === true;
               const nivelAsig = d.nivel_asignado || '';
               const tieneNivel = nivelAsig && nivelAsig.trim() !== '';
 
