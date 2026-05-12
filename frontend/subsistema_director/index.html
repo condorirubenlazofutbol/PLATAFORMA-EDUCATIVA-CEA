@@ -999,33 +999,46 @@ async function modalAsignarNivel(id, nombre) {
         let checkboxesHtml = '';
         cursosHum.forEach(c => {
             // Buscar si este curso tiene paralelos en los grupos de estudiantes
-            const paralelosEnCurso = new Set();
+            const paralelosEnCurso = new Map(); // key -> {p, t}
             if (dirData.grupos && dirData.grupos['humanistica']) {
                 for (const carrera in dirData.grupos['humanistica']) {
                     const niveles = dirData.grupos['humanistica'][carrera];
                     for (const nivelKey in niveles) {
-                        // La clave puede ser "Aplicados..." o "Aplicados... - Paralelo A"
+                        // La clave puede ser "Aplicados... (Turno Noche)" o "Aplicados... (Turno Noche) - Paralelo A"
                         if (nivelKey.startsWith(c.base)) {
-                            const match = nivelKey.match(/Paralelo ([A-Z])$/);
-                            if (match) paralelosEnCurso.add(match[1]);
+                            const matchTurno = nivelKey.match(/\((Mañana|Tarde|Noche)\)/) || nivelKey.match(/\(Turno (.*?)\)/);
+                            const turno = matchTurno ? matchTurno[1] : 'Noche';
+                            const matchParalelo = nivelKey.match(/Paralelo ([A-Z])$/);
+                            const paralelo = matchParalelo ? matchParalelo[1] : null;
+                            const mapKey = `${turno}-${paralelo}`;
+                            paralelosEnCurso.set(mapKey, { p: paralelo, t: turno });
                         }
                     }
                 }
             }
 
             if (paralelosEnCurso.size > 1) {
-                // Hay paralelos: mostrar opción por paralelo
-                [...paralelosEnCurso].sort().forEach(p => {
-                    const val = `${c.base} - Paralelo ${p}`;
-                    const checked = nivelActual.includes(c.base) && nivelActual.includes(`Paralelo ${p}`) ? 'checked' : '';
+                // Hay paralelos o turnos múltiples: mostrar opción por paralelo y turno
+                [...paralelosEnCurso.values()].sort((a,b) => (a.t + a.p).localeCompare(b.t + b.p)).forEach(({p, t}) => {
+                    const val = p ? `${c.base} (${t}) - Paralelo ${p}` : `${c.base} (${t})`;
+                    const checked = nivelActual.includes(c.base) && (p ? nivelActual.includes(`Paralelo ${p}`) : true) && nivelActual.includes(t) ? 'checked' : '';
                     checkboxesHtml += `
                     <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
-                        <input type="checkbox" id="ch-${c.id}-${p.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
-                        <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — Paralelo ${p}</span>
+                        <input type="checkbox" id="ch-${c.id}-${p ? p.toLowerCase() : 'all'}-${t.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
+                        <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${p ? `Paralelo ${p}` : 'General'} <small style="color:var(--muted)">(${t})</small></span>
                     </label>`;
                 });
+            } else if (paralelosEnCurso.size === 1) {
+                const {p, t} = [...paralelosEnCurso.values()][0];
+                const val = p ? `${c.base} (${t}) - Paralelo ${p}` : `${c.base} (${t})`;
+                const checked = nivelActual.includes(c.base) && nivelActual.includes(t) ? 'checked' : '';
+                checkboxesHtml += `
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
+                    <input type="checkbox" id="ch-${c.id}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
+                    <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${c.base.split('(')[1]?.replace(')','') || ''} <small style="color:var(--muted)">(${t})</small></span>
+                </label>`;
             } else {
-                // Solo un grupo: mostrar el curso normal
+                // Fallback normal
                 const checked = nivelActual.includes(c.base) ? 'checked' : '';
                 checkboxesHtml += `
                 <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
@@ -1038,7 +1051,7 @@ async function modalAsignarNivel(id, nombre) {
         htmlContenido = `
             <p style="font-size:.85rem;color:#94a3b8;margin-bottom:12px;">
                 Prof. <strong>${nombre}</strong> · Materia: <strong>${espDocente}</strong><br>
-                <small>Selecciona los cursos que impartirá (puede ser 1, 2 o los 3).</small>
+                <small>Selecciona los cursos que impartirá.</small>
             </p>
             <div style="display:flex;flex-direction:column;gap:10px;text-align:left;">
                 ${checkboxesHtml}
@@ -1053,11 +1066,11 @@ async function modalAsignarNivel(id, nombre) {
         if (dirData.grupos && dirData.grupos['tecnica'] && dirData.grupos['tecnica'][espDocente]) {
             const nivelesCarrera = dirData.grupos['tecnica'][espDocente];
             // El backend ya entrega las claves como:
-            //   "Nivel Básico"          → único paralelo o sin división
-            //   "Nivel Básico - Paralelo A" / "Nivel Básico - Paralelo B" → dividido por >30
+            //   "Nivel Básico (Turno Noche)"          → único paralelo o sin división
+            //   "Nivel Básico (Turno Mañana) - Paralelo A" → dividido por >30
             // Ordenar por nivel base primero, luego paralelo
             const nivelOrder = {'Nivel Básico':1,'Nivel Auxiliar':2,'Nivel Medio I':3,'Nivel Medio II':4};
-            const getNivelBase = k => k.replace(/ - Paralelo [A-Z]$/, '').trim();
+            const getNivelBase = k => k.replace(/ \(Turno.*$/, '').trim();
             Object.keys(nivelesCarrera)
               .sort((a, b) => {
                   const oa = nivelOrder[getNivelBase(a)] || 9;
@@ -1066,18 +1079,17 @@ async function modalAsignarNivel(id, nombre) {
                   return a.localeCompare(b);
               })
               .forEach(nivelKey => {
-                  // Si la clave ya contiene "Paralelo", usarla directamente
-                  if (nivelKey.includes('Paralelo')) {
-                      const label = nivelKey.replace(' - Paralelo ', ' — Paralelo ');
-                      nivelesDisponibles.push({ label, value: nivelKey });
-                  } else {
-                      nivelesDisponibles.push({ label: nivelKey, value: nivelKey });
+                  // Mostrar la clave formateada
+                  let label = nivelKey;
+                  if (label.includes('Paralelo')) {
+                      label = label.replace(' - Paralelo ', ' — Paralelo ');
                   }
+                  nivelesDisponibles.push({ label, value: nivelKey });
               });
         }
         // Si no hay datos de estudiantes, mostrar los 4 niveles estándar
         if (nivelesDisponibles.length === 0) {
-            ['Nivel Básico','Nivel Auxiliar','Nivel Medio I','Nivel Medio II'].forEach(n => {
+            ['Nivel Básico (Turno Mañana)','Nivel Básico (Turno Tarde)','Nivel Básico (Turno Noche)'].forEach(n => {
                 nivelesDisponibles.push({ label: n, value: n });
             });
         }

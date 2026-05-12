@@ -193,15 +193,16 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
         """)
         rows = rows_to_dicts(cur, cur.fetchall())
 
-        # Organizar en estructura agrupada â€” incluye paralelo en la clave si hay mÃ¡s de uno
+        # Organizar en estructura agrupada — incluye paralelo en la clave si hay más de uno
         from collections import defaultdict
-        # Primero contar cuÃ¡ntos paralelos hay por (Ã¡rea, carrera, nivel)
+        # Primero contar cuántos paralelos hay por (área, carrera, nivel, turno)
         paralelo_counts = defaultdict(set)
         for r in rows:
             area = (r["area"] or "humanistica").lower()
             carrera = r["carrera"] or "Sin Carrera"
             nivel = r["nivel"] or "Sin Nivel"
-            paralelo_counts[(area, carrera, nivel)].add(r["paralelo"] or "A")
+            turno = r["turno"] or "Noche"
+            paralelo_counts[(area, carrera, nivel, turno)].add(r["paralelo"] or "A")
 
         grupos = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
 
@@ -210,8 +211,10 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
             carrera = r["carrera"] or "Sin Carrera Asignada"
             nivel = r["nivel"] or "Sin Nivel"
             paralelo = r["paralelo"] or "A"
-            # Si hay mÃ¡s de un paralelo en este curso, aÃ±adir el paralelo a la clave
-            clave_nivel = f"{nivel} - Paralelo {paralelo}" if len(paralelo_counts[(area, carrera, nivel)]) > 1 else nivel
+            turno = r["turno"] or "Noche"
+            # Si hay más de un paralelo en este curso, añadir el paralelo a la clave
+            base_nivel = f"{nivel} ({turno})"
+            clave_nivel = f"{base_nivel} - Paralelo {paralelo}" if len(paralelo_counts[(area, carrera, nivel, turno)]) > 1 else base_nivel
             grupos[area][carrera][clave_nivel].append(r)
 
         # Docentes (incluye jefe_carrera para mostrar su rol correcto)
