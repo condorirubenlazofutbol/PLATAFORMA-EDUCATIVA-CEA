@@ -716,8 +716,12 @@ function eliminarPorCarrera(carrera) {
   apiEliminar({ tipo: 'carrera', carrera }, `¿Eliminar TODOS los estudiantes de la carrera "${carrera}"?`);
 }
 
-function eliminarPorNivel(nivel, carrera) {
-  apiEliminar({ tipo: 'nivel', nivel }, `¿Eliminar todos los estudiantes del nivel "${nivel}" (${carrera})?`);
+function eliminarPorNivel(nivelCompuesto, carrera) {
+  const baseNivel = nivelCompuesto.replace(/ \(.*$/, '').trim();
+  let turno = 'Noche';
+  if (nivelCompuesto.includes('Mañana')) turno = 'Mañana';
+  if (nivelCompuesto.includes('Tarde')) turno = 'Tarde';
+  apiEliminar({ tipo: 'nivel', nivel: baseNivel, turno: turno }, `¿Eliminar todos los estudiantes del nivel "${nivelCompuesto}" (${carrera})?`);
 }
 
 function eliminarPorArea(area) {

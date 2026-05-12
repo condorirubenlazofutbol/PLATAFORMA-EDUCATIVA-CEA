@@ -280,6 +280,7 @@ class EliminarInscripcionesRequest(BaseModel):
     carrera: Optional[str] = None
     nivel: Optional[str] = None
     area: Optional[str] = None
+    turno: Optional[str] = None
     rol: Optional[str] = "estudiante"  # "estudiante" | "docente" | "todos"
 
 @router.delete("/eliminar-inscripciones")
@@ -330,12 +331,21 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
         elif data.tipo == "nivel":
             if not data.nivel:
                 raise HTTPException(400, "Se requiere el nivel")
-            cur.execute("""
-                DELETE FROM usuarios WHERE id IN (
-                    SELECT DISTINCT i.usuario_id FROM inscripciones i
-                    WHERE i.nivel = %s
-                ) AND rol = ANY(%s) RETURNING id
-            """, (data.nivel, roles_objetivo))
+            
+            if data.turno:
+                cur.execute("""
+                    DELETE FROM usuarios WHERE id IN (
+                        SELECT DISTINCT i.usuario_id FROM inscripciones i
+                        WHERE i.nivel = %s AND i.turno = %s
+                    ) AND rol = ANY(%s) RETURNING id
+                """, (data.nivel, data.turno, roles_objetivo))
+            else:
+                cur.execute("""
+                    DELETE FROM usuarios WHERE id IN (
+                        SELECT DISTINCT i.usuario_id FROM inscripciones i
+                        WHERE i.nivel = %s
+                    ) AND rol = ANY(%s) RETURNING id
+                """, (data.nivel, roles_objetivo))
             eliminados = cur.rowcount
 
         elif data.tipo == "area":
