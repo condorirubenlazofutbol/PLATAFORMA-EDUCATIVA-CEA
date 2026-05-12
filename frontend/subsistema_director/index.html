@@ -634,7 +634,7 @@ function renderDocentes() {
                 </td>
                 <td><span class="badge ${d.estado==='activo'?'b-ok':'b-err'}">${d.estado}</span></td>
                 <td style="white-space:nowrap;">
-                  <button class="btn-del btn-del-ind" onclick="eliminarIndividual(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+                  <button class="btn-del btn-del-ind" onclick="eliminarDocente(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🗑 Eliminar</button>
                   <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">🔑 Clave</button>
                   <button class="btn-sm" style="margin-left:4px;background:${tieneNivel?'linear-gradient(90deg,#48d18e,#0ea5e9)':'var(--primary)'};color:white;border:none;" onclick="modalAsignarNivel(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">
                     ${tieneNivel ? '✏️ Cambiar Nivel' : '📘 Asignar Nivel'}
@@ -695,6 +695,67 @@ function eliminarPorArea(area) {
 
 function eliminarDocentesPorEsp(especialidad) {
   apiEliminar({ tipo: 'carrera', carrera: especialidad, rol: 'docente' }, `¿Eliminar TODOS los docentes de la especialidad "${especialidad}"?`);
+}
+
+// ── Eliminar docente individual (usa DELETE /auth/usuarios/{id}) ──────────
+async function eliminarDocente(id, nombre) {
+    const conf = await Swal.fire({
+        title: '🗑 Eliminar Docente',
+        html: `¿Estás seguro de que deseas eliminar a <b>${nombre}</b> del sistema?<br><br>
+               <small style="color:#f43f5e;">⚠️ Esta acción es IRREVERSIBLE. Se eliminará su cuenta de acceso y todos sus datos.</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f43f5e',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        background: '#0b1220',
+        color: '#f8fafc'
+    });
+
+    if (!conf.isConfirmed) return;
+
+    // Segunda confirmación
+    const conf2 = await Swal.fire({
+        title: '¿COMPLETAMENTE SEGURO?',
+        html: `Vas a eliminar permanentemente a <b>${nombre}</b>.<br>Esta acción <u>no se puede deshacer</u>.`,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#f43f5e',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, ELIMINAR DEFINITIVAMENTE',
+        cancelButtonText: 'Cancelar',
+        background: '#0b1220',
+        color: '#f8fafc'
+    });
+
+    if (!conf2.isConfirmed) return;
+
+    try {
+        Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const res = await fetch(`${API_BASE}/auth/usuarios/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        Swal.close();
+        if (res.ok) {
+            Swal.fire({
+                title: '✅ Docente Eliminado',
+                html: `<b>${nombre}</b> ha sido eliminado del sistema.`,
+                icon: 'success',
+                timer: 2500,
+                timerProgressBar: true,
+                showConfirmButton: false
+            });
+            document.directorioLoaded = false;
+            loadDirectorio();
+        } else {
+            Swal.fire('Error', data.detail || 'No se pudo eliminar al docente', 'error');
+        }
+    } catch(e) {
+        Swal.fire('Error', 'Error de red: ' + e.message, 'error');
+    }
 }
 
 function eliminarTodos(rol) {

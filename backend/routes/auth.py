@@ -460,22 +460,42 @@ def get_personal(current_user: dict = Depends(get_current_user)):
     finally:
         conn.close()
 
-@router.delete("/usuarios/{usuario_id}", dependencies=[Depends(get_current_user)])
-def delete_usuario(usuario_id: int):
+@router.delete("/usuarios/{usuario_id}")
+def delete_usuario(usuario_id: int, current_user: dict = Depends(get_current_user)):
+    """Elimina un usuario del sistema.
+    - Director: puede eliminar docentes y estudiantes.
+    - Admin: puede eliminar cualquier usuario (excepto otros admins).
+    - No se permite eliminar Director o Admin por parte de roles inferiores.
+    """
     conn = get_db_connection()
     if not conn:
         raise HTTPException(status_code=500, detail="Error de base de datos")
     try:
         cur = conn.cursor()
-        # Primero verificamos si el usuario existe
-        cur.execute("SELECT email FROM usuarios WHERE id = %s", (usuario_id,))
-        if not cur.fetchone():
+        # Verificar que el usuario existe y obtener su rol
+        cur.execute("SELECT email, rol FROM usuarios WHERE id = %s", (usuario_id,))
+        row = cur.fetchone()
+        if not row:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
-            
+
+        rol_objetivo = row[1]
+        mi_rol = current_user["rol"]
+
+        # Protecciones de seguridad
+        if rol_objetivo in ("admin", "administrador"):
+            raise HTTPException(status_code=403, detail="No se puede eliminar una cuenta de Administrador.")
+        if rol_objetivo == "director" and mi_rol not in ("admin", "administrador"):
+            raise HTTPException(status_code=403, detail="Solo el Super Admin puede eliminar una cuenta de Director.")
+        if mi_rol not in ("admin", "administrador", "director", "secretaria"):
+            raise HTTPException(status_code=403, detail="No tiene permisos para eliminar usuarios.")
+
         cur.execute("DELETE FROM usuarios WHERE id = %s", (usuario_id,))
         conn.commit()
         return {"mensaje": "Usuario eliminado correctamente"}
+    except HTTPException:
+        raise
     except Exception as e:
+        conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         conn.close()
