@@ -144,7 +144,7 @@ def register_usuario(data: RegistroUsuario):
                     c_id = c_row[0]
                     area = c_row[1]
                     paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, data.turno)
-                    cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, data.turno))
+                    cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, data.turno))
                     
                     # Matricular automÃ¡ticamente en sus 5 mÃ³dulos
                     cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -161,7 +161,7 @@ def register_usuario(data: RegistroUsuario):
                     c_id = c_row[0]
                     area = c_row[1]
                     paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, data.turno)
-                    cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, data.turno))
+                    cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, data.turno))
                     
                     # Matricular automÃ¡ticamente en sus 2 mÃ³dulos por materia
                     cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -175,7 +175,7 @@ def register_usuario(data: RegistroUsuario):
             area = c_area_row[0] if c_area_row else 'HumanÃ­stica'
             paralelo = obtener_paralelo_disponible(cur, data.carrera_id, data.nivel_asignado, area, data.turno)
             cur.execute(
-                "INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo",
+                "INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'",
                 (new_id, data.carrera_id, data.nivel_asignado, paralelo, data.turno)
             )
             
@@ -308,7 +308,7 @@ async def importar_estudiantes_excel(nivel: str, turno: str = "Noche", file: Upl
                         c_id = c_row[0]
                         db_area = c_row[1]
                         paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area, turno)
-                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, turno))
+                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, turno))
                         
                         # Matricular en mÃ³dulos
                         cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -324,7 +324,7 @@ async def importar_estudiantes_excel(nivel: str, turno: str = "Noche", file: Upl
                         c_id = c_row[0]
                         db_area = c_row[1]
                         paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area, turno)
-                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, turno))
+                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, turno))
                         
                         # Matricular en mÃ³dulos
                         cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -747,14 +747,14 @@ async def bulk_register(nivel: str, turno: str = "Noche", rol: str = "estudiante
                     if c_row:
                         c_id, area = c_row
                         paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, turno)
-                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, turno))
+                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, turno))
                 # Ã rea HumanÃ­stica
                 else:
                     nivel_nombre = nivel_str.strip()
                     cur.execute("SELECT id, area FROM carreras WHERE area = 'HumanÃ­stica'")
                     for c_id, area in cur.fetchall():
                         paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, turno)
-                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo", (new_id, c_id, nivel_nombre, paralelo, turno))
+                        cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, turno))
 
             conn.commit()
             registrados += 1

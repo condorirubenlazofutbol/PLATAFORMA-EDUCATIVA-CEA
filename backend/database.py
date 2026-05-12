@@ -109,6 +109,8 @@ def init_db():
         # Eliminar la restricción antigua si existe y crear una que incluya el turno
         cursor.execute("ALTER TABLE inscripciones DROP CONSTRAINT IF EXISTS inscripciones_usuario_id_carrera_id_key")
         cursor.execute("ALTER TABLE inscripciones ADD CONSTRAINT inscripciones_usuario_id_carrera_id_turno_key UNIQUE (usuario_id, carrera_id, turno)")
+        # Reparar inscripciones con estado NULL (migración de datos)
+        cursor.execute("UPDATE inscripciones SET estado = 'activo' WHERE estado IS NULL")
 
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS modulos (

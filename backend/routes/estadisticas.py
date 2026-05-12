@@ -144,7 +144,7 @@ def directorio_exportar(current_user: dict = Depends(get_current_user)):
             FROM usuarios u
             JOIN inscripciones i ON i.usuario_id = u.id
             JOIN carreras c ON c.id = i.carrera_id
-            WHERE u.rol = 'estudiante' AND i.estado = 'activo'
+            WHERE u.rol = 'estudiante' AND COALESCE(i.estado, 'activo') = 'activo'
             ORDER BY area, carrera, nivel, paralelo, u.apellido
         """)
         estudiantes = rows_to_dicts(cur, cur.fetchall())
@@ -188,7 +188,7 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
             FROM usuarios u
             JOIN inscripciones i ON i.usuario_id = u.id
             JOIN carreras c ON c.id = i.carrera_id
-            WHERE u.rol = 'estudiante' AND i.estado = 'activo'
+            WHERE u.rol = 'estudiante' AND COALESCE(i.estado, 'activo') = 'activo'
             ORDER BY area, carrera, nivel, paralelo, u.apellido
         """)
         rows = rows_to_dicts(cur, cur.fetchall())
