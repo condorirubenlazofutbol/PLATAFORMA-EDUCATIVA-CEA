@@ -88,6 +88,7 @@ def init_db():
         # Add column if table already exists (for backwards compatibility without data loss)
         cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
         cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS curso_asignado VARCHAR(200)")
+        cursor.execute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS es_jefe BOOLEAN DEFAULT FALSE")
 
         # 2.5 Nueva Tabla: Inscripciones (Dualidad)
         cursor.execute('''
@@ -97,14 +98,17 @@ def init_db():
                 carrera_id INT NOT NULL,
                 nivel VARCHAR(100), -- ej. Técnico Medio, Aprendizajes Aplicados
                 paralelo VARCHAR(5) DEFAULT 'A',
+                turno VARCHAR(20) DEFAULT 'Noche',
                 fecha_inscripcion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 estado VARCHAR(20) DEFAULT 'activo',
                 FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-                FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE CASCADE,
-                UNIQUE (usuario_id, carrera_id)
+                FOREIGN KEY (carrera_id) REFERENCES carreras(id) ON DELETE CASCADE
             )
         ''')
-        cursor.execute("ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS paralelo VARCHAR(5) DEFAULT 'A'")
+        cursor.execute("ALTER TABLE inscripciones ADD COLUMN IF NOT EXISTS turno VARCHAR(20) DEFAULT 'Noche'")
+        # Eliminar la restricción antigua si existe y crear una que incluya el turno
+        cursor.execute("ALTER TABLE inscripciones DROP CONSTRAINT IF EXISTS inscripciones_usuario_id_carrera_id_key")
+        cursor.execute("ALTER TABLE inscripciones ADD CONSTRAINT inscripciones_usuario_id_carrera_id_turno_key UNIQUE (usuario_id, carrera_id, turno)")
 
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS modulos (

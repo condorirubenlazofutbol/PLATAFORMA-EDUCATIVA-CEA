@@ -740,62 +740,105 @@ def promover_alta_direccion(data: PromoverDirectorRequest, current_user: dict = 
 class PromoverJefeRequest(BaseModel):
     usuario_id: int
     carrera_id: Optional[int] = None
-    especialidad_nombre: Optional[str] = None  # Nombre de la especialidad si no hay carrera_id
+    especialidad_nombre: Optional[str] = None  # Nombre de la especialidad/materia del grupo
 
-@router.post("/promover-jefe-carrera", dependencies=[Depends(get_current_user)])
+@router.post("/promover-jefe-carrera")
 def promover_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depends(get_current_user)):
+    """Designa a un docente como Jefe de su especialidad/carrera.
+    
+    Reglas:
+    - Solo 1 Jefe por especialidad (Humanística) o por carrera (Técnica).
+    - Si ya hay un Jefe en esa especialidad, se le retira la flag es_jefe automáticamente.
+    - El ROL del docente permanece como 'docente' — solo cambia es_jefe=True.
+    - Solo el Director puede designar Jefes.
+    """
     if current_user["rol"] not in ["admin", "administrador", "director"]:
-        raise HTTPException(status_code=403, detail="Solo la DirecciÃ³n puede nombrar Jefes de Carrera")
-        
+        raise HTTPException(status_code=403, detail="Solo la Dirección puede nombrar Jefes de Carrera")
+
     conn = get_db_connection()
-    if not conn: raise HTTPException(status_code=500, detail="Error DB")
+    if not conn:
+        raise HTTPException(status_code=500, detail="Error DB")
     try:
         cur = conn.cursor()
 
-        # Resolver carrera_id: si viene especialidad_nombre, buscar o crear la carrera
+        # 1. Obtener la especialidad del docente a promover (nivel_asignado = su área/materia)
+        cur.execute(
+            "SELECT nombre, apellido, nivel_asignado, rol FROM usuarios WHERE id = %s",
+            (data.usuario_id,)
+        )
+        docente = cur.fetchone()
+        if not docente:
+            raise HTTPException(status_code=404, detail="Docente no encontrado")
+
+        nombre_docente = f"{docente[0]} {docente[1]}"
+        especialidad_docente = docente[2] or data.especialidad_nombre or ""
+
+        if not especialidad_docente:
+            raise HTTPException(status_code=400, detail="El docente no tiene una especialidad asignada.")
+
+        # 2. Retirar la flag es_jefe a cualquier otro docente de LA MISMA ESPECIALIDAD
+        #    (garantiza que solo 1 sea Jefe por especialidad)
+        cur.execute("""
+            UPDATE usuarios
+            SET es_jefe = FALSE
+            WHERE id != %s
+              AND nivel_asignado = %s
+              AND es_jefe = TRUE
+              AND rol IN ('docente', 'profesor', 'jefe_carrera')
+        """, (data.usuario_id, especialidad_docente))
+
+        # 3. Actualizar carreras.jefe_id si se envió carrera_id o se puede resolver
         carrera_id = data.carrera_id
         if not carrera_id and data.especialidad_nombre:
-            nombre_esp = data.especialidad_nombre.strip()
-            cur.execute("SELECT id FROM carreras WHERE nombre ILIKE %s LIMIT 1", (nombre_esp,))
+            cur.execute("SELECT id FROM carreras WHERE nombre ILIKE %s LIMIT 1", (data.especialidad_nombre.strip(),))
             c_row = cur.fetchone()
             if c_row:
                 carrera_id = c_row[0]
-            else:
-                # Crear la carrera automÃ¡ticamente sin subsistema_id estricto
-                cur.execute(
-                    "INSERT INTO carreras (nombre, area, subsistema_id) VALUES (%s, 'General', NULL) RETURNING id",
-                    (nombre_esp,)
-                )
-                carrera_id = cur.fetchone()[0]
-                conn.commit()
 
-        if not carrera_id:
-            raise HTTPException(status_code=400, detail="Debe especificar una carrera o especialidad")
-        
-        # 1. Encontrar quiÃ©n era el jefe de esta carrera antes
-        cur.execute("SELECT jefe_id FROM carreras WHERE id = %s", (carrera_id,))
-        c_row = cur.fetchone()
-        if not c_row:
-            raise HTTPException(status_code=404, detail="Carrera no encontrada")
-            
-        antiguo_jefe_id = c_row[0]
-        if antiguo_jefe_id:
-            # Degradamos al antiguo jefe a profesor solo si era jefe_carrera
-            cur.execute("UPDATE usuarios SET rol = 'profesor' WHERE id = %s AND rol = 'jefe_carrera'", (antiguo_jefe_id,))
-            
-        # 2. Promovemos al nuevo usuario a jefe_carrera
-        cur.execute("UPDATE usuarios SET rol = 'jefe_carrera' WHERE id = %s", (data.usuario_id,))
-        
-        # 3. Asignamos en la tabla carreras
-        cur.execute("UPDATE carreras SET jefe_id = %s WHERE id = %s", (data.usuario_id, carrera_id))
-        
+        if carrera_id:
+            cur.execute("UPDATE carreras SET jefe_id = %s WHERE id = %s", (data.usuario_id, carrera_id))
+
+        # 4. Marcar al docente como Jefe con es_jefe=True (SIN cambiar su rol)
+        cur.execute("""
+            UPDATE usuarios
+            SET es_jefe = TRUE
+            WHERE id = %s
+        """, (data.usuario_id,))
+
         conn.commit()
-        return {"mensaje": "Profesor ascendido a Jefe de Carrera exitosamente."}
+        return {"mensaje": f"{nombre_docente} ha sido designado Jefe de {especialidad_docente} exitosamente."}
+    except HTTPException:
+        raise
     except Exception as e:
-        if conn: conn.rollback()
-        print(f"Error en promover_jefe_carrera: {e}")
+        if conn:
+            conn.rollback()
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
     finally:
-        if conn: conn.close()
+        if conn:
+            conn.close()
 
+@router.post("/retirar-jefe-carrera")
+def retirar_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depends(get_current_user)):
+    """Retira la designación de Jefe a un docente sin cambiar su rol de docente."""
+    if current_user["rol"] not in ["admin", "administrador", "director"]:
+        raise HTTPException(status_code=403, detail="Solo la Dirección puede gestionar Jefes de Carrera")
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Error DB")
+    try:
+        cur = conn.cursor()
+        cur.execute("UPDATE usuarios SET es_jefe = FALSE WHERE id = %s", (data.usuario_id,))
+        if data.carrera_id:
+            # Limpiar jefe_id en carreras si corresponde
+            cur.execute("UPDATE carreras SET jefe_id = NULL WHERE id = %s AND jefe_id = %s",
+                       (data.carrera_id, data.usuario_id))
+        conn.commit()
+        return {"mensaje": "Designación de Jefe retirada correctamente."}
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
 

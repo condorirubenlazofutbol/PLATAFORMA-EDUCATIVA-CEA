@@ -555,9 +555,9 @@ function renderDocentes() {
   const container = document.getElementById('dirDocContent');
   if (!docentes.length) { container.innerHTML = '<div class="loading">Sin docentes registrados.</div>'; return; }
 
-  // Detectar jefe actual por especialidad
+  // Detectar jefe actual por especialidad — usa la flag es_jefe (no el rol)
   const jefesPorEsp = {};
-  docentes.forEach(d => { if (d.rol === 'jefe_carrera') jefesPorEsp[d.especialidad] = d.id; });
+  docentes.forEach(d => { if (d.es_jefe) jefesPorEsp[d.especialidad] = d.id; });
 
   // Agrupar por especialidad
   const grupos = {};
@@ -613,7 +613,7 @@ function renderDocentes() {
           <table class="tbl">
             <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Curso/Nivel Designado</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody>${docs.map(d => {
-              const esJefe = d.rol === 'jefe_carrera';
+              const esJefe = d.es_jefe === true;
               const nivelAsig = d.nivel_asignado || '';
               const tieneNivel = nivelAsig && nivelAsig.trim() !== '';
               const rowStyle = esJefe
@@ -640,7 +640,7 @@ function renderDocentes() {
                     ${tieneNivel ? '✏️ Cambiar Nivel' : '📘 Asignar Nivel'}
                   </button>
                   ${esJefe
-                    ? `<button class="btn-sm" style="margin-left:4px;background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;border:none;cursor:default;">🏅 Jefe Actual</button>`
+                    ? `<button class="btn-sm" style="margin-left:4px;background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;border:none;" onclick="modalRetirarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🏅 Jefe Actual · Retirar</button>`
                     : `<button class="btn-sm" style="margin-left:4px;background:var(--violet);color:white;border:none;" onclick="modalNombrarJefe(${d.id},'${esp.replace(/'/g,"\\'")}')">🎖️ Nombrar Jefe</button>`
                   }
                 </td>
@@ -825,6 +825,52 @@ async function modalNombrarJefe(id, especialidad) {
             }
         } catch(e) {
             Swal.fire('Error', 'Error inesperado: ' + e.message, 'error');
+        }
+    }
+}
+
+// ── Retirar designación de Jefe ───────────────────────────────────────────
+async function modalRetirarJefe(id, nombre) {
+    const conf = await Swal.fire({
+        title: '🏅 Retirar Jefatura',
+        html: `¿Retirar la designación de Jefe de Carrera a <b>${nombre}</b>?<br><br>
+               <small style="color:#94a3b8;">El docente seguirá activo y podrá dictar clases normalmente, pero ya no será responsable de la malla curricular.</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, retirar',
+        cancelButtonText: 'Cancelar',
+        background: '#0b1220',
+        color: '#f8fafc'
+    });
+
+    if (conf.isConfirmed) {
+        Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            const r = await fetch(`${API_BASE}/auth/retirar-jefe-carrera`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+                body: JSON.stringify({ usuario_id: id })
+            });
+            const d = await r.json();
+            Swal.close();
+            if (r.ok) {
+                Swal.fire({
+                    title: '✅ Jefatura Retirada',
+                    html: `<b>${nombre}</b> ya no es Jefe de Carrera. Puede nombrar a otro docente de la misma especialidad.`,
+                    icon: 'success',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+                document.directorioLoaded = false;
+                loadDirectorio();
+            } else {
+                Swal.fire('Error', d.detail || 'No se pudo retirar la jefatura', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Error de red: ' + e.message, 'error');
         }
     }
 }

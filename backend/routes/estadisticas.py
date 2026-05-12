@@ -139,7 +139,8 @@ def directorio_exportar(current_user: dict = Depends(get_current_user)):
                    COALESCE(c.nombre, 'Sin Carrera Asignada') as carrera,
                    LOWER(COALESCE(c.area, 'humanistica')) as area,
                    COALESCE(i.nivel, u.nivel_asignado, 'Sin Nivel') as nivel,
-                   COALESCE(i.paralelo, 'A') as paralelo
+                   COALESCE(i.paralelo, 'A') as paralelo,
+                   COALESCE(i.turno, 'Noche') as turno
             FROM usuarios u
             JOIN inscripciones i ON i.usuario_id = u.id
             JOIN carreras c ON c.id = i.carrera_id
@@ -182,7 +183,8 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
                 COALESCE(c.nombre, 'Sin Carrera Asignada') as carrera,
                 LOWER(COALESCE(c.area, 'humanistica')) as area,
                 COALESCE(i.nivel, u.nivel_asignado, 'Sin Nivel') as nivel,
-                COALESCE(i.paralelo, 'A') as paralelo
+                COALESCE(i.paralelo, 'A') as paralelo,
+                COALESCE(i.turno, 'Noche') as turno
             FROM usuarios u
             JOIN inscripciones i ON i.usuario_id = u.id
             JOIN carreras c ON c.id = i.carrera_id
@@ -217,6 +219,7 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
             SELECT id, nombre, apellido, carnet, email, estado, rol,
                    COALESCE(nivel_asignado, 'Sin Especialidad') as especialidad,
                    COALESCE(curso_asignado, '') as nivel_asignado,
+                   COALESCE(es_jefe, FALSE) as es_jefe,
                    fecha_registro::date as fecha_ingreso
             FROM usuarios 
             WHERE rol IN ('docente','profesor','jefe_carrera')
