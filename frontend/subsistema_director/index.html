@@ -974,8 +974,9 @@ async function modalRetirarJefe(id, nombre) {
 
 // ── Asignar Nivel/Curso al docente (Nivel Pro) ───────────────────────────
 async function modalAsignarNivel(id, nombre) {
-    const docente = (dirData.docentes || []).find(d => d.id === id);
-    const espDocente = docente ? (docente.especialidad || '') : '';
+    try {
+        const docente = (dirData.docentes || []).find(d => d.id === id);
+        const espDocente = docente ? (docente.especialidad || '') : '';
     const nivelActual = docente ? (docente.nivel_asignado || '') : '';
 
     // Detección de área — usa el catálogo oficial del backend (independiente de inscripciones)
@@ -1202,6 +1203,10 @@ async function modalAsignarNivel(id, nombre) {
         } catch(e) {
             Swal.fire('Error', 'Error de red: ' + e.message, 'error');
         }
+    }
+    } catch (criticalError) {
+        alert("ERROR CRÍTICO en Asignar Nivel:\n" + criticalError.message + "\nPor favor reporta este mensaje o envía una captura de pantalla.");
+        console.error("Critical Error in modalAsignarNivel:", criticalError);
     }
 }
 
