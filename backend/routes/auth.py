@@ -338,7 +338,8 @@ async def importar_estudiantes_excel(nivel: str, turno: str = "Noche", file: Upl
                            nombre = EXCLUDED.nombre,
                            apellido = EXCLUDED.apellido,
                            nivel_asignado = EXCLUDED.nivel_asignado,
-                           carnet = EXCLUDED.carnet
+                           carnet = EXCLUDED.carnet,
+                           estado = 'activo'
                        RETURNING id""",
                     (nombres, apellidos, email, password, nivel, carnet)
                 )
@@ -351,7 +352,7 @@ async def importar_estudiantes_excel(nivel: str, turno: str = "Noche", file: Upl
                     carrera_nombre = parts[0].strip()
                     nivel_nombre = parts[1].strip()
                     
-                    cur.execute("SELECT id, area FROM carreras WHERE nombre = %s AND area = 'TÃ©cnica'", (carrera_nombre,))
+                    cur.execute("SELECT id, area FROM carreras WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(%s)) AND area = 'TÃ©cnica'", (carrera_nombre,))
                     c_row = cur.fetchone()
                     if c_row:
                         c_id = c_row[0]
@@ -779,7 +780,8 @@ async def bulk_register(nivel: str, turno: str = "Noche", rol: str = "estudiante
                        nombre = EXCLUDED.nombre,
                        apellido = EXCLUDED.apellido,
                        nivel_asignado = EXCLUDED.nivel_asignado,
-                       carnet = EXCLUDED.carnet
+                       carnet = EXCLUDED.carnet,
+                       estado = 'activo'
                    RETURNING id""",
                 (subsistema_id, nombre, apellido, email, hashed, db_rol, nivel, s_carnet)
             )
