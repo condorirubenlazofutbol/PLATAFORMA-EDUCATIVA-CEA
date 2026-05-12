@@ -1121,8 +1121,9 @@
             
             if (tipo === 'estudiante') {
                 let nivel = document.getElementById('ins_nivel').value;
+                let turno = document.getElementById('ins_turno').value;
                 let area_carrera = currentArea === 'tecnica' ? document.getElementById('ins_carrera').value : "Área Humanística";
-                mensaje = `¿Ya configuraste la inscripción a <b>${area_carrera}</b> - <b>${nivel}</b> en el formulario? Todos los estudiantes del Excel se inscribirán allí.`;
+                mensaje = `¿Ya configuraste la inscripción a <b>${area_carrera}</b> - <b>${nivel}</b> (Turno <b>${turno}</b>) en el formulario? Todos los estudiantes del Excel se inscribirán allí.`;
             } else if (tipo === 'docente') {
                 let especialidad = document.getElementById('doc_especialidad').value;
                 mensaje = `¿Ya seleccionaste la especialidad <b>${especialidad}</b>? Todos los docentes del Excel se registrarán bajo esa área.`;
