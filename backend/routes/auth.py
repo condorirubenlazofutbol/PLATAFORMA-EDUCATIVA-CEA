@@ -90,22 +90,36 @@ def generate_cea_email(nombre: str, apellido: str):
     clean_a = apellido.strip().split(" ")[0].lower()
     return f"{clean_n}{clean_a}" + "@ceapailon.com"
 
-def obtener_paralelo_disponible(cur, carrera_id, nivel, area, turno):
-    limite = 30 if str(area).lower() == 'tÃ©cnica' else 40
+import math
+
+def rebalancear_paralelos(cur, carrera_id, nivel, area, turno):
+    """
+    Rebalancea a los estudiantes de un curso/nivel/turno específico entre múltiples paralelos
+    de forma intercalada (Round-Robin), basado en el orden de inscripción.
+    Asegura que todos los paralelos tengan la misma cantidad de estudiantes (o +1 de diferencia).
+    """
+    # 1. Obtener todas las inscripciones activas de este curso/nivel/turno, ordenadas
     cur.execute('''
-        SELECT paralelo, COUNT(*) 
-        FROM inscripciones 
-        WHERE carrera_id = %s AND nivel = %s AND turno = %s
-        GROUP BY paralelo
-        ORDER BY paralelo ASC
+        SELECT i.id 
+        FROM inscripciones i
+        JOIN usuarios u ON i.usuario_id = u.id
+        WHERE i.carrera_id = %s AND i.nivel = %s AND i.turno = %s AND i.estado = 'activo'
+        ORDER BY i.fecha_inscripcion ASC, u.apellido ASC
     ''', (carrera_id, nivel, turno))
-    paralelos = cur.fetchall()
     
-    if not paralelos: return 'A'
-    for paralelo, count in paralelos:
-        if count < limite: return paralelo
-    ultimo_paralelo = paralelos[-1][0]
-    return chr(ord(ultimo_paralelo) + 1) if len(ultimo_paralelo) == 1 and ultimo_paralelo.isalpha() else 'A'
+    inscritos = cur.fetchall()
+    total = len(inscritos)
+    if total == 0:
+        return
+        
+    limite = 30 if "cnica" in str(area).lower() else 40
+    num_paralelos = max(1, math.ceil(total / limite))
+    
+    # 2. Intercalar estudiantes en los paralelos (A, B, C...)
+    for index, (insc_id,) in enumerate(inscritos):
+        paralelo_idx = index % num_paralelos
+        letra_paralelo = chr(ord('A') + paralelo_idx)
+        cur.execute("UPDATE inscripciones SET paralelo = %s WHERE id = %s", (letra_paralelo, insc_id))
 
 @router.post("/register-usuario", dependencies=[Depends(get_current_user)])
 def register_usuario(data: RegistroUsuario):
@@ -143,8 +157,9 @@ def register_usuario(data: RegistroUsuario):
                 if c_row:
                     c_id = c_row[0]
                     area = c_row[1]
-                    paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, data.turno)
+                    paralelo = 'A'
                     cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, data.turno))
+                    rebalancear_paralelos(cur, c_id, nivel_nombre, area, data.turno)
                     
                     # Matricular automÃ¡ticamente en sus 5 mÃ³dulos
                     cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -152,7 +167,7 @@ def register_usuario(data: RegistroUsuario):
                     for mod in modulos:
                         cur.execute("INSERT INTO progreso (usuario_id, modulo_id, estado) VALUES (%s, %s, 'cursando') ON CONFLICT DO NOTHING", (new_id, mod[0]))
             
-            # Ãrea HumanÃ­stica (formato: "Nivel")
+            # Ã rea HumanÃ­stica (formato: "Nivel")
             else:
                 nivel_nombre = nivel_str.strip()
                 cur.execute("SELECT id, area FROM carreras WHERE area = 'HumanÃ­stica'")
@@ -160,8 +175,9 @@ def register_usuario(data: RegistroUsuario):
                 for c_row in carreras_hum:
                     c_id = c_row[0]
                     area = c_row[1]
-                    paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, data.turno)
+                    paralelo = 'A'
                     cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, data.turno))
+                    rebalancear_paralelos(cur, c_id, nivel_nombre, area, data.turno)
                     
                     # Matricular automÃ¡ticamente en sus 2 mÃ³dulos por materia
                     cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -173,11 +189,12 @@ def register_usuario(data: RegistroUsuario):
             cur.execute("SELECT area FROM carreras WHERE id = %s", (data.carrera_id,))
             c_area_row = cur.fetchone()
             area = c_area_row[0] if c_area_row else 'HumanÃ­stica'
-            paralelo = obtener_paralelo_disponible(cur, data.carrera_id, data.nivel_asignado, area, data.turno)
+            paralelo = 'A'
             cur.execute(
                 "INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'",
                 (new_id, data.carrera_id, data.nivel_asignado, paralelo, data.turno)
             )
+            rebalancear_paralelos(cur, data.carrera_id, data.nivel_asignado, area, data.turno)
             
         conn.commit()
         return {"id": new_id, "email": email, "mensaje": f"Usuario {data.nombre} ({data.rol}) creado exitosamente"}
@@ -307,8 +324,9 @@ async def importar_estudiantes_excel(nivel: str, turno: str = "Noche", file: Upl
                     if c_row:
                         c_id = c_row[0]
                         db_area = c_row[1]
-                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area, turno)
+                        paralelo = 'A'
                         cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, turno))
+                        rebalancear_paralelos(cur, c_id, nivel_nombre, db_area, turno)
                         
                         # Matricular en mÃ³dulos
                         cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -323,8 +341,9 @@ async def importar_estudiantes_excel(nivel: str, turno: str = "Noche", file: Upl
                     for c_row in carreras_hum:
                         c_id = c_row[0]
                         db_area = c_row[1]
-                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, db_area, turno)
+                        paralelo = 'A'
                         cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, turno))
+                        rebalancear_paralelos(cur, c_id, nivel_nombre, db_area, turno)
                         
                         # Matricular en mÃ³dulos
                         cur.execute("SELECT id FROM modulos WHERE carrera_id = %s AND nivel = %s", (c_id, nivel_nombre))
@@ -746,15 +765,17 @@ async def bulk_register(nivel: str, turno: str = "Noche", rol: str = "estudiante
                     c_row = cur.fetchone()
                     if c_row:
                         c_id, area = c_row
-                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, turno)
+                        paralelo = 'A'
                         cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, turno))
+                        rebalancear_paralelos(cur, c_id, nivel_nombre, area, turno)
                 # Ã rea HumanÃ­stica
                 else:
                     nivel_nombre = nivel_str.strip()
                     cur.execute("SELECT id, area FROM carreras WHERE area = 'HumanÃ­stica'")
                     for c_id, area in cur.fetchall():
-                        paralelo = obtener_paralelo_disponible(cur, c_id, nivel_nombre, area, turno)
+                        paralelo = 'A'
                         cur.execute("INSERT INTO inscripciones (usuario_id, carrera_id, nivel, paralelo, turno, estado) VALUES (%s, %s, %s, %s, %s, 'activo') ON CONFLICT (usuario_id, carrera_id, turno) DO UPDATE SET paralelo = EXCLUDED.paralelo, estado = 'activo'", (new_id, c_id, nivel_nombre, paralelo, turno))
+                        rebalancear_paralelos(cur, c_id, nivel_nombre, area, turno)
 
             conn.commit()
             registrados += 1
