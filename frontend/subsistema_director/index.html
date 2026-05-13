@@ -1005,10 +1005,11 @@ async function modalAsignarNivel(id, nombre) {
     (dirData.docentes || []).forEach(d => {
         if (d.id !== id && d.nivel_asignado) {
             const isT = d.area_designada && d.area_designada.toLowerCase().includes('tecnica');
+            const nombreDocente = `${d.nombre} ${d.apellido}`.trim();
             if (isT) {
-                asignacionesTecnica[d.nivel_asignado] = true;
+                asignacionesTecnica[d.nivel_asignado] = nombreDocente;
             } else {
-                d.nivel_asignado.split(',').forEach(n => asignacionesHumanistica[n.trim()] = true);
+                d.nivel_asignado.split(',').forEach(n => asignacionesHumanistica[n.trim()] = nombreDocente);
             }
         }
     });
@@ -1047,17 +1048,13 @@ async function modalAsignarNivel(id, nombre) {
                         // La clave puede ser "Aplicados... (Turno Noche)" o "Aplicados... (Turno Noche) - Paralelo A"
                         if (nivelKey.startsWith(c.base)) {
                             const estudiantes = niveles[nivelKey];
-                            if (estudiantes.total >= 15) {
+                            if (estudiantes.total >= 20) {
                                 const matchTurno = nivelKey.match(/\((Mañana|Tarde|Noche)\)/) || nivelKey.match(/\(Turno (.*?)\)/);
                                 const turno = matchTurno ? matchTurno[1] : 'Noche';
                                 const matchParalelo = nivelKey.match(/Paralelo ([A-Z])$/);
                                 const paralelo = matchParalelo ? matchParalelo[1] : null;
-                                const val = paralelo ? `${c.base} (${turno}) - Paralelo ${paralelo}` : `${c.base} (${turno})`;
-                                
-                                if (!asignacionesHumanistica[val]) {
-                                    const mapKey = `${turno}-${paralelo}`;
-                                    paralelosEnCurso.set(mapKey, { p: paralelo, t: turno });
-                                }
+                                const mapKey = `${turno}-${paralelo}`;
+                                paralelosEnCurso.set(mapKey, { p: paralelo, t: turno });
                             }
                         }
                     }
@@ -1084,10 +1081,13 @@ async function modalAsignarNivel(id, nombre) {
                 [...paralelosEnCurso.values()].sort((a,b) => (a.t + (a.p||'')).localeCompare(b.t + (b.p||''))).forEach(({p, t}) => {
                     const val = p ? `${c.base} (${t}) - Paralelo ${p}` : `${c.base} (${t})`;
                     const checked = nivelActual.includes(c.base) && (p ? nivelActual.includes(`Paralelo ${p}`) : true) && nivelActual.includes(t) ? 'checked' : '';
+                    const asignadoA = asignacionesHumanistica[val];
+                    const colorLabel = asignadoA ? 'color:#ef4444;' : 'color:#f8fafc;';
+                    const extraText = asignadoA ? ` <small>(Asignado a: ${asignadoA})</small>` : '';
                     checkboxesHtml += `
                     <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
                         <input type="checkbox" id="ch-${c.id}-${p ? p.toLowerCase() : 'all'}-${t.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
-                        <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${p ? `Paralelo ${p}` : 'General'} <small style="color:var(--muted)">(${t})</small></span>
+                        <span style="${colorLabel}">${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${p ? `Paralelo ${p}` : 'General'} <small style="color:var(--muted)">(${t})</small>${extraText}</span>
                     </label>`;
                 });
             }
@@ -1096,7 +1096,7 @@ async function modalAsignarNivel(id, nombre) {
         if (!checkboxesHtml) {
             checkboxesHtml = `<div style="padding:15px;text-align:center;color:#f97316;background:rgba(249,115,22,0.1);border-radius:8px;font-size:.9rem;">
                 No hay cursos habilitados para tu especialidad.<br>
-                <small>Recuerda que el Ministerio requiere un <b>mínimo de 15 estudiantes</b> inscritos en un nivel para habilitar oficialmente el curso.</small>
+                <small>Recuerda que el Ministerio requiere un <b>mínimo de 20 estudiantes</b> inscritos en un nivel para habilitar oficialmente el curso.</small>
             </div>`;
         }
 
@@ -1119,7 +1119,7 @@ async function modalAsignarNivel(id, nombre) {
             const nivelesCarrera = dirData.grupos['tecnica'][espDocente];
             Object.keys(nivelesCarrera).forEach(nivelKey => {
                 const estudiantes = nivelesCarrera[nivelKey];
-                if (estudiantes.total >= 15 && !asignacionesTecnica[nivelKey]) {
+                if (estudiantes.total >= 15) {
                     let label = nivelKey;
                     if (label.includes('Paralelo')) {
                         label = label.replace(' - Paralelo ', ' — Paralelo ');
@@ -1171,7 +1171,10 @@ async function modalAsignarNivel(id, nombre) {
                 } else {
                     isSelected = n.value.startsWith(nivelActual) && n.value.includes('Noche');
                 }
-                return `<option value="${n.value}" ${isSelected ? 'selected' : ''}>${n.label}</option>`;
+                const asignadoA = asignacionesTecnica[n.value];
+                const labelAsignado = asignadoA ? `${n.label} (Asignado a: ${asignadoA})` : n.label;
+                const styleAsignado = asignadoA ? 'color:#ef4444;' : '';
+                return `<option value="${n.value}" ${isSelected ? 'selected' : ''} style="${styleAsignado}">${labelAsignado}</option>`;
             }).join('');
             
             selectorHtml = `<select id="sel-nivel" style="width:100%;padding:12px;border-radius:10px;background:#1e2a3a;color:#f8fafc;border:1px solid rgba(14,165,233,0.4);font-size:0.95rem;">
