@@ -999,16 +999,16 @@ async function modalAsignarNivel(id, nombre) {
     const esTecnica = areaDocente.includes('tecnica') || areaDocente.includes('técnica');
     areaDocente = esTecnica ? 'tecnica' : 'humanistica';
 
+    // Construir diccionarios de ocupación para filtrar
     const asignacionesHumanistica = {};
     const asignacionesTecnica = {};
     (dirData.docentes || []).forEach(d => {
         if (d.id !== id && d.nivel_asignado) {
-            if (areaDocente === 'humanistica') {
-                d.nivel_asignado.split(',').forEach(n => {
-                    asignacionesHumanistica[n.trim()] = `${d.nombre} ${d.apellido}`;
-                });
-            } else if (d.especialidad === espDocente) {
-                asignacionesTecnica[d.nivel_asignado] = `${d.nombre} ${d.apellido}`;
+            const isT = d.area_designada && d.area_designada.toLowerCase().includes('tecnica');
+            if (isT) {
+                asignacionesTecnica[d.nivel_asignado] = true;
+            } else {
+                d.nivel_asignado.split(',').forEach(n => asignacionesHumanistica[n.trim()] = true);
             }
         }
     });
@@ -1052,44 +1052,42 @@ async function modalAsignarNivel(id, nombre) {
                                 const turno = matchTurno ? matchTurno[1] : 'Noche';
                                 const matchParalelo = nivelKey.match(/Paralelo ([A-Z])$/);
                                 const paralelo = matchParalelo ? matchParalelo[1] : null;
-                                const mapKey = `${turno}-${paralelo}`;
-                                paralelosEnCurso.set(mapKey, { p: paralelo, t: turno });
+                                const val = paralelo ? `${c.base} (${turno}) - Paralelo ${paralelo}` : `${c.base} (${turno})`;
+                                
+                                if (!asignacionesHumanistica[val]) {
+                                    const mapKey = `${turno}-${paralelo}`;
+                                    paralelosEnCurso.set(mapKey, { p: paralelo, t: turno });
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // Inyectar cursos asignados que podrían estar ocultos por tener <15 alumnos o 0 alumnos
-            const inyectarHumanistica = (nivelKey) => {
-                if (nivelKey.startsWith(c.base)) {
-                    const matchTurno = nivelKey.match(/\((Mañana|Tarde|Noche)\)/) || nivelKey.match(/\(Turno (.*?)\)/);
-                    const turno = matchTurno ? matchTurno[1] : 'Noche';
-                    const matchParalelo = nivelKey.match(/Paralelo ([A-Z])$/);
-                    const paralelo = matchParalelo ? matchParalelo[1] : null;
-                    const mapKey = `${turno}-${paralelo}`;
-                    if (!paralelosEnCurso.has(mapKey)) {
-                        paralelosEnCurso.set(mapKey, { p: paralelo, t: turno, warning: true });
-                    }
-                }
-            };
-            Object.keys(asignacionesHumanistica).forEach(inyectarHumanistica);
+            // Inyectar los cursos que el docente ya tiene asignados para que pueda verlos y desmarcarlos
             if (nivelActual && nivelActual !== 'Sin Especialidad') {
-                nivelActual.split(',').map(n => n.trim()).forEach(inyectarHumanistica);
+                nivelActual.split(',').map(n => n.trim()).forEach(nivelKey => {
+                    if (nivelKey.startsWith(c.base)) {
+                        const matchTurno = nivelKey.match(/\((Mañana|Tarde|Noche)\)/) || nivelKey.match(/\(Turno (.*?)\)/);
+                        const turno = matchTurno ? matchTurno[1] : 'Noche';
+                        const matchParalelo = nivelKey.match(/Paralelo ([A-Z])$/);
+                        const paralelo = matchParalelo ? matchParalelo[1] : null;
+                        const mapKey = `${turno}-${paralelo}`;
+                        if (!paralelosEnCurso.has(mapKey)) {
+                            paralelosEnCurso.set(mapKey, { p: paralelo, t: turno });
+                        }
+                    }
+                });
             }
 
             if (paralelosEnCurso.size > 0) {
-                [...paralelosEnCurso.values()].sort((a,b) => (a.t + (a.p||'')).localeCompare(b.t + (b.p||''))).forEach(({p, t, warning}) => {
+                [...paralelosEnCurso.values()].sort((a,b) => (a.t + (a.p||'')).localeCompare(b.t + (b.p||''))).forEach(({p, t}) => {
                     const val = p ? `${c.base} (${t}) - Paralelo ${p}` : `${c.base} (${t})`;
                     const checked = nivelActual.includes(c.base) && (p ? nivelActual.includes(`Paralelo ${p}`) : true) && nivelActual.includes(t) ? 'checked' : '';
-                    const asignadoA = asignacionesHumanistica[val];
-                    const colorLabel = asignadoA ? 'color:#ef4444;' : 'color:#f8fafc;';
-                    let extraText = asignadoA ? ` <small>(Asignado a: ${asignadoA})</small>` : '';
-                    if (warning) extraText += ' <small style="color:#f97316;">(Insuficientes alumnos)</small>';
                     checkboxesHtml += `
                     <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
                         <input type="checkbox" id="ch-${c.id}-${p ? p.toLowerCase() : 'all'}-${t.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
-                        <span style="${colorLabel}">${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${p ? `Paralelo ${p}` : 'General'} <small style="color:var(--muted)">(${t})</small>${extraText}</span>
+                        <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${p ? `Paralelo ${p}` : 'General'} <small style="color:var(--muted)">(${t})</small></span>
                     </label>`;
                 });
             }
@@ -1121,7 +1119,7 @@ async function modalAsignarNivel(id, nombre) {
             const nivelesCarrera = dirData.grupos['tecnica'][espDocente];
             Object.keys(nivelesCarrera).forEach(nivelKey => {
                 const estudiantes = nivelesCarrera[nivelKey];
-                if (estudiantes.total >= 15) {
+                if (estudiantes.total >= 15 && !asignacionesTecnica[nivelKey]) {
                     let label = nivelKey;
                     if (label.includes('Paralelo')) {
                         label = label.replace(' - Paralelo ', ' — Paralelo ');
@@ -1131,19 +1129,11 @@ async function modalAsignarNivel(id, nombre) {
             });
         }
 
-        // Inyectar cursos asignados que podrían estar ocultos por tener <15 alumnos o 0 alumnos
-        Object.keys(asignacionesTecnica).forEach(nivelKey => {
-            if (!nivelesDisponiblesMap.has(nivelKey)) {
-                let label = nivelKey;
-                if (label.includes('Paralelo')) label = label.replace(' - Paralelo ', ' — Paralelo ');
-                nivelesDisponiblesMap.set(nivelKey, label + ' (Insuficientes alumnos)');
-            }
-        });
         if (nivelActual && nivelActual !== 'Sin Especialidad') {
             if (!nivelesDisponiblesMap.has(nivelActual)) {
                 let label = nivelActual;
                 if (label.includes('Paralelo')) label = label.replace(' - Paralelo ', ' — Paralelo ');
-                nivelesDisponiblesMap.set(nivelActual, label + ' (Actual - Insuficientes alumnos)');
+                nivelesDisponiblesMap.set(nivelActual, label);
             }
         }
 
@@ -1181,10 +1171,7 @@ async function modalAsignarNivel(id, nombre) {
                 } else {
                     isSelected = n.value.startsWith(nivelActual) && n.value.includes('Noche');
                 }
-                const asignadoA = asignacionesTecnica[n.value];
-                const labelAsignado = asignadoA ? `${n.label} (Asignado a: ${asignadoA})` : n.label;
-                const styleAsignado = asignadoA ? 'color:#ef4444;' : '';
-                return `<option value="${n.value}" ${isSelected ? 'selected' : ''} style="${styleAsignado}">${labelAsignado}</option>`;
+                return `<option value="${n.value}" ${isSelected ? 'selected' : ''}>${n.label}</option>`;
             }).join('');
             
             selectorHtml = `<select id="sel-nivel" style="width:100%;padding:12px;border-radius:10px;background:#1e2a3a;color:#f8fafc;border:1px solid rgba(14,165,233,0.4);font-size:0.95rem;">
