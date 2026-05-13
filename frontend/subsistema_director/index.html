@@ -869,14 +869,14 @@ function exportarExcelPro() {
           const groupedDocentes = {};
           
           dirData.docentes.forEach(d => {
+            const isT = (d.area_designada && d.area_designada.toLowerCase().includes('tecnica')) || 
+                        (d.especialidad && Object.keys(dirData.grupos?.tecnica || {}).includes(d.especialidad));
+            let areaDoc = isT ? 'Técnica' : 'Humanística';
+
             let esp = d.especialidad;
-            if (!esp || esp.trim() === '' || esp === 'Sin Especialidad') esp = 'Área General';
+            if (!esp || esp.trim() === '' || esp === 'Sin Especialidad') esp = areaDoc === 'Humanística' ? 'Área Humanística' : 'Área Técnica';
             
             if (!groupedDocentes[esp]) groupedDocentes[esp] = [];
-            
-            let areaDoc = catalogo[d.especialidad];
-            if (!areaDoc) areaDoc = carrerasTecnicas.has(d.especialidad) ? 'Técnica' : 'Humanística';
-            else areaDoc = areaDoc.toLowerCase().includes('tec') ? 'Técnica' : 'Humanística';
 
             groupedDocentes[esp].push({
               'CI': d.carnet, 
