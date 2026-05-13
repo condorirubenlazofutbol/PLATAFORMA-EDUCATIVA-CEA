@@ -1074,7 +1074,7 @@ async function modalAsignarNivel(id, nombre) {
                 }
             };
             Object.keys(asignacionesHumanistica).forEach(inyectarHumanistica);
-            if (nivelActual && nivelActual !== 'Sin Especialidad' && nivelActual !== '__UNASSIGN__') {
+            if (nivelActual && nivelActual !== 'Sin Especialidad') {
                 nivelActual.split(',').map(n => n.trim()).forEach(inyectarHumanistica);
             }
 
@@ -1139,7 +1139,7 @@ async function modalAsignarNivel(id, nombre) {
                 nivelesDisponiblesMap.set(nivelKey, label + ' (Insuficientes alumnos)');
             }
         });
-        if (nivelActual && nivelActual !== 'Sin Especialidad' && nivelActual !== '__UNASSIGN__') {
+        if (nivelActual && nivelActual !== 'Sin Especialidad') {
             if (!nivelesDisponiblesMap.has(nivelActual)) {
                 let label = nivelActual;
                 if (label.includes('Paralelo')) label = label.replace(' - Paralelo ', ' — Paralelo ');
@@ -1174,7 +1174,7 @@ async function modalAsignarNivel(id, nombre) {
             const opciones = nivelesDisponibles.map(n => {
                 const hasTurno = nivelActual.includes('Mañana') || nivelActual.includes('Tarde') || nivelActual.includes('Noche');
                 let isSelected = false;
-                if (!nivelActual || nivelActual === 'Sin Especialidad' || nivelActual === '__UNASSIGN__') {
+                if (!nivelActual || nivelActual === 'Sin Especialidad') {
                     isSelected = false;
                 } else if (hasTurno) {
                     isSelected = nivelActual === n.value;
@@ -1188,7 +1188,7 @@ async function modalAsignarNivel(id, nombre) {
             }).join('');
             
             selectorHtml = `<select id="sel-nivel" style="width:100%;padding:12px;border-radius:10px;background:#1e2a3a;color:#f8fafc;border:1px solid rgba(14,165,233,0.4);font-size:0.95rem;">
-                <option value="__UNASSIGN__">— Sin Asignar / Quitar Asignación —</option>
+                <option value="">— Sin Asignar / Quitar Asignación —</option>
                 ${opciones}
             </select>`;
         } else {
@@ -1223,12 +1223,12 @@ async function modalAsignarNivel(id, nombre) {
                 const sel = [...document.querySelectorAll('.swal2-html-container input[type="checkbox"]:checked')]
                     .map(el => el.value);
                 if (sel.length === 0) {
-                    return '__UNASSIGN__';
+                    return '';
                 }
                 return sel.join(', ');
             } else {
                 const val = document.getElementById('sel-nivel')?.value;
-                if (!val) { Swal.showValidationMessage('Debes seleccionar un nivel.'); return false; }
+                if (val === undefined || val === null) { Swal.showValidationMessage('Error al leer nivel.'); return false; }
                 return val;
             }
         }
