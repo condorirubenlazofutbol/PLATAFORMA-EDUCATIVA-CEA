@@ -999,6 +999,20 @@ async function modalAsignarNivel(id, nombre) {
     const esTecnica = areaDocente.includes('tecnica') || areaDocente.includes('técnica');
     areaDocente = esTecnica ? 'tecnica' : 'humanistica';
 
+    const asignacionesHumanistica = {};
+    const asignacionesTecnica = {};
+    (dirData.docentes || []).forEach(d => {
+        if (d.id !== id && d.nivel_asignado) {
+            if (areaDocente === 'humanistica') {
+                d.nivel_asignado.split(',').forEach(n => {
+                    asignacionesHumanistica[n.trim()] = `${d.nombre} ${d.apellido}`;
+                });
+            } else if (d.especialidad === espDocente) {
+                asignacionesTecnica[d.nivel_asignado] = `${d.nombre} ${d.apellido}`;
+            }
+        }
+    });
+
     let htmlContenido = '';
     let titulo = '';
 
@@ -1050,10 +1064,13 @@ async function modalAsignarNivel(id, nombre) {
                 [...paralelosEnCurso.values()].sort((a,b) => (a.t + (a.p||'')).localeCompare(b.t + (b.p||''))).forEach(({p, t}) => {
                     const val = p ? `${c.base} (${t}) - Paralelo ${p}` : `${c.base} (${t})`;
                     const checked = nivelActual.includes(c.base) && (p ? nivelActual.includes(`Paralelo ${p}`) : true) && nivelActual.includes(t) ? 'checked' : '';
+                    const asignadoA = asignacionesHumanistica[val];
+                    const colorLabel = asignadoA ? 'color:#ef4444;' : 'color:#f8fafc;';
+                    const extraText = asignadoA ? ` <small>(Asignado a: ${asignadoA})</small>` : '';
                     checkboxesHtml += `
                     <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
                         <input type="checkbox" id="ch-${c.id}-${p ? p.toLowerCase() : 'all'}-${t.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
-                        <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${p ? `Paralelo ${p}` : 'General'} <small style="color:var(--muted)">(${t})</small></span>
+                        <span style="${colorLabel}">${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${p ? `Paralelo ${p}` : 'General'} <small style="color:var(--muted)">(${t})</small>${extraText}</span>
                     </label>`;
                 });
             }
@@ -1127,11 +1144,14 @@ async function modalAsignarNivel(id, nombre) {
                 } else {
                     isSelected = n.value.startsWith(nivelActual) && n.value.includes('Noche');
                 }
-                return `<option value="${n.value}" ${isSelected ? 'selected' : ''}>${n.label}</option>`;
+                const asignadoA = asignacionesTecnica[n.value];
+                const labelAsignado = asignadoA ? `${n.label} (Asignado a: ${asignadoA})` : n.label;
+                const styleAsignado = asignadoA ? 'color:#ef4444;' : '';
+                return `<option value="${n.value}" ${isSelected ? 'selected' : ''} style="${styleAsignado}">${labelAsignado}</option>`;
             }).join('');
             
             selectorHtml = `<select id="sel-nivel" style="width:100%;padding:12px;border-radius:10px;background:#1e2a3a;color:#f8fafc;border:1px solid rgba(14,165,233,0.4);font-size:0.95rem;">
-                <option value="">— Selecciona un Nivel habilitado —</option>
+                <option value="__UNASSIGN__">— Sin Asignar / Quitar Asignación —</option>
                 ${opciones}
             </select>`;
         } else {
@@ -1166,8 +1186,7 @@ async function modalAsignarNivel(id, nombre) {
                 const sel = [...document.querySelectorAll('.swal2-html-container input[type="checkbox"]:checked')]
                     .map(el => el.value);
                 if (sel.length === 0) {
-                    Swal.showValidationMessage('Debes seleccionar al menos un curso.');
-                    return false;
+                    return '__UNASSIGN__';
                 }
                 return sel.join(', ');
             } else {

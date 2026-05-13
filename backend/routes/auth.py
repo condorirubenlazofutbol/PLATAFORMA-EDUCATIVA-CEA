@@ -648,6 +648,11 @@ def update_especialidad(usuario_id: int, data: EspecialidadUpdateBody, current_u
         especialidad_docente = row[0] or ""  # Ej: "Sistemas Informáticos" o "Aplicados"
         nuevo_nivel = data.especialidad.strip()
 
+        if nuevo_nivel == "__UNASSIGN__":
+            cur.execute("UPDATE usuarios SET curso_asignado = NULL WHERE id = %s", (usuario_id,))
+            conn.commit()
+            return {"status": "success", "message": "Asignación eliminada"}
+
         # 2. Determinar el área del docente buscando su especialidad en el catálogo de carreras
         cur.execute("SELECT area FROM carreras WHERE nombre = %s AND estado = 'activo' LIMIT 1", (especialidad_docente,))
         carrera_row = cur.fetchone()
