@@ -767,6 +767,11 @@ function eliminarDocentesPorEsp(especialidad) {
   apiEliminar({ tipo: 'carrera', carrera: especialidad, rol: 'docente' }, `¿Eliminar TODOS los docentes de la especialidad "${especialidad}"?`);
 }
 
+function eliminarDocentesPorArea(area) {
+  const label = area === 'tecnica' ? 'Técnica' : 'Humanística';
+  apiEliminar({ tipo: 'area', area, rol: 'docente' }, `¿Eliminar TODOS los docentes del Área ${label}?`);
+}
+
 // ── Eliminar docente individual (usa DELETE /auth/usuarios/{id}) ──────────
 async function eliminarDocente(id, nombre) {
     const conf = await Swal.fire({
@@ -1033,17 +1038,21 @@ function exportarExcelPro() {
       for (const area in dirData.grupos) {
         if (area === 'humanistica') {
           const data = [];
+          const seen = new Set();
           for (const carrera in dirData.grupos[area]) {
             const niveles = dirData.grupos[area][carrera];
             const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99));
             sortedNiveles.forEach(([nivel, d]) => {
               d.alumnos.forEach((a) => {
-                data.push({
-                  'Nivel/Curso': nivel,
-                  'Especialidad': carrera === 'humanistica' ? 'Ninguna' : carrera,
-                  'CI': a.carnet || 'S/N', 'Apellidos': a.apellido,
-                  'Nombres': a.nombre, 'Paralelo': a.paralelo || 'A', 'Estado': a.estado, 'Fecha Inscripción': a.fecha_inscripcion || ''
-                });
+                const key = `${nivel}_${a.carnet}_${a.apellido}_${a.nombre}`;
+                if (!seen.has(key)) {
+                  seen.add(key);
+                  data.push({
+                    'Nivel/Curso': nivel,
+                    'CI': a.carnet || 'S/N', 'Apellidos': a.apellido,
+                    'Nombres': a.nombre, 'Paralelo': a.paralelo || 'A', 'Estado': a.estado, 'Fecha Inscripción': a.fecha_inscripcion || ''
+                  });
+                }
               });
             });
           }
@@ -1052,9 +1061,9 @@ function exportarExcelPro() {
                const oA = nivelOrder[a['Nivel/Curso'].replace(/ \(.*$/, '').trim()] || 99;
                const oB = nivelOrder[b['Nivel/Curso'].replace(/ \(.*$/, '').trim()] || 99;
                if (oA !== oB) return oA - oB;
-               return a['Especialidad'].localeCompare(b['Especialidad']);
+               return a['Apellidos'].localeCompare(b['Apellidos']);
             });
-            const ws = createProSheet(data, "REPORTE GENERAL DE ESTUDIANTES", area, "Varias Especialidades");
+            const ws = createProSheet(data, "REPORTE GENERAL DE ESTUDIANTES", area, "");
             XLSX.utils.book_append_sheet(wb, ws, "Humanística");
           }
         } else {
