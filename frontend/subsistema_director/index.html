@@ -1139,7 +1139,9 @@ async function modalAsignarNivel(id, nombre) {
             const opciones = nivelesDisponibles.map(n => {
                 const hasTurno = nivelActual.includes('Mañana') || nivelActual.includes('Tarde') || nivelActual.includes('Noche');
                 let isSelected = false;
-                if (hasTurno) {
+                if (!nivelActual || nivelActual === 'Sin Especialidad' || nivelActual === '__UNASSIGN__') {
+                    isSelected = false;
+                } else if (hasTurno) {
                     isSelected = nivelActual === n.value;
                 } else {
                     isSelected = n.value.startsWith(nivelActual) && n.value.includes('Noche');
