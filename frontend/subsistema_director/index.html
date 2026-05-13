@@ -1048,14 +1048,12 @@ async function modalAsignarNivel(id, nombre) {
                         // La clave puede ser "Aplicados... (Turno Noche)" o "Aplicados... (Turno Noche) - Paralelo A"
                         if (nivelKey.startsWith(c.base)) {
                             const estudiantes = niveles[nivelKey];
-                            if (estudiantes.total >= 20) {
                                 const matchTurno = nivelKey.match(/\((Mañana|Tarde|Noche)\)/) || nivelKey.match(/\(Turno (.*?)\)/);
                                 const turno = matchTurno ? matchTurno[1] : 'Noche';
                                 const matchParalelo = nivelKey.match(/Paralelo ([A-Z])$/);
                                 const paralelo = matchParalelo ? matchParalelo[1] : null;
                                 const mapKey = `${turno}-${paralelo}`;
                                 paralelosEnCurso.set(mapKey, { p: paralelo, t: turno });
-                            }
                         }
                     }
                 }
@@ -1119,13 +1117,11 @@ async function modalAsignarNivel(id, nombre) {
             const nivelesCarrera = dirData.grupos['tecnica'][espDocente];
             Object.keys(nivelesCarrera).forEach(nivelKey => {
                 const estudiantes = nivelesCarrera[nivelKey];
-                if (estudiantes.total >= 15) {
                     let label = nivelKey;
                     if (label.includes('Paralelo')) {
                         label = label.replace(' - Paralelo ', ' — Paralelo ');
                     }
                     nivelesDisponiblesMap.set(nivelKey, label);
-                }
             });
         }
 
