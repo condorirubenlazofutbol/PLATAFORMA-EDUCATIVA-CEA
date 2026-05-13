@@ -860,10 +860,25 @@ function exportarExcelPro() {
 
   // Hoja docentes
   if (dirData.docentes && dirData.docentes.length > 0) {
-      const docs = dirData.docentes.map(d => ({
-        'CI': d.carnet, 'Apellidos': d.apellido, 'Nombres': d.nombre, 'Email': d.email,
-        'Especialidad': d.especialidad, 'Estado': d.estado, 'Fecha Ingreso': d.fecha_ingreso
-      }));
+      const catalogo = dirData.catalogo_areas || {};
+      const carrerasTecnicas = new Set(dirData.grupos && dirData.grupos['tecnica'] ? Object.keys(dirData.grupos['tecnica']) : []);
+      
+      const docs = dirData.docentes.map(d => {
+        let areaDoc = catalogo[d.especialidad];
+        if (!areaDoc) areaDoc = carrerasTecnicas.has(d.especialidad) ? 'Técnica' : 'Humanística';
+        else areaDoc = areaDoc.toLowerCase().includes('tec') ? 'Técnica' : 'Humanística';
+
+        return {
+          'CI': d.carnet, 
+          'Apellidos': d.apellido, 
+          'Nombres': d.nombre,
+          'Área': areaDoc,
+          'Especialidad / Carrera': d.especialidad || 'Sin Especialidad',
+          'Cursos Asignados': d.nivel_asignado || 'Sin Asignar',
+          'Estado': d.estado, 
+          'Fecha Ingreso': d.fecha_ingreso
+        };
+      });
       const ws = XLSX.utils.json_to_sheet(docs);
       applyProTableStyles(ws);
       XLSX.utils.book_append_sheet(wb, ws, "Plantel Docente");
