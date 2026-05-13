@@ -1233,14 +1233,25 @@ async function modalAsignarNivel(id, nombre) {
             });
             const d = await r.json();
             if (r.ok) {
-                Swal.fire({
-                    title: '✅ Asignado',
-                    html: `El nivel <b>${result.value}</b> fue asignado correctamente al docente.`,
-                    icon: 'success',
-                    timer: 2500,
-                    timerProgressBar: true,
-                    showConfirmButton: false
-                });
+                if (result.value === '') {
+                    Swal.fire({
+                        title: 'Asignación Retirada',
+                        html: `Se ha retirado la designación del docente correctamente.`,
+                        icon: 'success',
+                        timer: 2500,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        title: '✅ Asignado',
+                        html: `El nivel <b>${result.value}</b> fue asignado correctamente al docente.`,
+                        icon: 'success',
+                        timer: 2500,
+                        timerProgressBar: true,
+                        showConfirmButton: false
+                    });
+                }
                 document.directorioLoaded = false;
                 loadDirectorio();
             } else if (r.status === 409) {
