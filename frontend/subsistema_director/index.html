@@ -1034,63 +1034,88 @@ function exportarExcelPro() {
         'Nivel Básico': 1, 'Nivel Auxiliar': 2, 'Nivel Medio I': 3, 'Nivel Medio II': 4,
         'Aplicados (Primer Año)': 1, 'Complementarios (Segundo Año)': 2, 'Especializados (Tercer Año)': 3
       };
+      const getNivelOrder = key => nivelOrder[key.replace(/ \(.*$/, '').trim()] || 99;
 
-      for (const area in dirData.grupos) {
-        if (area === 'humanistica') {
-          const data = [];
-          const seen = new Set();
-          for (const carrera in dirData.grupos[area]) {
-            const niveles = dirData.grupos[area][carrera];
-            const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99));
-            sortedNiveles.forEach(([nivel, d]) => {
-              d.alumnos.forEach((a) => {
-                const key = `${nivel}_${a.carnet}_${a.apellido}_${a.nombre}`;
-                if (!seen.has(key)) {
-                  seen.add(key);
-                  data.push({
-                    'Nivel/Curso': nivel,
-                    'CI': a.carnet || 'S/N', 'Apellidos': a.apellido,
-                    'Nombres': a.nombre, 'Paralelo': a.paralelo || 'A', 'Estado': a.estado, 'Fecha Inscripción': a.fecha_inscripcion || ''
-                  });
-                }
-              });
-            });
-          }
-          if (data.length > 0) {
-            data.sort((a, b) => {
-               const oA = nivelOrder[a['Nivel/Curso'].replace(/ \(.*$/, '').trim()] || 99;
-               const oB = nivelOrder[b['Nivel/Curso'].replace(/ \(.*$/, '').trim()] || 99;
-               if (oA !== oB) return oA - oB;
-               return a['Apellidos'].localeCompare(b['Apellidos']);
-            });
-            const ws = createProSheet(data, "REPORTE GENERAL DE ESTUDIANTES", area, "");
-            XLSX.utils.book_append_sheet(wb, ws, "Humanística");
-          }
-        } else {
-          for (const carrera in dirData.grupos[area]) {
-            const niveles = dirData.grupos[area][carrera];
-            const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99));
-  
-            const data = [];
-            sortedNiveles.forEach(([nivel, d]) => {
-              d.alumnos.forEach((a) => {
-                data.push({
-                  'Nivel/Curso': nivel, 'CI': a.carnet || 'S/N', 'Apellidos': a.apellido,
-                  'Nombres': a.nombre, 'Paralelo': a.paralelo || 'A', 'Estado': a.estado, 'Fecha Inscripción': a.fecha_inscripcion || ''
+      // ── HOJA 1: ÁREA HUMANÍSTICA ─────────────────────────────────────────
+      const dataHum = [];
+      const seenHum = new Set();
+      if (dirData.grupos.humanistica) {
+        for (const carrera in dirData.grupos.humanistica) {
+          const niveles = dirData.grupos.humanistica[carrera];
+          const sortedNiveles = Object.entries(niveles).sort(([a],[b]) => getNivelOrder(a) - getNivelOrder(b));
+          sortedNiveles.forEach(([nivel, d]) => {
+            d.alumnos.forEach(a => {
+              const key = `${a.carnet}_${nivel}`;
+              if (!seenHum.has(key)) {
+                seenHum.add(key);
+                dataHum.push({
+                  'N°': dataHum.length + 1,
+                  'Curso': nivel.replace(/ \(.*$/, '').trim(),
+                  'CI': a.carnet || 'S/N',
+                  'Apellidos': a.apellido,
+                  'Nombres': a.nombre,
+                  'Paralelo': a.paralelo || 'A',
+                  'Turno': a.turno || 'Noche',
+                  'Estado': a.estado,
+                  'Inscrito': (a.fecha_inscripcion || '').split('T')[0]
                 });
+              }
+            });
+          });
+        }
+        dataHum.sort((a,b) => {
+          const oA = nivelOrder[a['Curso']] || 99;
+          const oB = nivelOrder[b['Curso']] || 99;
+          if (oA !== oB) return oA - oB;
+          return a['Apellidos'].localeCompare(b['Apellidos']);
+        });
+        dataHum.forEach((r, i) => r['N°'] = i + 1);
+      }
+
+      // ── HOJA 2: ÁREA TÉCNICA ──────────────────────────────────────────────
+      const dataTec = [];
+      if (dirData.grupos.tecnica) {
+        for (const carrera in dirData.grupos.tecnica) {
+          const niveles = dirData.grupos.tecnica[carrera];
+          const sortedNiveles = Object.entries(niveles).sort(([a],[b]) => getNivelOrder(a) - getNivelOrder(b));
+          sortedNiveles.forEach(([nivel, d]) => {
+            d.alumnos.forEach(a => {
+              dataTec.push({
+                'N°': dataTec.length + 1,
+                'Carrera': carrera,
+                'Nivel/Curso': nivel,
+                'CI': a.carnet || 'S/N',
+                'Apellidos': a.apellido,
+                'Nombres': a.nombre,
+                'Paralelo': a.paralelo || 'A',
+                'Turno': a.turno || 'Noche',
+                'Estado': a.estado,
+                'Inscrito': (a.fecha_inscripcion || '').split('T')[0]
               });
             });
-  
-            if (data.length > 0) {
-              let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31) || "Estudiantes";
-              const ws = createProSheet(data, "REPORTE GENERAL DE ESTUDIANTES", area, carrera);
-              XLSX.utils.book_append_sheet(wb, ws, sheetName);
-            }
-          }
+          });
         }
+        dataTec.sort((a,b) => {
+          if (a['Carrera'] !== b['Carrera']) return a['Carrera'].localeCompare(b['Carrera']);
+          const oA = getNivelOrder(a['Nivel/Curso']);
+          const oB = getNivelOrder(b['Nivel/Curso']);
+          if (oA !== oB) return oA - oB;
+          return a['Apellidos'].localeCompare(b['Apellidos']);
+        });
+        dataTec.forEach((r, i) => r['N°'] = i + 1);
       }
-      
-      if (wb.SheetNames.length === 0) return alert("No hay estudiantes para exportar.");
+
+      if (dataHum.length === 0 && dataTec.length === 0) return alert("No hay estudiantes para exportar.");
+
+      if (dataHum.length > 0) {
+        const ws = createProSheet(dataHum, "REPORTE GENERAL – ÁREA HUMANÍSTICA", "humanistica", "Todos los Cursos");
+        XLSX.utils.book_append_sheet(wb, ws, "Área Humanística");
+      }
+      if (dataTec.length > 0) {
+        const ws = createProSheet(dataTec, "REPORTE GENERAL – ÁREA TÉCNICA", "tecnica", "Todas las Carreras");
+        XLSX.utils.book_append_sheet(wb, ws, "Área Técnica");
+      }
+
       XLSX.writeFile(wb, `Estudiantes_CEA_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
 
   } else {
