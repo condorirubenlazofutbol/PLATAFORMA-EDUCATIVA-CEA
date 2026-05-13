@@ -524,6 +524,7 @@ function renderDirectorio() {
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
               <span class="dir-carrera-badge">${totalCarrera} estudiantes</span>
+              <button class="btn-sm" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid #10b981;" onclick="event.stopPropagation();exportarExcelCarrera('${carrera.replace(/'/g,"\\'")}', true)">📥 Excel</button>
               <button class="btn-del btn-del-grp" onclick="eliminarPorCarrera('${carrera.replace(/'/g,"\\'")}')">🗑 Eliminar Carrera</button>
             </div>
           </div>
@@ -541,6 +542,7 @@ function renderDirectorio() {
             <span style="font-size:.85rem;color:var(--muted);font-weight:600;">${totalArea} estudiantes en total</span>
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-sm" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid #10b981;" onclick="event.stopPropagation();exportarExcelArea('${area}', true)">📥 Excel</button>
             <button class="btn-del btn-del-area" onclick="event.stopPropagation();eliminarPorArea('${area}')">🗑 Eliminar Área</button>
             <span style="color:var(--muted);font-size:1.2rem;">▼</span>
           </div>
@@ -605,82 +607,114 @@ function renderDocentes() {
     }
   }
 
+  const areaLabels = { tecnica: { label: '👨‍🔧 Área Técnica', cls: 'area-tec' }, humanistica: { label: '📚 Área Humanística', cls: 'area-hum' } };
+
   let html = '';
-  for (const [esp, docs] of Object.entries(grupos).sort()) {
-    const areaActual = areaDeEsp[esp] || 'tecnica';
-    const tieneJefe = jefesPorEsp.hasOwnProperty(esp);
-    html += `
-      <div class="dir-carrera" style="margin-bottom:12px;">
-        <div class="dir-carrera-header">
-          <div class="dir-carrera-title">
-            ${areaActual === 'humanistica' ? '📚' : '🎓'} ${esp}
-            ${tieneJefe ? '<span class="badge" style="background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid #f59e0b;margin-left:8px;font-size:0.65rem;">🏅 JEFE ASIGNADO</span>' : ''}
+  const orderedAreas = ['tecnica', 'humanistica'];
+
+  for (const area of orderedAreas) {
+    const aInfo = areaLabels[area];
+    let totalArea = 0;
+    let carrerasHtml = '';
+
+    const carrerasDelArea = Object.entries(grupos)
+      .filter(([esp, _]) => (areaDeEsp[esp] || 'tecnica') === area)
+      .sort();
+
+    if (carrerasDelArea.length === 0) continue;
+
+    for (const [esp, docs] of carrerasDelArea) {
+      totalArea += docs.length;
+      const tieneJefe = jefesPorEsp.hasOwnProperty(esp);
+      
+      carrerasHtml += `
+        <div class="dir-carrera" style="margin-bottom:12px;">
+          <div class="dir-carrera-header">
+            <div class="dir-carrera-title">
+              ${area === 'humanistica' ? '📚' : '🎓'} ${esp}
+              ${tieneJefe ? '<span class="badge" style="background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid #f59e0b;margin-left:8px;font-size:0.65rem;">🏅 JEFE ASIGNADO</span>' : ''}
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span class="dir-carrera-badge">${docs.length} docentes</span>
+              <button class="btn-sm" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid #10b981;" onclick="event.stopPropagation();exportarExcelCarrera('${esp.replace(/'/g,"\\'")}', false)">📥 Excel</button>
+              <button class="btn-del btn-del-grp" onclick="eliminarDocentesPorEsp('${esp.replace(/'/g,"\\'")}')" >🗑 Eliminar</button>
+            </div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <span class="dir-carrera-badge">${docs.length} docentes</span>
-            <button class="btn-del btn-del-grp" onclick="eliminarDocentesPorEsp('${esp.replace(/'/g,"\\'")}')" >🗑 Eliminar</button>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Curso/Nivel Designado</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody>${docs.map(d => {
+                const esJefe = d.es_jefe === true;
+                const nivelAsig = d.nivel_asignado || '';
+                const tieneNivel = nivelAsig && nivelAsig.trim() !== '';
+  
+                let esHuerfano = false;
+                if (tieneNivel && area === 'tecnica' && dirData.grupos?.tecnica?.[esp]) {
+                    const clavesGrupo = Object.keys(dirData.grupos.tecnica[esp]);
+                    const nivelBase = nivelAsig.replace(/ - Paralelo [A-Z]$/, '').trim();
+                    const clavesDelNivel = clavesGrupo.filter(k => k.startsWith(nivelBase));
+                    const todasConParalelo = clavesDelNivel.length > 1 && clavesDelNivel.every(k => k.includes('Paralelo'));
+                    const asignadoSinParalelo = !nivelAsig.includes('Paralelo');
+                    esHuerfano = todasConParalelo && asignadoSinParalelo;
+                }
+  
+                const rowStyle = esHuerfano
+                  ? 'background:linear-gradient(90deg,rgba(251,146,60,0.08),rgba(239,68,68,0.05));border-left:3px solid #f97316;'
+                  : esJefe
+                  ? 'background:linear-gradient(90deg,rgba(245,158,11,0.06),rgba(139,92,246,0.06));border-left:3px solid #f59e0b;'
+                  : tieneNivel ? 'border-left:3px solid rgba(72,209,142,0.5);' : '';
+  
+                return `
+                <tr style="${rowStyle}">
+                  <td><strong>${d.carnet||'S/N'}</strong></td>
+                  <td>
+                    ${d.apellido} ${d.nombre}
+                    ${esJefe ? '<br><span class="badge" style="background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;font-size:0.65rem;margin-top:3px;display:inline-block;">🏅 Jefe de Carrera</span>' : ''}
+                    ${esHuerfano ? '<br><span class="badge" style="background:rgba(251,146,60,0.2);color:#fb923c;border:1px solid #f97316;font-size:0.62rem;margin-top:3px;display:inline-block;">⚠️ REASIGNAR PARALELO</span>' : ''}
+                  </td>
+                  <td style="font-size:.78rem;">
+                    ${esHuerfano
+                      ? `<span style="color:#f97316;font-weight:700;">⚠️ ${nivelAsig} <small style="font-weight:400;opacity:.8">(curso dividido)</small></span>`
+                      : tieneNivel
+                      ? `<span style="color:#48d18e;font-weight:700;">✅ ${nivelAsig}</span>`
+                      : `<span style="color:var(--muted);font-style:italic;">Sin designar</span>`
+                    }
+                  </td>
+                  <td><span class="badge ${d.estado==='activo'?'b-ok':'b-err'}">${d.estado}</span></td>
+                  <td style="white-space:nowrap;">
+                    <button class="btn-del btn-del-ind" onclick="eliminarDocente(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+                    <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">🔑 Clave</button>
+                    <button class="btn-sm" style="margin-left:4px;background:${esHuerfano?'linear-gradient(90deg,#f97316,#ef4444)':tieneNivel?'linear-gradient(90deg,#48d18e,#0ea5e9)':'var(--primary)'};color:white;border:none;" onclick="modalAsignarNivel(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">
+                      ${esHuerfano ? '🔄 Reasignar Paralelo' : tieneNivel ? '✏️ Cambiar Nivel' : '📘 Asignar Nivel'}
+                    </button>
+                    ${esJefe
+                      ? `<button class="btn-sm" style="margin-left:4px;background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;border:none;" onclick="modalRetirarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🏅 Jefe Actual · Retirar</button>`
+                      : `<button class="btn-sm" style="margin-left:4px;background:var(--violet);color:white;border:none;" onclick="modalNombrarJefe(${d.id},'${esp.replace(/'/g,"\\'")}')">🎖️ Nombrar Jefe</button>`
+                    }
+                  </td>
+                </tr>`;
+              }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    if (!carrerasHtml) continue;
+
+    html += `
+      <div class="dir-area">
+        <div class="dir-area-header" onclick="toggleArea(this)">
+          <div class="dir-area-title">
+            <span class="area-badge ${aInfo.cls}">${aInfo.label}</span>
+            <span style="font-size:.85rem;color:var(--muted);font-weight:600;">${totalArea} docentes en total</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-sm" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid #10b981;" onclick="event.stopPropagation();exportarExcelArea('${area}', false)">📥 Excel</button>
+            <span style="color:var(--muted);font-size:1.2rem;">▼</span>
+          </div>
         </div>
-        <div class="tbl-wrap">
-          <table class="tbl">
-            <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Curso/Nivel Designado</th><th>Estado</th><th>Acciones</th></tr></thead>
-            <tbody>${docs.map(d => {
-              const esJefe = d.es_jefe === true;
-              const nivelAsig = d.nivel_asignado || '';
-              const tieneNivel = nivelAsig && nivelAsig.trim() !== '';
-
-              // Detectar asignación «huérfana»: el docente tiene nivel sin paralelo
-              // pero el grupo ya se dividió en paralelos (la clave en grupos incluye "Paralelo")
-              let esHuerfano = false;
-              if (tieneNivel && areaActual === 'tecnica' && dirData.grupos?.tecnica?.[esp]) {
-                  const clavesGrupo = Object.keys(dirData.grupos.tecnica[esp]);
-                  // Verificar si TODAS las claves que empiezan con el nivel del docente tienen "Paralelo"
-                  // pero el nivel asignado NO tiene "Paralelo"
-                  const nivelBase = nivelAsig.replace(/ - Paralelo [A-Z]$/, '').trim();
-                  const clavesDelNivel = clavesGrupo.filter(k => k.startsWith(nivelBase));
-                  const todasConParalelo = clavesDelNivel.length > 1 && clavesDelNivel.every(k => k.includes('Paralelo'));
-                  const asignadoSinParalelo = !nivelAsig.includes('Paralelo');
-                  esHuerfano = todasConParalelo && asignadoSinParalelo;
-              }
-
-              const rowStyle = esHuerfano
-                ? 'background:linear-gradient(90deg,rgba(251,146,60,0.08),rgba(239,68,68,0.05));border-left:3px solid #f97316;'
-                : esJefe
-                ? 'background:linear-gradient(90deg,rgba(245,158,11,0.06),rgba(139,92,246,0.06));border-left:3px solid #f59e0b;'
-                : tieneNivel ? 'border-left:3px solid rgba(72,209,142,0.5);' : '';
-
-              return `
-              <tr style="${rowStyle}">
-                <td><strong>${d.carnet||'S/N'}</strong></td>
-                <td>
-                  ${d.apellido} ${d.nombre}
-                  ${esJefe ? '<br><span class="badge" style="background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;font-size:0.65rem;margin-top:3px;display:inline-block;">🏅 Jefe de Carrera</span>' : ''}
-                  ${esHuerfano ? '<br><span class="badge" style="background:rgba(251,146,60,0.2);color:#fb923c;border:1px solid #f97316;font-size:0.62rem;margin-top:3px;display:inline-block;">⚠️ REASIGNAR PARALELO</span>' : ''}
-                </td>
-                <td style="font-size:.78rem;">
-                  ${esHuerfano
-                    ? `<span style="color:#f97316;font-weight:700;">⚠️ ${nivelAsig} <small style="font-weight:400;opacity:.8">(curso dividido)</small></span>`
-                    : tieneNivel
-                    ? `<span style="color:#48d18e;font-weight:700;">✅ ${nivelAsig}</span>`
-                    : `<span style="color:var(--muted);font-style:italic;">Sin designar</span>`
-                  }
-                </td>
-                <td><span class="badge ${d.estado==='activo'?'b-ok':'b-err'}">${d.estado}</span></td>
-                <td style="white-space:nowrap;">
-                  <button class="btn-del btn-del-ind" onclick="eliminarDocente(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🗑 Eliminar</button>
-                  <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">🔑 Clave</button>
-                  <button class="btn-sm" style="margin-left:4px;background:${esHuerfano?'linear-gradient(90deg,#f97316,#ef4444)':tieneNivel?'linear-gradient(90deg,#48d18e,#0ea5e9)':'var(--primary)'};color:white;border:none;" onclick="modalAsignarNivel(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">
-                    ${esHuerfano ? '🔄 Reasignar Paralelo' : tieneNivel ? '✏️ Cambiar Nivel' : '📘 Asignar Nivel'}
-                  </button>
-                  ${esJefe
-                    ? `<button class="btn-sm" style="margin-left:4px;background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;border:none;" onclick="modalRetirarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🏅 Jefe Actual · Retirar</button>`
-                    : `<button class="btn-sm" style="margin-left:4px;background:var(--violet);color:white;border:none;" onclick="modalNombrarJefe(${d.id},'${esp.replace(/'/g,"\\'")}')">🎖️ Nombrar Jefe</button>`
-                  }
-                </td>
-              </tr>`;
-            }).join('')}
-            </tbody>
-          </table>
-        </div>
+        <div class="dir-area-body open">${carrerasHtml}</div>
       </div>`;
   }
   container.innerHTML = html;
@@ -815,6 +849,175 @@ async function resetPassword(id, carnet) {
 }
 
 // ── Exportar Excel Pro ───────────────────────────
+function createProSheet(dataJson, titulo, area, especialidad, nivel) {
+    const isHum = area && area.toLowerCase().includes('hum');
+    const isDocente = !!dataJson[0]?.['Especialidad / Carrera'];
+    
+    // Encabezado Pro
+    const data = [
+        ["CENTRO DE EDUCACIÓN ALTERNATIVA 'PAILÓN'"],
+        [titulo],
+        [""],
+        area ? ["ÁREA:", "", isHum ? "Humanística" : "Técnica"] : [],
+        especialidad ? [isHum ? (isDocente ? "ÁREA:" : "ESPECIALIDAD:") : (isDocente ? "CARRERA/ESPECIALIDAD:" : "CARRERA:"), "", especialidad] : [],
+        nivel ? ["NIVEL / CURSO:", "", nivel] : [],
+        ["FECHA DE REPORTE:", "", new Date().toLocaleDateString()],
+        [""]
+    ].filter(row => row.length > 0);
+
+    let headerRowIndex = data.length;
+
+    if (dataJson.length > 0) {
+        const columns = Object.keys(dataJson[0]);
+        data.push(columns);
+        
+        dataJson.forEach(row => {
+            const rowData = columns.map(col => row[col] || '');
+            data.push(rowData);
+        });
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    
+    const styleTitulo = { font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "1E293B" } }, alignment: { horizontal: "center", vertical: "center" } };
+    const styleSubTitulo = { font: { bold: true, sz: 11, color: { rgb: "0EA5E9" } }, alignment: { horizontal: "left" } };
+    const styleHeader = { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "334155" } }, alignment: { horizontal: "center", vertical: "center" }, border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} } };
+    const styleDataCenter = { alignment: { horizontal: "center", vertical: "center" }, border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} } };
+
+    if (!ws['!ref']) return ws;
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    
+    // Estilizar Título principal
+    if (ws['A1']) ws['A1'].s = styleTitulo;
+    if (ws['A2']) ws['A2'].s = styleTitulo;
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: range.e.c } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: range.e.c } }
+    ];
+
+    // Estilizar Metadata
+    for (let R = 3; R < headerRowIndex - 1; R++) {
+        const cellA = XLSX.utils.encode_cell({ r: R, c: 0 });
+        const cellC = XLSX.utils.encode_cell({ r: R, c: 2 });
+        if (ws[cellA]) ws[cellA].s = styleSubTitulo;
+        if (ws[cellC]) ws[cellC].s = { font: { bold: true }, alignment: { horizontal: "left" } };
+
+        // Unir celdas para que las etiquetas largas no se corten
+        ws['!merges'].push({ s: { r: R, c: 0 }, e: { r: R, c: 1 } });
+        // Unir celdas para el valor
+        ws['!merges'].push({ s: { r: R, c: 2 }, e: { r: R, c: Math.min(3, range.e.c) } });
+    }
+
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+        const headerCell = XLSX.utils.encode_cell({ r: headerRowIndex, c: C });
+        if (ws[headerCell]) ws[headerCell].s = styleHeader;
+        for (let R = headerRowIndex + 1; R <= range.e.r; ++R) {
+            const dataCell = XLSX.utils.encode_cell({ r: R, c: C });
+            if (ws[dataCell]) ws[dataCell].s = styleDataCenter;
+        }
+    }
+
+    const colWidths = [];
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+        if (C === 0) {
+            const isNoCol = dataJson.length > 0 && Object.keys(dataJson[0])[0] === 'N°';
+            colWidths.push({wch: isNoCol ? 6 : 15});
+        } else {
+            colWidths.push({wch: 22});
+        }
+    }
+    ws['!cols'] = colWidths;
+    
+    return ws;
+}
+
+function exportarExcelArea(area, isEstudiante) {
+    if(!dirData || !dirData.grupos) return alert("Espera a que carguen los datos.");
+    const wb = XLSX.utils.book_new();
+
+    if (isEstudiante) {
+        const carreras = dirData.grupos[area] || {};
+        for (const [carrera, niveles] of Object.entries(carreras)) {
+            const data = [];
+            for (const [nivel, d] of Object.entries(niveles)) {
+                d.alumnos.forEach((a) => {
+                    data.push({
+                        'Nivel/Curso': nivel, 'CI': a.carnet || 'S/N', 'Apellidos': a.apellido,
+                        'Nombres': a.nombre, 'Paralelo': a.paralelo || 'A', 'Estado': a.estado, 'Fecha Inscripción': a.fecha_inscripcion || ''
+                    });
+                });
+            }
+            if (data.length > 0) {
+                let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31) || "Estudiantes";
+                const ws = createProSheet(data, `REPORTE DE ÁREA: ${area.toUpperCase()}`, area, carrera);
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            }
+        }
+        if (wb.SheetNames.length === 0) return alert("No hay estudiantes en esta área.");
+        XLSX.writeFile(wb, `Area_${area}_Estudiantes_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
+    } else {
+        const docsFiltered = (dirData.docentes || []).filter(d => {
+            const isT = (d.area_designada && d.area_designada.toLowerCase().includes('tecnica')) || 
+                        (d.especialidad && Object.keys(dirData.grupos?.tecnica || {}).includes(d.especialidad));
+            let areaDoc = isT ? 'tecnica' : 'humanistica';
+            return areaDoc === area;
+        });
+
+        if (docsFiltered.length === 0) return alert("No hay docentes en esta área.");
+
+        const groups = {};
+        docsFiltered.forEach(d => {
+            let esp = d.especialidad;
+            if (!esp || esp.trim() === '' || esp === 'Sin Especialidad') esp = area === 'humanistica' ? 'Área Humanística' : 'Área Técnica';
+            if (!groups[esp]) groups[esp] = [];
+            groups[esp].push({
+                'CI': d.carnet, 'Apellidos': d.apellido, 'Nombres': d.nombre,
+                'Especialidad / Carrera': esp, 'Cursos Asignados': d.nivel_asignado || 'Sin Asignar', 'Estado': d.estado, 'Fecha Ingreso': d.fecha_ingreso
+            });
+        });
+
+        for (const [esp, data] of Object.entries(groups)) {
+            let sheetName = esp.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31) || "Docentes";
+            const ws = createProSheet(data, `REPORTE DE ÁREA: ${area.toUpperCase()}`, area, esp);
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        }
+        XLSX.writeFile(wb, `Area_${area}_Docentes_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
+    }
+}
+
+function exportarExcelCarrera(carrera, isEstudiante) {
+    if(!dirData) return;
+    const wb = XLSX.utils.book_new();
+
+    let areaDetectada = 'tecnica';
+    if (dirData.grupos?.humanistica?.[carrera]) areaDetectada = 'humanistica';
+
+    if (isEstudiante) {
+        const niveles = dirData.grupos[areaDetectada][carrera] || {};
+        const data = [];
+        for (const [nivel, d] of Object.entries(niveles)) {
+            d.alumnos.forEach(a => data.push({
+                'Nivel/Curso': nivel, 'CI': a.carnet || 'S/N', 'Apellidos': a.apellido,
+                'Nombres': a.nombre, 'Paralelo': a.paralelo || 'A', 'Estado': a.estado, 'Fecha Inscripción': a.fecha_inscripcion || ''
+            }));
+        }
+        if (data.length === 0) return alert("No hay estudiantes.");
+        const ws = createProSheet(data, `REPORTE DE CARRERA: ${carrera.toUpperCase()}`, areaDetectada, carrera);
+        XLSX.utils.book_append_sheet(wb, ws, carrera.substring(0,31));
+        XLSX.writeFile(wb, `Carrera_${carrera}_Estudiantes.xlsx`);
+    } else {
+        const docsFiltered = (dirData.docentes || []).filter(d => d.especialidad === carrera);
+        if (docsFiltered.length === 0) return alert("No hay docentes.");
+        const data = docsFiltered.map(d => ({
+            'CI': d.carnet, 'Apellidos': d.apellido, 'Nombres': d.nombre,
+            'Cursos Asignados': d.nivel_asignado || 'Sin Asignar', 'Estado': d.estado, 'Fecha Ingreso': d.fecha_ingreso
+        }));
+        const ws = createProSheet(data, `REPORTE DOCENTE: ${carrera.toUpperCase()}`, areaDetectada, carrera);
+        XLSX.utils.book_append_sheet(wb, ws, carrera.substring(0,31));
+        XLSX.writeFile(wb, `Carrera_${carrera}_Docentes.xlsx`);
+    }
+}
+
 function exportarExcelPro() {
   if(!dirData || !dirData.grupos) return alert("Espera a que carguen los datos del directorio.");
   const wb = XLSX.utils.book_new();
@@ -829,30 +1032,21 @@ function exportarExcelPro() {
       for (const area in dirData.grupos) {
         for (const carrera in dirData.grupos[area]) {
           const niveles = dirData.grupos[area][carrera];
-          const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => {
-            return (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99);
-          });
+          const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99));
 
           const data = [];
           sortedNiveles.forEach(([nivel, d]) => {
             d.alumnos.forEach((a) => {
               data.push({
-                'Nivel/Curso': nivel,
-                'CI': a.carnet || 'S/N',
-                'Apellidos': a.apellido,
-                'Nombres': a.nombre,
-                'Paralelo': a.paralelo || 'A',
-                'Estado': a.estado,
-                'Fecha Inscripción': a.fecha_inscripcion || ''
+                'Nivel/Curso': nivel, 'CI': a.carnet || 'S/N', 'Apellidos': a.apellido,
+                'Nombres': a.nombre, 'Paralelo': a.paralelo || 'A', 'Estado': a.estado, 'Fecha Inscripción': a.fecha_inscripcion || ''
               });
             });
           });
 
           if (data.length > 0) {
-            let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31);
-            if(!sheetName) sheetName = "Estudiantes";
-            const ws = XLSX.utils.json_to_sheet(data);
-            applyProTableStyles(ws);
+            let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31) || "Estudiantes";
+            const ws = createProSheet(data, "REPORTE GENERAL DE ESTUDIANTES", area, carrera);
             XLSX.utils.book_append_sheet(wb, ws, sheetName);
           }
         }
@@ -863,9 +1057,6 @@ function exportarExcelPro() {
 
   } else {
       if (dirData.docentes && dirData.docentes.length > 0) {
-          const catalogo = dirData.catalogo_areas || {};
-          const carrerasTecnicas = new Set(dirData.grupos && dirData.grupos['tecnica'] ? Object.keys(dirData.grupos['tecnica']) : []);
-          
           const groupedDocentes = {};
           
           dirData.docentes.forEach(d => {
@@ -876,33 +1067,22 @@ function exportarExcelPro() {
             let esp = d.especialidad;
             if (!esp || esp.trim() === '' || esp === 'Sin Especialidad') esp = areaDoc === 'Humanística' ? 'Área Humanística' : 'Área Técnica';
             
-            if (!groupedDocentes[esp]) groupedDocentes[esp] = [];
+            if (!groupedDocentes[esp]) groupedDocentes[esp] = { area: areaDoc, data: [] };
 
-            groupedDocentes[esp].push({
-              'CI': d.carnet, 
-              'Apellidos': d.apellido, 
-              'Nombres': d.nombre,
-              'Área': areaDoc,
-              'Especialidad / Carrera': esp,
-              'Cursos Asignados': d.nivel_asignado || 'Sin Asignar',
-              'Estado': d.estado, 
-              'Fecha Ingreso': d.fecha_ingreso
+            groupedDocentes[esp].data.push({
+              'CI': d.carnet, 'Apellidos': d.apellido, 'Nombres': d.nombre,
+              'Área': areaDoc, 'Especialidad / Carrera': esp, 'Cursos Asignados': d.nivel_asignado || 'Sin Asignar',
+              'Estado': d.estado, 'Fecha Ingreso': d.fecha_ingreso
             });
           });
           
-          for (const esp in groupedDocentes) {
-              let sheetName = esp.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31);
-              if(!sheetName) sheetName = "Docentes";
+          for (const [esp, obj] of Object.entries(groupedDocentes)) {
+              let sheetName = esp.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31) || "Docentes";
               
-              const ws = XLSX.utils.json_to_sheet(groupedDocentes[esp]);
-              applyProTableStyles(ws);
+              const ws = createProSheet(obj.data, "REPORTE GENERAL DE DOCENTES", obj.area, esp);
               
-              let finalName = sheetName;
-              let counter = 1;
-              while(wb.SheetNames.includes(finalName)) {
-                  finalName = sheetName.substring(0, 28) + "_" + counter;
-                  counter++;
-              }
+              let finalName = sheetName; let counter = 1;
+              while(wb.SheetNames.includes(finalName)) { finalName = sheetName.substring(0, 28) + "_" + counter; counter++; }
               XLSX.utils.book_append_sheet(wb, ws, finalName);
           }
       } else {
@@ -1359,111 +1539,28 @@ function descargarExcelCurso(area, carrera, nivel) {
     const alumnos = dirData.grupos[area][carrera][nivel]?.alumnos;
     if (!alumnos || alumnos.length === 0) return alert("No hay alumnos en este curso.");
 
-    const isHum = area === 'humanistica';
-    
-    // Encabezado Pro
-    const data = [
-        ["CENTRO DE EDUCACIÓN ALTERNATIVA 'PAILÓN'"],
-        ["LISTA OFICIAL DE ESTUDIANTES"],
-        [""],
-        ["ÁREA:", isHum ? "Humanística" : "Técnica"],
-        [isHum ? "ESPECIALIDAD:" : "CARRERA:", carrera],
-        ["NIVEL / CURSO:", nivel],
-        ["FECHA DE REPORTE:", new Date().toLocaleDateString()],
-        [""],
-        ["N°", "Carnet / CI", "Apellidos", "Nombres", "Paralelo", "Estado", "Fecha Inscripción"]
-    ];
-
+    const data = [];
     alumnos.forEach((a, index) => {
-        data.push([
-            index + 1,
-            a.carnet || 'S/N',
-            a.apellido,
-            a.nombre,
-            a.paralelo || 'A',
-            a.estado,
-            a.fecha_inscripcion || ''
-        ]);
+        data.push({
+            'N°': index + 1,
+            'Carnet / CI': a.carnet || 'S/N',
+            'Apellidos': a.apellido,
+            'Nombres': a.nombre,
+            'Paralelo': a.paralelo || 'A',
+            'Estado': a.estado,
+            'Fecha Inscripción': a.fecha_inscripcion || ''
+        });
     });
-
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    
-    // ESTILOS PRO
-    const styleTitulo = {
-        font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
-        fill: { fgColor: { rgb: "1E293B" } },
-        alignment: { horizontal: "center", vertical: "center" }
-    };
-    const styleSubTitulo = {
-        font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
-        fill: { fgColor: { rgb: "0EA5E9" } },
-        alignment: { horizontal: "center", vertical: "center" }
-    };
-    const styleMetaKey = { font: { bold: true, color: { rgb: "1E293B" } } };
-    const styleHeader = {
-        font: { bold: true, color: { rgb: "FFFFFF" } },
-        fill: { fgColor: { rgb: "334155" } },
-        alignment: { horizontal: "center", vertical: "center" },
-        border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
-    };
-    const styleDataCenter = {
-        alignment: { horizontal: "center", vertical: "center" },
-        border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
-    };
-    const styleDataLeft = {
-        alignment: { horizontal: "left", vertical: "center" },
-        border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
-    };
-
-    // Aplicar estilos a celdas específicas
-    ws['A1'].s = styleTitulo;
-    ws['A2'].s = styleSubTitulo;
-    
-    ws['A4'].s = styleMetaKey; ws['A5'].s = styleMetaKey; ws['A6'].s = styleMetaKey; ws['A7'].s = styleMetaKey;
-    
-    // Headers de tabla (Fila 9, index 8)
-    const cols = ['A','B','C','D','E','F','G'];
-    cols.forEach(c => {
-        if(ws[`${c}9`]) ws[`${c}9`].s = styleHeader;
-    });
-
-    // Datos (Fila 10 en adelante)
-    for (let i = 0; i < alumnos.length; i++) {
-        let r = 10 + i;
-        if(ws[`A${r}`]) ws[`A${r}`].s = styleDataCenter;
-        if(ws[`B${r}`]) ws[`B${r}`].s = styleDataCenter;
-        if(ws[`C${r}`]) ws[`C${r}`].s = styleDataLeft;
-        if(ws[`D${r}`]) ws[`D${r}`].s = styleDataLeft;
-        if(ws[`E${r}`]) ws[`E${r}`].s = styleDataCenter;
-        if(ws[`F${r}`]) ws[`F${r}`].s = styleDataCenter;
-        if(ws[`G${r}`]) ws[`G${r}`].s = styleDataCenter;
-    }
-
-    // Combinar celdas para el título y darles altura
-    ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // CEA Pailon
-        { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }  // Lista Oficial
-    ];
-    ws['!rows'] = [ { hpt: 25 }, { hpt: 20 } ]; // Altura de fila para títulos
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Lista Curso");
+    const ws = createProSheet(data, "LISTA OFICIAL DE ESTUDIANTES", area, carrera, nivel);
     
-    // Auto-ajustar ancho de columnas
-    const colWidths = [
-        { wch: 5 },  // N°
-        { wch: 15 }, // CI
-        { wch: 25 }, // Apellidos
-        { wch: 25 }, // Nombres
-        { wch: 10 }, // Paralelo
-        { wch: 12 }, // Estado
-        { wch: 15 }  // Fecha
-    ];
-    ws['!cols'] = colWidths;
+    let safeNivel = nivel.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31);
+    XLSX.utils.book_append_sheet(wb, ws, safeNivel);
 
-    const safeCarrera = carrera.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    const safeNivel = nivel.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    XLSX.writeFile(wb, `Lista_${safeCarrera}_${safeNivel}.xlsx`);
+    const safeCarreraF = carrera.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const safeNivelF = nivel.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    XLSX.writeFile(wb, `Lista_${safeCarreraF}_${safeNivelF}.xlsx`);
 }
 
 init();
