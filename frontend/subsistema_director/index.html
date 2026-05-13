@@ -880,6 +880,7 @@ function createProSheet(dataJson, titulo, area, especialidad, nivel) {
     const ws = XLSX.utils.aoa_to_sheet(data);
     
     const styleTitulo = { font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "1E293B" } }, alignment: { horizontal: "center", vertical: "center" } };
+    const styleTituloCeleste = { font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "0EA5E9" } }, alignment: { horizontal: "center", vertical: "center" } };
     const styleSubTitulo = { font: { bold: true, sz: 11, color: { rgb: "0EA5E9" } }, alignment: { horizontal: "left" } };
     const styleHeader = { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "334155" } }, alignment: { horizontal: "center", vertical: "center" }, border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} } };
     const styleDataCenter = { alignment: { horizontal: "center", vertical: "center" }, border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} } };
@@ -889,7 +890,7 @@ function createProSheet(dataJson, titulo, area, especialidad, nivel) {
     
     // Estilizar Título principal
     if (ws['A1']) ws['A1'].s = styleTitulo;
-    if (ws['A2']) ws['A2'].s = styleTitulo;
+    if (ws['A2']) ws['A2'].s = styleTituloCeleste;
     ws['!merges'] = [
         { s: { r: 0, c: 0 }, e: { r: 0, c: range.e.c } },
         { s: { r: 1, c: 0 }, e: { r: 1, c: range.e.c } }
@@ -1030,24 +1031,52 @@ function exportarExcelPro() {
       };
 
       for (const area in dirData.grupos) {
-        for (const carrera in dirData.grupos[area]) {
-          const niveles = dirData.grupos[area][carrera];
-          const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99));
-
+        if (area === 'humanistica') {
           const data = [];
-          sortedNiveles.forEach(([nivel, d]) => {
-            d.alumnos.forEach((a) => {
-              data.push({
-                'Nivel/Curso': nivel, 'CI': a.carnet || 'S/N', 'Apellidos': a.apellido,
-                'Nombres': a.nombre, 'Paralelo': a.paralelo || 'A', 'Estado': a.estado, 'Fecha Inscripción': a.fecha_inscripcion || ''
+          for (const carrera in dirData.grupos[area]) {
+            const niveles = dirData.grupos[area][carrera];
+            const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99));
+            sortedNiveles.forEach(([nivel, d]) => {
+              d.alumnos.forEach((a) => {
+                data.push({
+                  'Nivel/Curso': nivel,
+                  'Especialidad': carrera === 'humanistica' ? 'Ninguna' : carrera,
+                  'CI': a.carnet || 'S/N', 'Apellidos': a.apellido,
+                  'Nombres': a.nombre, 'Paralelo': a.paralelo || 'A', 'Estado': a.estado, 'Fecha Inscripción': a.fecha_inscripcion || ''
+                });
               });
             });
-          });
-
+          }
           if (data.length > 0) {
-            let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31) || "Estudiantes";
-            const ws = createProSheet(data, "REPORTE GENERAL DE ESTUDIANTES", area, carrera);
-            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            data.sort((a, b) => {
+               const oA = nivelOrder[a['Nivel/Curso'].replace(/ \(.*$/, '').trim()] || 99;
+               const oB = nivelOrder[b['Nivel/Curso'].replace(/ \(.*$/, '').trim()] || 99;
+               if (oA !== oB) return oA - oB;
+               return a['Especialidad'].localeCompare(b['Especialidad']);
+            });
+            const ws = createProSheet(data, "REPORTE GENERAL DE ESTUDIANTES", area, "Varias Especialidades");
+            XLSX.utils.book_append_sheet(wb, ws, "Humanística");
+          }
+        } else {
+          for (const carrera in dirData.grupos[area]) {
+            const niveles = dirData.grupos[area][carrera];
+            const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99));
+  
+            const data = [];
+            sortedNiveles.forEach(([nivel, d]) => {
+              d.alumnos.forEach((a) => {
+                data.push({
+                  'Nivel/Curso': nivel, 'CI': a.carnet || 'S/N', 'Apellidos': a.apellido,
+                  'Nombres': a.nombre, 'Paralelo': a.paralelo || 'A', 'Estado': a.estado, 'Fecha Inscripción': a.fecha_inscripcion || ''
+                });
+              });
+            });
+  
+            if (data.length > 0) {
+              let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31) || "Estudiantes";
+              const ws = createProSheet(data, "REPORTE GENERAL DE ESTUDIANTES", area, carrera);
+              XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            }
           }
         }
       }

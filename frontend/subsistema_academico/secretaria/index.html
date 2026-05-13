@@ -984,6 +984,7 @@
             const ws = XLSX.utils.aoa_to_sheet(data);
             
             const styleTitulo = { font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "1E293B" } }, alignment: { horizontal: "center", vertical: "center" } };
+            const styleTituloCeleste = { font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "0EA5E9" } }, alignment: { horizontal: "center", vertical: "center" } };
             const styleSubTitulo = { font: { bold: true, sz: 11, color: { rgb: "0EA5E9" } }, alignment: { horizontal: "left" } };
             const styleHeader = { font: { bold: true, color: { rgb: "FFFFFF" } }, fill: { fgColor: { rgb: "334155" } }, alignment: { horizontal: "center", vertical: "center" }, border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} } };
             const styleDataCenter = { alignment: { horizontal: "center", vertical: "center" }, border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} } };
@@ -992,7 +993,7 @@
             const range = XLSX.utils.decode_range(ws['!ref']);
             
             if (ws['A1']) ws['A1'].s = styleTitulo;
-            if (ws['A2']) ws['A2'].s = styleTitulo;
+            if (ws['A2']) ws['A2'].s = styleTituloCeleste;
             ws['!merges'] = [
                 { s: { r: 0, c: 0 }, e: { r: 0, c: range.e.c } },
                 { s: { r: 1, c: 0 }, e: { r: 1, c: range.e.c } }
