@@ -212,7 +212,7 @@ header{background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(12px);border-bottom
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -1317,11 +1317,63 @@ function descargarExcelCurso(area, carrera, nivel) {
 
     const ws = XLSX.utils.aoa_to_sheet(data);
     
-    // Combinar celdas para el título
+    // ESTILOS PRO
+    const styleTitulo = {
+        font: { bold: true, sz: 14, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "1E293B" } },
+        alignment: { horizontal: "center", vertical: "center" }
+    };
+    const styleSubTitulo = {
+        font: { bold: true, sz: 12, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "0EA5E9" } },
+        alignment: { horizontal: "center", vertical: "center" }
+    };
+    const styleMetaKey = { font: { bold: true, color: { rgb: "1E293B" } } };
+    const styleHeader = {
+        font: { bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "334155" } },
+        alignment: { horizontal: "center", vertical: "center" },
+        border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+    };
+    const styleDataCenter = {
+        alignment: { horizontal: "center", vertical: "center" },
+        border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+    };
+    const styleDataLeft = {
+        alignment: { horizontal: "left", vertical: "center" },
+        border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+    };
+
+    // Aplicar estilos a celdas específicas
+    ws['A1'].s = styleTitulo;
+    ws['A2'].s = styleSubTitulo;
+    
+    ws['A4'].s = styleMetaKey; ws['A5'].s = styleMetaKey; ws['A6'].s = styleMetaKey; ws['A7'].s = styleMetaKey;
+    
+    // Headers de tabla (Fila 9, index 8)
+    const cols = ['A','B','C','D','E','F','G'];
+    cols.forEach(c => {
+        if(ws[`${c}9`]) ws[`${c}9`].s = styleHeader;
+    });
+
+    // Datos (Fila 10 en adelante)
+    for (let i = 0; i < alumnos.length; i++) {
+        let r = 10 + i;
+        if(ws[`A${r}`]) ws[`A${r}`].s = styleDataCenter;
+        if(ws[`B${r}`]) ws[`B${r}`].s = styleDataCenter;
+        if(ws[`C${r}`]) ws[`C${r}`].s = styleDataLeft;
+        if(ws[`D${r}`]) ws[`D${r}`].s = styleDataLeft;
+        if(ws[`E${r}`]) ws[`E${r}`].s = styleDataCenter;
+        if(ws[`F${r}`]) ws[`F${r}`].s = styleDataCenter;
+        if(ws[`G${r}`]) ws[`G${r}`].s = styleDataCenter;
+    }
+
+    // Combinar celdas para el título y darles altura
     ws['!merges'] = [
         { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // CEA Pailon
         { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }  // Lista Oficial
     ];
+    ws['!rows'] = [ { hpt: 25 }, { hpt: 20 } ]; // Altura de fila para títulos
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Lista Curso");
