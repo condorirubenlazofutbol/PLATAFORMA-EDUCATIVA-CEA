@@ -1003,7 +1003,7 @@ async function modalAsignarNivel(id, nombre) {
     const asignacionesHumanistica = {};
     const asignacionesTecnica = {};
     (dirData.docentes || []).forEach(d => {
-        if (d.id !== id && d.nivel_asignado) {
+        if (d.nivel_asignado) {
             const isT = (d.area_designada && d.area_designada.toLowerCase().includes('tecnica')) || 
                         (d.especialidad && Object.keys(dirData.grupos?.tecnica || {}).includes(d.especialidad));
             const nombreDocente = `${d.nombre} ${d.apellido}`.trim();
