@@ -818,73 +818,99 @@ async function resetPassword(id, carnet) {
 function exportarExcelPro() {
   if(!dirData || !dirData.grupos) return alert("Espera a que carguen los datos del directorio.");
   const wb = XLSX.utils.book_new();
+  const tabDocActive = document.getElementById('dTab-doc').classList.contains('active');
 
-  const nivelOrder = {
-    'Nivel Básico': 1, 'Nivel Auxiliar': 2, 'Nivel Medio I': 3, 'Nivel Medio II': 4,
-    'Aplicados (Primer Año)': 1, 'Complementarios (Segundo Año)': 2, 'Especializados (Tercer Año)': 3
-  };
+  if (!tabDocActive) {
+      const nivelOrder = {
+        'Nivel Básico': 1, 'Nivel Auxiliar': 2, 'Nivel Medio I': 3, 'Nivel Medio II': 4,
+        'Aplicados (Primer Año)': 1, 'Complementarios (Segundo Año)': 2, 'Especializados (Tercer Año)': 3
+      };
 
-  // Crear una hoja por cada Carrera (ordenada por niveles lógicamente)
-  for (const area in dirData.grupos) {
-    for (const carrera in dirData.grupos[area]) {
-      const niveles = dirData.grupos[area][carrera];
-      
-      const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => {
-        return (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99);
-      });
-
-      const data = [];
-      sortedNiveles.forEach(([nivel, d]) => {
-        d.alumnos.forEach((a) => {
-          data.push({
-            'Nivel/Curso': nivel,
-            'CI': a.carnet || 'S/N',
-            'Apellidos': a.apellido,
-            'Nombres': a.nombre,
-            'Paralelo': a.paralelo || 'A',
-            'Estado': a.estado,
-            'Fecha Inscripción': a.fecha_inscripcion || ''
+      for (const area in dirData.grupos) {
+        for (const carrera in dirData.grupos[area]) {
+          const niveles = dirData.grupos[area][carrera];
+          const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => {
+            return (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99);
           });
-        });
-      });
 
-      if (data.length > 0) {
-        let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31);
-        if(!sheetName) sheetName = "Estudiantes";
-        const ws = XLSX.utils.json_to_sheet(data);
-        applyProTableStyles(ws);
-        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+          const data = [];
+          sortedNiveles.forEach(([nivel, d]) => {
+            d.alumnos.forEach((a) => {
+              data.push({
+                'Nivel/Curso': nivel,
+                'CI': a.carnet || 'S/N',
+                'Apellidos': a.apellido,
+                'Nombres': a.nombre,
+                'Paralelo': a.paralelo || 'A',
+                'Estado': a.estado,
+                'Fecha Inscripción': a.fecha_inscripcion || ''
+              });
+            });
+          });
+
+          if (data.length > 0) {
+            let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31);
+            if(!sheetName) sheetName = "Estudiantes";
+            const ws = XLSX.utils.json_to_sheet(data);
+            applyProTableStyles(ws);
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+          }
+        }
       }
-    }
-  }
-
-  // Hoja docentes
-  if (dirData.docentes && dirData.docentes.length > 0) {
-      const catalogo = dirData.catalogo_areas || {};
-      const carrerasTecnicas = new Set(dirData.grupos && dirData.grupos['tecnica'] ? Object.keys(dirData.grupos['tecnica']) : []);
       
-      const docs = dirData.docentes.map(d => {
-        let areaDoc = catalogo[d.especialidad];
-        if (!areaDoc) areaDoc = carrerasTecnicas.has(d.especialidad) ? 'Técnica' : 'Humanística';
-        else areaDoc = areaDoc.toLowerCase().includes('tec') ? 'Técnica' : 'Humanística';
+      if (wb.SheetNames.length === 0) return alert("No hay estudiantes para exportar.");
+      XLSX.writeFile(wb, `Estudiantes_CEA_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
 
-        return {
-          'CI': d.carnet, 
-          'Apellidos': d.apellido, 
-          'Nombres': d.nombre,
-          'Área': areaDoc,
-          'Especialidad / Carrera': d.especialidad || 'Sin Especialidad',
-          'Cursos Asignados': d.nivel_asignado || 'Sin Asignar',
-          'Estado': d.estado, 
-          'Fecha Ingreso': d.fecha_ingreso
-        };
-      });
-      const ws = XLSX.utils.json_to_sheet(docs);
-      applyProTableStyles(ws);
-      XLSX.utils.book_append_sheet(wb, ws, "Plantel Docente");
+  } else {
+      if (dirData.docentes && dirData.docentes.length > 0) {
+          const catalogo = dirData.catalogo_areas || {};
+          const carrerasTecnicas = new Set(dirData.grupos && dirData.grupos['tecnica'] ? Object.keys(dirData.grupos['tecnica']) : []);
+          
+          const groupedDocentes = {};
+          
+          dirData.docentes.forEach(d => {
+            let esp = d.especialidad;
+            if (!esp || esp.trim() === '' || esp === 'Sin Especialidad') esp = 'Área General';
+            
+            if (!groupedDocentes[esp]) groupedDocentes[esp] = [];
+            
+            let areaDoc = catalogo[d.especialidad];
+            if (!areaDoc) areaDoc = carrerasTecnicas.has(d.especialidad) ? 'Técnica' : 'Humanística';
+            else areaDoc = areaDoc.toLowerCase().includes('tec') ? 'Técnica' : 'Humanística';
+
+            groupedDocentes[esp].push({
+              'CI': d.carnet, 
+              'Apellidos': d.apellido, 
+              'Nombres': d.nombre,
+              'Área': areaDoc,
+              'Especialidad / Carrera': esp,
+              'Cursos Asignados': d.nivel_asignado || 'Sin Asignar',
+              'Estado': d.estado, 
+              'Fecha Ingreso': d.fecha_ingreso
+            });
+          });
+          
+          for (const esp in groupedDocentes) {
+              let sheetName = esp.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31);
+              if(!sheetName) sheetName = "Docentes";
+              
+              const ws = XLSX.utils.json_to_sheet(groupedDocentes[esp]);
+              applyProTableStyles(ws);
+              
+              let finalName = sheetName;
+              let counter = 1;
+              while(wb.SheetNames.includes(finalName)) {
+                  finalName = sheetName.substring(0, 28) + "_" + counter;
+                  counter++;
+              }
+              XLSX.utils.book_append_sheet(wb, ws, finalName);
+          }
+      } else {
+          return alert("No hay docentes para exportar.");
+      }
+      
+      XLSX.writeFile(wb, `Docentes_CEA_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
   }
-
-  XLSX.writeFile(wb, `Directorio_CEA_Pailon_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
 }
 
 function applyProTableStyles(ws) {
