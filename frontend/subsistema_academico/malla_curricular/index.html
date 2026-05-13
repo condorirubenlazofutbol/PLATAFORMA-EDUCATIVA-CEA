@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Malla Curricular | EduConnect Pro</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         :root {
@@ -240,9 +240,33 @@
             const ws = XLSX.utils.aoa_to_sheet([headers, ...ejemplos]);
             // Estilos de ancho de columnas
             ws['!cols'] = headers.map((h, i) => ({ wch: [10,12,22,30,28,35,28,35,28,35,28,35][i] || 20 }));
+            applyProTableStyles(ws);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Malla_CEA');
             XLSX.writeFile(wb, 'Plantilla_Malla_Curricular_CEA.xlsx');
+        }
+
+        function applyProTableStyles(ws) {
+            const styleHeader = {
+                font: { bold: true, color: { rgb: "FFFFFF" } },
+                fill: { fgColor: { rgb: "334155" } },
+                alignment: { horizontal: "center", vertical: "center" },
+                border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+            };
+            const styleDataCenter = {
+                alignment: { horizontal: "center", vertical: "center" },
+                border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+            };
+            if (!ws['!ref']) return;
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const headerCell = XLSX.utils.encode_cell({ r: 0, c: C });
+                if (ws[headerCell]) ws[headerCell].s = styleHeader;
+                for (let R = 1; R <= range.e.r; ++R) {
+                    const dataCell = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (ws[dataCell]) ws[dataCell].s = styleDataCenter;
+                }
+            }
         }
 
         // ─── VALIDADOR EXCEL PRO ──────────────────────────────────────────

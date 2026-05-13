@@ -851,7 +851,9 @@ function exportarExcelPro() {
       if (data.length > 0) {
         let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31);
         if(!sheetName) sheetName = "Estudiantes";
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), sheetName);
+        const ws = XLSX.utils.json_to_sheet(data);
+        applyProTableStyles(ws);
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
       }
     }
   }
@@ -862,10 +864,38 @@ function exportarExcelPro() {
         'CI': d.carnet, 'Apellidos': d.apellido, 'Nombres': d.nombre, 'Email': d.email,
         'Especialidad': d.especialidad, 'Estado': d.estado, 'Fecha Ingreso': d.fecha_ingreso
       }));
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docs), "Plantel Docente");
+      const ws = XLSX.utils.json_to_sheet(docs);
+      applyProTableStyles(ws);
+      XLSX.utils.book_append_sheet(wb, ws, "Plantel Docente");
   }
 
   XLSX.writeFile(wb, `Directorio_CEA_Pailon_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
+}
+
+function applyProTableStyles(ws) {
+    const styleHeader = {
+        font: { bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "334155" } },
+        alignment: { horizontal: "center", vertical: "center" },
+        border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+    };
+    const styleDataCenter = {
+        alignment: { horizontal: "center", vertical: "center" },
+        border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+    };
+    if (!ws['!ref']) return;
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+        const headerCell = XLSX.utils.encode_cell({ r: 0, c: C });
+        if (ws[headerCell]) ws[headerCell].s = styleHeader;
+        for (let R = 1; R <= range.e.r; ++R) {
+            const dataCell = XLSX.utils.encode_cell({ r: R, c: C });
+            if (ws[dataCell]) ws[dataCell].s = styleDataCenter;
+        }
+    }
+    const colWidths = [];
+    for (let C = range.s.c; C <= range.e.c; ++C) colWidths.push({wch: 22});
+    ws['!cols'] = colWidths;
 }
 
 // ── Nombrar Jefe de Carrera ───────────────────────────

@@ -319,7 +319,7 @@
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <script src="../../portal/js/api.js"></script>
 <script>
     // ── Datos Iniciales ─────────────────────────────────────────────
@@ -483,10 +483,35 @@
             ["Aplicados (Primer Año)", "Matemática Aplicada"]
         ];
         const ws = XLSX.utils.aoa_to_sheet(wsData);
-        // Ajustar ancho de columnas
-        ws['!cols'] = [{wch: 30}, {wch: 40}];
+        applyProTableStyles(ws);
         XLSX.utils.book_append_sheet(wb, ws, "Plantilla_Malla");
         XLSX.writeFile(wb, "Plantilla_Malla_Curricular_CEA.xlsx");
+    }
+
+    function applyProTableStyles(ws) {
+        const styleHeader = {
+            font: { bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "334155" } },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+        };
+        const styleDataCenter = {
+            alignment: { horizontal: "center", vertical: "center" },
+            border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+        };
+        if (!ws['!ref']) return;
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const headerCell = XLSX.utils.encode_cell({ r: 0, c: C });
+            if (ws[headerCell]) ws[headerCell].s = styleHeader;
+            for (let R = 1; R <= range.e.r; ++R) {
+                const dataCell = XLSX.utils.encode_cell({ r: R, c: C });
+                if (ws[dataCell]) ws[dataCell].s = styleDataCenter;
+            }
+        }
+        const colWidths = [];
+        for (let C = range.s.c; C <= range.e.c; ++C) colWidths.push({wch: 35});
+        ws['!cols'] = colWidths;
     }
 
     async function importarMallaExcel(input) {

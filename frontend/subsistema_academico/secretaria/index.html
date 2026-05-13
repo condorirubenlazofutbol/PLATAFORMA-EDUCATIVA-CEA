@@ -7,7 +7,7 @@
     <meta http-equiv="pragma" content="no-cache">
     <title>Secretaría | EduConnect Pro v2</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
         
@@ -710,6 +710,7 @@
                 ["Maria", "Lopez", "7654321"]
             ];
             const ws = XLSX.utils.aoa_to_sheet(data);
+            applyProTableStyles(ws);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Estudiantes");
             XLSX.writeFile(wb, "Plantilla_Estudiantes_CEA.xlsx");
@@ -722,6 +723,7 @@
                 ["Ana", "Suarez", "5544332"]
             ];
             const ws = XLSX.utils.aoa_to_sheet(data);
+            applyProTableStyles(ws);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Docentes");
             XLSX.writeFile(wb, "Plantilla_Docentes_CEA.xlsx");
@@ -973,8 +975,35 @@
                 'Fecha Inscripción': i.fecha_inscripcion
             })));
             const wb = XLSX.utils.book_new();
+            applyProTableStyles(ws);
             XLSX.utils.book_append_sheet(wb, ws, 'Inscritos');
             XLSX.writeFile(wb, `Inscritos_CEA_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
+        }
+
+        function applyProTableStyles(ws) {
+            const styleHeader = {
+                font: { bold: true, color: { rgb: "FFFFFF" } },
+                fill: { fgColor: { rgb: "334155" } },
+                alignment: { horizontal: "center", vertical: "center" },
+                border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+            };
+            const styleDataCenter = {
+                alignment: { horizontal: "center", vertical: "center" },
+                border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+            };
+            if (!ws['!ref']) return;
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const headerCell = XLSX.utils.encode_cell({ r: 0, c: C });
+                if (ws[headerCell]) ws[headerCell].s = styleHeader;
+                for (let R = 1; R <= range.e.r; ++R) {
+                    const dataCell = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (ws[dataCell]) ws[dataCell].s = styleDataCenter;
+                }
+            }
+            const colWidths = [];
+            for (let C = range.s.c; C <= range.e.c; ++C) colWidths.push({wch: 22});
+            ws['!cols'] = colWidths;
         }
 
         function renderUserTable(list) {
