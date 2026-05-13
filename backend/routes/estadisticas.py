@@ -359,7 +359,8 @@ def eliminar_inscripciones(data: EliminarInscripcionesRequest, current_user: dic
             t_ids = list(target_ids)
             cur.execute("DELETE FROM progreso WHERE usuario_id = ANY(%s)", (t_ids,))
             cur.execute("DELETE FROM inscripciones WHERE usuario_id = ANY(%s)", (t_ids,))
-            cur.execute("DELETE FROM certificados WHERE usuario_id = ANY(%s)", (t_ids,))
+            cur.execute("DELETE FROM certificados WHERE estudiante_id = ANY(%s)", (t_ids,))
+            cur.execute("DELETE FROM constancias WHERE estudiante_id = ANY(%s)", (t_ids,))
             
             # Si hay docentes entre los eliminados, desvincularlos de los cursos (set null en vez de borrar el curso)
             cur.execute("UPDATE modulos SET docente_id = NULL WHERE docente_id = ANY(%s)", (t_ids,))
