@@ -1004,7 +1004,8 @@ async function modalAsignarNivel(id, nombre) {
     const asignacionesTecnica = {};
     (dirData.docentes || []).forEach(d => {
         if (d.id !== id && d.nivel_asignado) {
-            const isT = d.area_designada && d.area_designada.toLowerCase().includes('tecnica');
+            const isT = (d.area_designada && d.area_designada.toLowerCase().includes('tecnica')) || 
+                        (d.especialidad && Object.keys(dirData.grupos?.tecnica || {}).includes(d.especialidad));
             const nombreDocente = `${d.nombre} ${d.apellido}`.trim();
             if (isT) {
                 asignacionesTecnica[d.nivel_asignado] = nombreDocente;
@@ -1048,12 +1049,14 @@ async function modalAsignarNivel(id, nombre) {
                         // La clave puede ser "Aplicados... (Turno Noche)" o "Aplicados... (Turno Noche) - Paralelo A"
                         if (nivelKey.startsWith(c.base)) {
                             const estudiantes = niveles[nivelKey];
+                            if (estudiantes.total >= 20) {
                                 const matchTurno = nivelKey.match(/\((Mañana|Tarde|Noche)\)/) || nivelKey.match(/\(Turno (.*?)\)/);
                                 const turno = matchTurno ? matchTurno[1] : 'Noche';
                                 const matchParalelo = nivelKey.match(/Paralelo ([A-Z])$/);
                                 const paralelo = matchParalelo ? matchParalelo[1] : null;
                                 const mapKey = `${turno}-${paralelo}`;
                                 paralelosEnCurso.set(mapKey, { p: paralelo, t: turno });
+                            }
                         }
                     }
                 }
@@ -1080,8 +1083,8 @@ async function modalAsignarNivel(id, nombre) {
                     const val = p ? `${c.base} (${t}) - Paralelo ${p}` : `${c.base} (${t})`;
                     const checked = nivelActual.includes(c.base) && (p ? nivelActual.includes(`Paralelo ${p}`) : true) && nivelActual.includes(t) ? 'checked' : '';
                     const asignadoA = asignacionesHumanistica[val];
-                    const colorLabel = asignadoA ? 'color:#ef4444;' : 'color:#f8fafc;';
-                    const extraText = asignadoA ? ` <small>(Asignado a: ${asignadoA})</small>` : '';
+                    const colorLabel = asignadoA ? 'color:#ef4444; font-weight:bold;' : 'color:#f8fafc;';
+                    const extraText = asignadoA ? ` <small>🔴 (Asignado a: ${asignadoA})</small>` : '';
                     checkboxesHtml += `
                     <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
                         <input type="checkbox" id="ch-${c.id}-${p ? p.toLowerCase() : 'all'}-${t.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
@@ -1117,11 +1120,13 @@ async function modalAsignarNivel(id, nombre) {
             const nivelesCarrera = dirData.grupos['tecnica'][espDocente];
             Object.keys(nivelesCarrera).forEach(nivelKey => {
                 const estudiantes = nivelesCarrera[nivelKey];
+                if (estudiantes.total >= 15) {
                     let label = nivelKey;
                     if (label.includes('Paralelo')) {
                         label = label.replace(' - Paralelo ', ' — Paralelo ');
                     }
                     nivelesDisponiblesMap.set(nivelKey, label);
+                }
             });
         }
 
@@ -1168,8 +1173,8 @@ async function modalAsignarNivel(id, nombre) {
                     isSelected = n.value.startsWith(nivelActual) && n.value.includes('Noche');
                 }
                 const asignadoA = asignacionesTecnica[n.value];
-                const labelAsignado = asignadoA ? `${n.label} (Asignado a: ${asignadoA})` : n.label;
-                const styleAsignado = asignadoA ? 'color:#ef4444;' : '';
+                const labelAsignado = asignadoA ? `🔴 ${n.label} (Asignado a: ${asignadoA})` : n.label;
+                const styleAsignado = asignadoA ? 'color:#ef4444; font-weight:bold;' : '';
                 return `<option value="${n.value}" ${isSelected ? 'selected' : ''} style="${styleAsignado}">${labelAsignado}</option>`;
             }).join('');
             
