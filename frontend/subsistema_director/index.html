@@ -1224,7 +1224,7 @@ async function modalAsignarNivel(id, nombre) {
         }
     });
 
-    if (result.isConfirmed && result.value) {
+    if (result.isConfirmed && result.value !== undefined && result.value !== null) {
         try {
             const r = await fetch(`${API_BASE}/auth/usuarios/${id}/especialidad`, {
                 method: 'PUT',
