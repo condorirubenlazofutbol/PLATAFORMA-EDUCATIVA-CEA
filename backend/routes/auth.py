@@ -116,11 +116,11 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return {"id": row[0], "nombre": row[1], "apellido": row[2], "email": row[3], "rol": row[4], "nivel_asignado": row[5], "subsistema_id": row[6]}
 
-def generate_cea_email(nombre: str, apellido: str):
-    # Usar solo primer nombre y primer apellido (paterno)
+def generate_cea_email(nombre: str, apellido: str, carnet: str = ""):
+    # Usar solo primer nombre, primer apellido y carnet para asegurar unicidad absoluta
     clean_n = nombre.strip().split(" ")[0].lower()
     clean_a = apellido.strip().split(" ")[0].lower()
-    return f"{clean_n}{clean_a}" + "@ceapailon.com"
+    return f"{clean_n}{clean_a}{str(carnet).strip()}@ceapailon.com"
 
 import math
 
@@ -160,7 +160,7 @@ def register_usuario(data: RegistroUsuario):
         raise HTTPException(status_code=500, detail="Error de base de datos")
     try:
         cur = conn.cursor()
-        email = generate_cea_email(data.nombre, data.apellido)
+        email = generate_cea_email(data.nombre, data.apellido, str(data.carnet).strip())
         hashed = auth.get_password_hash(str(data.carnet).strip())
         
         # Verificar si ya existe el carnet
@@ -326,7 +326,7 @@ async def importar_estudiantes_excel(nivel: str, turno: str = "Noche", file: Upl
                 errores.append(f"Fila ignorada: nombre o carnet vacÃ­o")
                 continue
             
-            email = generate_cea_email(nombres, apellidos)
+            email = generate_cea_email(nombres, apellidos, carnet)
             password = auth.get_password_hash(carnet)
             
             try:
@@ -769,9 +769,10 @@ async def bulk_register(nivel: str, turno: str = "Noche", rol: str = "estudiante
         apellido = str(row[1]).strip() if len(row) > 1 and row[1] else ""
         
         try:
+            s_carnet = str(carnet).strip()
             clean_n = nombre.split(' ')[0].lower()
             clean_a = apellido.split(' ')[0].lower()
-            email = f"{clean_n}{clean_a}@ceapailon.com"
+            email = f"{clean_n}{clean_a}{s_carnet}@ceapailon.com"
             
             s_carnet = str(carnet).strip()
             hashed = auth.get_password_hash(s_carnet)
