@@ -1343,7 +1343,8 @@ async function modalAsignarNivel(id, nombre) {
             if (isT) {
                 asignacionesTecnica[d.nivel_asignado] = nombreDocente;
             } else {
-                d.nivel_asignado.split(',').forEach(n => asignacionesHumanistica[n.trim()] = nombreDocente);
+                if (!asignacionesHumanistica[d.especialidad]) asignacionesHumanistica[d.especialidad] = {};
+                d.nivel_asignado.split(',').forEach(n => asignacionesHumanistica[d.especialidad][n.trim()] = nombreDocente);
             }
         }
     });
@@ -1410,9 +1411,13 @@ async function modalAsignarNivel(id, nombre) {
                 [...paralelosEnCurso.values()].sort((a,b) => (a.t + (a.p||'')).localeCompare(b.t + (b.p||''))).forEach(({p, t}) => {
                     const val = p ? `${c.base} (${t}) - Paralelo ${p}` : `${c.base} (${t})`;
                     const checked = nivelActual.includes(c.base) && (p ? nivelActual.includes(`Paralelo ${p}`) : true) && nivelActual.includes(t) ? 'checked' : '';
-                    const asignadoA = asignacionesHumanistica[val];
-                    const colorLabel = asignadoA ? 'color:#ef4444; font-weight:bold;' : 'color:#f8fafc;';
-                    const extraText = asignadoA ? ` <small>🔴 (Asignado a: ${asignadoA})</small>` : '';
+                    const asignacionesPorEspecialidad = asignacionesHumanistica[espDocente] || {};
+                    const asignadoA = asignacionesPorEspecialidad[val];
+                    const esMismoDocente = asignadoA === nombre; // if assigned to the CURRENT teacher
+                    const isAsignadoOtro = asignadoA && !esMismoDocente;
+                    
+                    const colorLabel = isAsignadoOtro ? 'color:#ef4444; font-weight:bold;' : 'color:#f8fafc;';
+                    const extraText = isAsignadoOtro ? ` <small>🔴 (Asignado a: ${asignadoA})</small>` : '';
                     checkboxesHtml += `
                     <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
                         <input type="checkbox" id="ch-${c.id}-${p ? p.toLowerCase() : 'all'}-${t.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
