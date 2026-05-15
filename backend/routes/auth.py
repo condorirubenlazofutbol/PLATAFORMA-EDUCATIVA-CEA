@@ -32,7 +32,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         if not conn:
             raise HTTPException(status_code=500, detail="Database connection error")
         cur = conn.cursor()
-        cur.execute("SELECT id, nombre, email, password, rol, nivel_asignado, estado, subsistema_id FROM usuarios WHERE email=%s", (form_data.username,))
+        cur.execute("SELECT id, nombre, email, password, rol, nivel_asignado, estado, subsistema_id, es_jefe FROM usuarios WHERE email=%s", (form_data.username,))
         row = cur.fetchone()
         cur.close(); conn.close()
         
@@ -54,10 +54,15 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
         token = auth.create_access_token(data={"sub": row[2]})
         rol_retornado = row[4]
+        es_jefe = row[8]
+        
         # Normalizar roles: unificar variantes para que el frontend funcione correctamente
         if rol_retornado == 'profesor':
             rol_retornado = 'docente'
         elif rol_retornado == 'jefe':
+            rol_retornado = 'jefe_carrera'
+            
+        if es_jefe:
             rol_retornado = 'jefe_carrera'
         
         return {"access_token": token, "token_type": "bearer",
@@ -443,11 +448,17 @@ def get_usuarios(current_user: dict = Depends(get_current_user)):
         cur = conn.cursor()
         cur.execute("""
             SELECT u.id, u.nombre, u.apellido, u.email, u.rol, u.nivel_asignado, 
-                   u.carnet, u.estado, u.fecha_registro
+                   u.carnet, u.estado, u.fecha_registro, u.es_jefe
             FROM usuarios u
             ORDER BY u.rol, u.nombre
         """)
-        return rows_to_dicts(cur, cur.fetchall())
+        
+        usuarios_list = rows_to_dicts(cur, cur.fetchall())
+        for u in usuarios_list:
+            if u.get('es_jefe'):
+                u['rol'] = 'jefe_carrera'
+                
+        return usuarios_list
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
