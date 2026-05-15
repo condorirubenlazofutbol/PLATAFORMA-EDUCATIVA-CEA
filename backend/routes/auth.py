@@ -144,8 +144,11 @@ def rebalancear_paralelos(cur, carrera_id, nivel, area, turno):
     if total == 0:
         return
         
-    # Regla de habilitación: 15 estudiantes = 1 paralelo, 30 = 2 paralelos, 45 = 3 paralelos
-    num_paralelos = max(1, total // 15)
+    # Regla de habilitación: Para asegurar que cada paralelo resultante tenga al menos el mínimo requerido,
+    # dividimos el total por el requerimiento mínimo.
+    # Humanística: 20 por paralelo. Técnica: 15 por paralelo.
+    minimo_requerido = 20 if area.lower() in ['humanistica', 'humanística'] else 15
+    num_paralelos = max(1, total // minimo_requerido)
     
     # 2. Intercalar estudiantes en los paralelos (A, B, C...)
     for index, (insc_id,) in enumerate(inscritos):
