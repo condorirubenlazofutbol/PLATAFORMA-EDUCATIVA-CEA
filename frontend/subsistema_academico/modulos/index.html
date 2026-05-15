@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aula Virtual | EduConnect Pro</title>
+    <title>Aula Virtual | CEA Pailón</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -11,8 +11,8 @@
         :root {
             --primary: #0ea5e9; --primary-hover: #0284c7;
             --secondary: #48d18e; --violet: #8b5cf6; 
-            --bg-dark: #0b0f1a; --card-bg: rgba(19, 25, 41, 0.7); 
-            --card-inner: rgba(255, 255, 255, 0.03);
+            --bg-dark: #0b0f1a; --card-bg: rgba(19, 25, 41, 0.9); 
+            --card-inner: rgba(255,255,255,0.02);
             --border: rgba(255, 255, 255, 0.1); --border-light: rgba(255, 255, 255, 0.05);
             --text: #f8fafc; --muted: #94a3b8;
         }
@@ -21,106 +21,170 @@
         
         body::before {
             content: ''; position: fixed; inset: 0;
-            background: radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.15), transparent 50%),
-                        radial-gradient(circle at 100% 100%, rgba(139, 92, 246, 0.1), transparent 50%);
+            background: radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.12), transparent 50%),
+                        radial-gradient(circle at 100% 100%, rgba(139, 92, 246, 0.08), transparent 50%);
             z-index: -1; pointer-events: none;
         }
 
-        /* Navbar */
+        /* ── Navbar ── */
         header { 
-            background: rgba(11, 15, 26, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); 
-            padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; 
+            background: rgba(11, 15, 26, 0.85); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border); 
+            padding: 0.9rem 1.5rem; display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100; 
         }
-        .role-badge { background: var(--primary); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-        .btn-exit { padding: 8px 24px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: #fff; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .header-left { display: flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: 0.5px; font-size: 1rem; }
+        .role-badge {
+            background: linear-gradient(135deg, var(--primary), #0284c7);
+            color: white; padding: 5px 14px; border-radius: 20px;
+            font-size: 0.78rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;
+            box-shadow: 0 0 12px rgba(14,165,233,0.3);
+        }
+        .btn-exit {
+            padding: 8px 20px; border-radius: 8px; background: transparent;
+            border: 1px solid var(--border); color: #fff; font-size: 0.85rem;
+            font-weight: 600; cursor: pointer; transition: 0.2s; text-decoration: none;
+        }
         .btn-exit:hover { background: rgba(244, 63, 94, 0.1); border-color: #f43f5e; color: #f43f5e; }
 
-        /* Main Container */
-        .container { max-width: 900px; margin: 0 auto; width: 100%; padding: 3rem 1.5rem; flex: 1; }
+        /* ── Container ── */
+        .container { max-width: 860px; margin: 0 auto; width: 100%; padding: 2.5rem 1.5rem; flex: 1; }
         
-        /* Header Hero */
-        .hero { text-align: center; margin-bottom: 3rem; }
-        .hero h1 { font-size: 2.5rem; font-weight: 900; margin-bottom: 0.5rem; background: linear-gradient(to right, #fff, #a5b4fc); -webkit-background-clip: text; color: transparent; }
-        .hero p { color: var(--muted); font-size: 1rem; }
+        /* ── Hero ── */
+        .hero { text-align: center; margin-bottom: 2.5rem; }
+        .hero h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .hero h1 span { background: linear-gradient(to right, #fff, #7dd3fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { color: var(--muted); font-size: 0.95rem; line-height: 1.6; }
+        .hero p strong { color: var(--text); }
 
-        /* Accordion Modules */
-        .module-list { display: flex; flex-direction: column; gap: 1rem; }
+        /* ── Module Accordion ── */
+        .module-list { display: flex; flex-direction: column; gap: 0.75rem; }
         
         .module-item { 
-            background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; 
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; 
             overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .module-item:hover { border-color: rgba(14, 165, 233, 0.4); }
+        .module-item:hover { border-color: rgba(14, 165, 233, 0.35); }
+        .module-item.active { border-color: rgba(14, 165, 233, 0.5); }
         
         .module-header { 
-            padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; 
+            padding: 1.15rem 1.5rem; display: flex; align-items: center; justify-content: space-between; 
             cursor: pointer; user-select: none;
         }
-        .module-title { font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 12px; }
-        .module-title span.num { color: var(--primary); font-weight: 900; }
-        .module-icon { font-size: 0.8rem; color: var(--muted); transition: transform 0.3s; }
+        .module-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .module-title .num { color: var(--primary); font-weight: 900; font-size: 1rem; }
+        .module-icon { font-size: 0.75rem; color: var(--muted); transition: transform 0.3s; }
         
-        /* Accordion Body */
         .module-body { 
             display: none; border-top: 1px solid var(--border); background: var(--card-inner); padding: 1.5rem; 
         }
         .module-item.active .module-body { display: block; animation: slideDown 0.3s ease forwards; }
         .module-item.active .module-icon { transform: rotate(180deg); }
 
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Theme Tabs */
-        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 5px; }
+        /* ── Theme Tabs ── */
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 4px; }
+        .tabs::-webkit-scrollbar { height: 3px; }
+        .tabs::-webkit-scrollbar-track { background: transparent; }
+        .tabs::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+
         .tab-btn { 
-            padding: 8px 20px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); 
-            border-radius: 20px; color: var(--muted); font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s; white-space: nowrap; 
+            padding: 7px 18px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); 
+            border-radius: 20px; color: var(--muted); font-weight: 700; font-size: 0.82rem;
+            cursor: pointer; transition: 0.2s; white-space: nowrap; font-family: 'Inter', sans-serif;
         }
-        .tab-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
-        .tab-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .tab-btn:hover { background: rgba(14,165,233,0.1); color: var(--primary); border-color: var(--primary); }
+        .tab-btn.active { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 0 10px rgba(14,165,233,0.3); }
 
-        /* Resource Box */
-        .resource-box { background: rgba(0,0,0,0.2); border: 1px solid var(--border-light); border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
-        .resource-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 0.85rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* Inputs & Buttons */
-        .input-url { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; color: white; font-family: inherit; font-size: 0.9rem; margin-bottom: 12px; transition: 0.2s; }
-        .input-url:focus { outline: none; border-color: var(--primary); background: rgba(14, 165, 233, 0.05); }
-        .btn-action { width: 100%; padding: 12px; border-radius: 8px; border: none; font-family: inherit; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: 0.2s; text-align: center; text-decoration: none; display: inline-block; }
-        
-        .btn-save { background: var(--primary); color: white; }
-        .btn-save:hover { background: var(--primary-hover); }
-        
-        .btn-view { background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--border); }
-        .btn-view:hover { background: var(--primary); border-color: var(--primary); }
+        /* ── Resource Box (Profesor) ── */
+        .resource-box {
+            background: #0f1628; border: 1px solid var(--border-light);
+            border-radius: 12px; padding: 1.2rem 1.25rem; margin-bottom: 0.9rem;
+        }
+        .resource-header {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+            font-size: 0.85rem; font-weight: 900; color: var(--primary);
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .resource-header.extra { color: #0ea5e9; }
 
-        .btn-empty { background: rgba(255,255,255,0.02); color: var(--muted); cursor: not-allowed; border: 1px dashed var(--border); }
+        .input-url {
+            width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+            border-radius: 8px; padding: 11px 14px; color: white; font-family: 'Inter', sans-serif;
+            font-size: 0.88rem; margin-bottom: 10px; transition: 0.2s;
+        }
+        .input-url:focus { outline: none; border-color: var(--primary); background: rgba(14, 165, 233, 0.06); }
+        .input-url::placeholder { color: rgba(148,163,184,0.5); }
 
-        .loading { text-align: center; padding: 3rem; color: var(--muted); font-size: 1.2rem; }
+        .btn-guardar {
+            width: 100%; padding: 11px; border-radius: 8px; border: none;
+            font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.9rem;
+            cursor: pointer; transition: all 0.2s;
+            background: var(--primary); color: white;
+        }
+        .btn-guardar:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(14, 165, 233, 0.35); }
+        .btn-guardar:active { transform: translateY(0); }
+
+        /* ── Student Grid ── */
+        .student-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.9rem; margin-top: 0.5rem;
+        }
+        .student-card {
+            background: rgba(255,255,255,0.025); border: 1px solid var(--border);
+            border-radius: 16px; padding: 1.4rem 0.8rem;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; gap: 10px; color: var(--text); text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .student-card:hover {
+            border-color: var(--primary); background: rgba(14, 165, 233, 0.1);
+            transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+        }
+        .student-card .s-icon { font-size: 2.5rem; transition: transform 0.25s; }
+        .student-card:hover .s-icon { transform: scale(1.12); }
+        .student-card .s-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); transition: color 0.25s; }
+        .student-card:hover .s-label { color: #fff; }
+        
+        .student-card.empty { opacity: 0.4; pointer-events: none; }
+        .student-card.empty .s-icon { filter: grayscale(1); opacity: 0.3; }
+        .student-card.empty .s-label { color: rgba(255,255,255,0.2); }
+
+        .student-card.extra-card { border-color: rgba(245,158,11,0.4); }
+        .student-card.extra-card:hover { border-color: #f59e0b; background: rgba(245,158,11,0.1); box-shadow: 0 12px 24px rgba(245,158,11,0.15); }
+
+        /* Loading */
+        .loading { text-align: center; padding: 2.5rem; color: var(--muted); font-size: 1rem; }
         
         @media (max-width: 600px) {
-            .hero h1 { font-size: 1.8rem; }
-            .container { padding: 2rem 1rem; }
-            .module-title { font-size: 1rem; }
+            .hero h1 { font-size: 1.7rem; }
+            .container { padding: 1.5rem 1rem; }
+            .module-title { font-size: 0.95rem; }
+            .student-grid { grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
+            .student-card { padding: 1.2rem 0.6rem; border-radius: 12px; }
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div style="font-weight:900; letter-spacing:1px; display:flex; align-items:center; gap:12px;">
-            <span id="roleBadge" class="role-badge">ESTUDIANTE</span>
+        <div class="header-left">
+            <span id="userFirstName">---</span>
+            <span id="roleBadge" class="role-badge">CARGANDO</span>
         </div>
-        <a href="../../portal/index.html" class="btn-exit">Volver al Portal</a>
+        <a href="../../portal/index.html" class="btn-exit">Salir</a>
     </header>
 
     <div class="container">
         <div class="hero">
-            <h1 id="welcomeText">¡Hola, ESTUDIANTE!</h1>
-            <p>Aquí tu aprendizaje. Selecciona un nivel y explora tus módulos de estudio.</p>
+            <h1>¡Hola, <span id="welcomeName">BIENVENIDO</span>!</h1>
+            <p id="heroSub">Cargando información...</p>
         </div>
 
         <div class="module-list" id="modulosList">
-            <div class="loading">⏳ Cargando tus módulos...</div>
+            <div class="loading">⏳ Cargando módulos...</div>
         </div>
     </div>
 
@@ -132,58 +196,70 @@
         if (!token) window.location.href = '../../login.html';
 
         const isDocente = ['docente', 'profesor', 'director', 'jefe_carrera', 'administrador'].includes(user.rol);
-        
+
         // Configurar UI según el rol
-        document.getElementById('roleBadge').textContent = isDocente ? (user.rol === 'jefe_carrera' ? 'JEFE DE CARRERA' : 'DOCENTE') : 'ESTUDIANTE';
-        document.getElementById('welcomeText').textContent = \`¡Hola, \${user.nombre ? user.nombre.toUpperCase() : 'ESTUDIANTE'}!\`;
+        const firstName = user.nombre ? user.nombre.split(' ')[0].toUpperCase() : 'USUARIO';
+        document.getElementById('welcomeName').textContent = firstName;
+        document.getElementById('userFirstName').textContent = firstName;
+
+        const rolLabels = {
+            director: 'DIRECTOR', jefe_carrera: 'JEFE CARRERA',
+            secretaria: 'SECRETARIA', docente: 'DOCENTE',
+            estudiante: 'ESTUDIANTE', administrador: 'ADMIN'
+        };
+        document.getElementById('roleBadge').textContent = rolLabels[user.rol] || user.rol?.toUpperCase() || '---';
+
+        if (isDocente) {
+            document.getElementById('heroSub').innerHTML = 'Gestión de publicaciones. Selecciona el <strong>MÓDULO</strong>, el <strong>TEMA</strong> y sube el material para tus estudiantes..';
+        } else {
+            document.getElementById('heroSub').innerHTML = 'Aquí tu aprendizaje. Selecciona un <strong>MÓDULO</strong>, elige un <strong>TEMA</strong> y explora las publicaciones que el profesor ha preparado para ti.';
+        }
 
         let modulosActivos = [];
-        let contenidosCache = {}; // module_id -> contenidos
+        let contenidosCache = {};
 
         async function init() {
             try {
-                const res = await fetch(\`\${API_BASE}/modulos\`, { headers: { 'Authorization': \`Bearer \${token}\` } });
+                const res = await fetch(`${API_BASE}/modulos`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (!res.ok) throw new Error('Error al obtener módulos');
                 const data = await res.json();
                 modulosActivos = data.modulos || data;
-                
                 renderModulos();
             } catch (e) {
-                document.getElementById('modulosList').innerHTML = \`<div class="loading" style="color:#f43f5e;">❌ No se pudieron cargar los módulos.</div>\`;
+                document.getElementById('modulosList').innerHTML = `<div class="loading" style="color:#f43f5e;">❌ No se pudieron cargar los módulos. Verifica tu conexión.</div>`;
             }
         }
 
         function renderModulos() {
             const list = document.getElementById('modulosList');
             if (!modulosActivos || modulosActivos.length === 0) {
-                list.innerHTML = \`<div class="loading">No tienes módulos asignados en este momento.</div>\`;
+                list.innerHTML = `<div class="loading">📭 No tienes módulos asignados en este momento.</div>`;
                 return;
             }
 
             let html = '';
             modulosActivos.forEach((m, idx) => {
-                html += \`
-                    <div class="module-item" id="mod-\${m.id}">
-                        <div class="module-header" onclick="toggleModule(\${m.id})">
+                html += `
+                    <div class="module-item" id="mod-${m.id}">
+                        <div class="module-header" onclick="toggleModule(${m.id})">
                             <div class="module-title">
-                                <span class="num">\${idx + 1}.</span> \${m.nombre}
+                                <span class="num">Módulo ${idx + 1}:</span> ${m.nombre}
                             </div>
                             <div class="module-icon">▼</div>
                         </div>
-                        <div class="module-body" id="body-\${m.id}">
+                        <div class="module-body" id="body-${m.id}">
                             <div class="loading" style="padding:1rem; font-size:0.9rem;">Cargando temas...</div>
                         </div>
                     </div>
-                \`;
+                `;
             });
             list.innerHTML = html;
         }
 
         async function toggleModule(modId) {
-            const item = document.getElementById(\`mod-\${modId}\`);
+            const item = document.getElementById(`mod-${modId}`);
             const isActive = item.classList.contains('active');
 
-            // Cerrar todos los demás
             document.querySelectorAll('.module-item').forEach(el => el.classList.remove('active'));
             
             if (!isActive) {
@@ -191,13 +267,13 @@
                 if (!contenidosCache[modId]) {
                     await loadContenidos(modId);
                 }
-                renderTemas(modId, 1); // Renderizar Tema 1 por defecto
+                renderTemas(modId, 1);
             }
         }
 
         async function loadContenidos(modId) {
             try {
-                const res = await fetch(\`\${API_BASE}/modulos/\${modId}/contenidos\`, { headers: { 'Authorization': \`Bearer \${token}\` } });
+                const res = await fetch(`${API_BASE}/modulos/${modId}/contenidos`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if (res.ok) {
                     const data = await res.json();
                     contenidosCache[modId] = data.contenidos || [];
@@ -210,104 +286,172 @@
         }
 
         function renderTemas(modId, temaNum) {
-            const body = document.getElementById(\`body-\${modId}\`);
+            const body = document.getElementById(`body-${modId}`);
             const contenidos = contenidosCache[modId] || [];
             
-            // Buscar los contenidos de este tema en específico
-            const teoria = contenidos.find(c => c.tema_num === temaNum && c.tipo === 'teoria');
-            const presentacion = contenidos.find(c => c.tema_num === temaNum && c.tipo === 'presentacion');
+            const findC = (tipo) => contenidos.find(c => c.tema_num === temaNum && c.tipo === tipo);
+            const teoria     = findC('teoria');
+            const presentacion = findC('presentacion');
+            const audio      = findC('audio');
+            const video      = findC('video');
+            const mapa       = findC('mapa');
+            const evaluacion = findC('evaluacion');
+            const extra      = findC('otro');
 
-            // Generar Pestañas
+            // ─── Tabs ───
             let tabsHtml = '<div class="tabs">';
-            for(let i=1; i<=4; i++) {
-                tabsHtml += \`<button class="tab-btn \${i === temaNum ? 'active' : ''}" onclick="renderTemas(\${modId}, \${i})">Tema \${i}</button>\`;
+            for(let i = 1; i <= 4; i++) {
+                tabsHtml += `<button class="tab-btn ${i === temaNum ? 'active' : ''}" onclick="renderTemas(${modId}, ${i})">Tema ${i}:</button>`;
             }
             tabsHtml += '</div>';
 
-            // Generar Cajas de Recursos según el ROL
             let recursosHtml = '';
-            
-            if (isDocente) {
-                // UI PARA DOCENTES (Inputs para pegar URLs)
-                recursosHtml = \`
-                    <div class="resource-box">
-                        <div class="resource-header">📄 TEORÍA</div>
-                        <input type="url" id="url-teo-\${modId}-\${temaNum}" class="input-url" placeholder="Pega el enlace de Google Drive / Docs aquí..." value="\${teoria ? teoria.url : ''}">
-                        <button class="btn-action btn-save" onclick="guardarRecurso(\${modId}, \${temaNum}, 'teoria')">Guardar Teoría</button>
-                    </div>
-                    <div class="resource-box">
-                        <div class="resource-header">📊 PRESENTACIÓN</div>
-                        <input type="url" id="url-pre-\${modId}-\${temaNum}" class="input-url" placeholder="Pega el enlace de Google Slides aquí..." value="\${presentacion ? presentacion.url : ''}">
-                        <button class="btn-action btn-save" onclick="guardarRecurso(\${modId}, \${temaNum}, 'presentacion')">Guardar Presentación</button>
-                    </div>
-                \`;
-            } else {
-                // UI PARA ESTUDIANTES (Botones para abrir)
-                const btnTeo = teoria 
-                    ? \`<a href="\${teoria.url}" target="_blank" class="btn-action btn-view">Ver Material de Teoría</a>\` 
-                    : \`<button class="btn-action btn-empty" disabled>Material no publicado aún</button>\`;
-                
-                const btnPre = presentacion 
-                    ? \`<a href="\${presentacion.url}" target="_blank" class="btn-action btn-view">Ver Presentación</a>\` 
-                    : \`<button class="btn-action btn-empty" disabled>Presentación no publicada aún</button>\`;
 
-                recursosHtml = \`
+            if (isDocente) {
+                // ─── UI PROFESOR ───
+                const box = (tipo, label, icon, val) => `
                     <div class="resource-box">
-                        <div class="resource-header">📄 TEORÍA</div>
-                        \${btnTeo}
-                    </div>
-                    <div class="resource-box">
-                        <div class="resource-header">📊 PRESENTACIÓN</div>
-                        \${btnPre}
-                    </div>
-                \`;
+                        <div class="resource-header">${icon} ${label}</div>
+                        <input type="url" id="url-${tipo}-${modId}-${temaNum}" class="input-url" placeholder="Enlace..." value="${val ? escapeHtml(val.url) : ''}">
+                        <button class="btn-guardar" onclick="guardarRecurso(${modId}, ${temaNum}, '${tipo}')">Guardar</button>
+                    </div>`;
+
+                recursosHtml += box('teoria',       'TEORÍA',          '📄', teoria);
+                recursosHtml += box('presentacion', 'PRESENTACIÓN',    '📊', presentacion);
+                recursosHtml += box('audio',        'AUDIO',           '🎵', audio);
+                recursosHtml += box('video',        'VIDEO',           '🎥', video);
+                recursosHtml += box('mapa',         'MAPA CONCEPTUAL', '🗺️', mapa);
+                recursosHtml += box('evaluacion',   'EVALUACIÓN',      '📝', evaluacion);
+
+                // Material extra
+                recursosHtml += `
+                    <div class="resource-box" style="border: 1px dashed rgba(14, 165, 233, 0.35); background: rgba(14, 165, 233, 0.02);">
+                        <div class="resource-header extra">➕ AGREGAR MATERIAL EXTRA</div>
+                        <input type="text" id="tit-otro-${modId}-${temaNum}" class="input-url" placeholder="Título (Ej: PDF Adicional)" value="${extra ? escapeHtml(extra.titulo || '') : ''}">
+                        <input type="url"  id="url-otro-${modId}-${temaNum}" class="input-url" placeholder="Enlace..." value="${extra ? escapeHtml(extra.url) : ''}">
+                        <button class="btn-guardar" onclick="guardarRecursoExtra(${modId}, ${temaNum})">Guardar Extra</button>
+                    </div>`;
+
+            } else {
+                // ─── UI ESTUDIANTE (Grid de cards) ───
+                const card = (tipo, label, icon, val) => {
+                    if (val && val.url) {
+                        return `<a href="${escapeHtml(val.url)}" target="_blank" rel="noopener" class="student-card">
+                            <div class="s-icon">${icon}</div>
+                            <div class="s-label">${label}</div>
+                        </a>`;
+                    }
+                    return `<div class="student-card empty">
+                        <div class="s-icon">${icon}</div>
+                        <div class="s-label">${label}</div>
+                    </div>`;
+                };
+
+                let extraCard = '';
+                if (extra && extra.url) {
+                    extraCard = `<a href="${escapeHtml(extra.url)}" target="_blank" rel="noopener" class="student-card extra-card">
+                        <div class="s-icon">📎</div>
+                        <div class="s-label">${escapeHtml(extra.titulo || 'EXTRA')}</div>
+                    </a>`;
+                }
+
+                recursosHtml = `
+                    <div class="student-grid">
+                        ${card('teoria',       'TEORÍA',          '📄', teoria)}
+                        ${card('presentacion', 'PRESENTACIÓN',    '📊', presentacion)}
+                        ${card('audio',        'AUDIO',           '🎵', audio)}
+                        ${card('video',        'VIDEO',           '🎥', video)}
+                        ${card('mapa',         'MAPA',            '🗺️', mapa)}
+                        ${card('evaluacion',   'EVALUACIÓN',      '📝', evaluacion)}
+                        ${extraCard}
+                    </div>`;
             }
 
             body.innerHTML = tabsHtml + recursosHtml;
         }
 
+        // ── Guardar un recurso estándar ──
         async function guardarRecurso(modId, temaNum, tipo) {
-            const urlInput = document.getElementById(\`url-\${tipo.substring(0,3)}-\${modId}-\${temaNum}\`).value;
-            
-            if (!urlInput.trim()) {
-                Swal.fire('Atención', 'Debes pegar una URL válida.', 'warning');
+            const urlEl = document.getElementById(`url-${tipo}-${modId}-${temaNum}`);
+            if (!urlEl) return;
+            const urlVal = urlEl.value.trim();
+
+            if (!urlVal) {
+                Swal.fire({ title: 'Atención', text: 'Debes pegar una URL válida.', icon: 'warning', background: '#0f172a', color: '#f8fafc' });
                 return;
             }
 
-            const payload = {
-                modulo_id: modId,
-                tema_num: temaNum,
-                tipo: tipo,
-                titulo: tipo === 'teoria' ? 'Material Teórico' : 'Presentación',
-                url: urlInput.trim()
-            };
+            const titulos = { teoria: 'Material Teórico', presentacion: 'Presentación', audio: 'Audio', video: 'Video', mapa: 'Mapa Conceptual', evaluacion: 'Evaluación' };
 
-            Swal.fire({ title: 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            const payload = { modulo_id: modId, tema_num: temaNum, tipo, titulo: titulos[tipo] || tipo, url: urlVal };
+
+            Swal.fire({ title: 'Guardando...', allowOutsideClick: false, background: '#0f172a', color: '#f8fafc', didOpen: () => Swal.showLoading() });
 
             try {
-                const res = await fetch(\`\${API_BASE}/modulos/contenido\`, {
+                const res = await fetch(`${API_BASE}/modulos/contenido`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': \`Bearer \${token}\` },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                     body: JSON.stringify(payload)
                 });
-                
                 const data = await res.json();
-                
                 if (res.ok) {
-                    Swal.fire({ icon: 'success', title: '¡Guardado!', text: data.mensaje, timer: 1500, showConfirmButton: false });
-                    // Actualizar el caché recargando
+                    Swal.fire({ icon: 'success', title: '¡Guardado!', text: data.mensaje, timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#f8fafc' });
+                    contenidosCache[modId] = null;
                     await loadContenidos(modId);
+                    renderTemas(modId, temaNum);
                 } else {
-                    Swal.fire('Error', data.detail || 'Fallo al guardar', 'error');
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.detail || 'Fallo al guardar', background: '#0f172a', color: '#f8fafc' });
                 }
             } catch(e) {
-                Swal.fire('Error', 'Problema de conexión al guardar.', 'error');
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Problema de conexión.', background: '#0f172a', color: '#f8fafc' });
             }
         }
 
-        // Iniciar
-        init();
+        // ── Guardar material extra ──
+        async function guardarRecursoExtra(modId, temaNum) {
+            const titEl = document.getElementById(`tit-otro-${modId}-${temaNum}`);
+            const urlEl = document.getElementById(`url-otro-${modId}-${temaNum}`);
+            if (!titEl || !urlEl) return;
 
+            const titulo = titEl.value.trim() || 'Material Extra';
+            const urlVal = urlEl.value.trim();
+
+            if (!urlVal) {
+                Swal.fire({ title: 'Atención', text: 'Debes pegar una URL para el material extra.', icon: 'warning', background: '#0f172a', color: '#f8fafc' });
+                return;
+            }
+
+            const payload = { modulo_id: modId, tema_num: temaNum, tipo: 'otro', titulo, url: urlVal };
+
+            Swal.fire({ title: 'Guardando...', allowOutsideClick: false, background: '#0f172a', color: '#f8fafc', didOpen: () => Swal.showLoading() });
+
+            try {
+                const res = await fetch(`${API_BASE}/modulos/contenido`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    Swal.fire({ icon: 'success', title: '¡Extra guardado!', timer: 1500, showConfirmButton: false, background: '#0f172a', color: '#f8fafc' });
+                    contenidosCache[modId] = null;
+                    await loadContenidos(modId);
+                    renderTemas(modId, temaNum);
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.detail || 'Fallo', background: '#0f172a', color: '#f8fafc' });
+                }
+            } catch(e) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Problema de conexión.', background: '#0f172a', color: '#f8fafc' });
+            }
+        }
+
+        // ── Utilidad para escapar HTML ──
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        init();
     </script>
 </body>
 </html>
