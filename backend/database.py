@@ -505,10 +505,31 @@ def init_db():
             
         connection.commit()
         print("Tablas PostgreSQL creadas/verificadas correctamente.")
+
+
     except Exception as e:
         print(f"Init DB error: {e}")
     finally:
         cursor.close(); connection.close()
 
+    # ── Garantizar admin en producción (conexión separada) ────────────────
+    try:
+        import security as _sec
+        _conn = get_db_connection()
+        _cur = _conn.cursor()
+        _admin_pass = _sec.get_password_hash("1234567")
+        _cur.execute("""
+            INSERT INTO usuarios (nombre, apellido, email, password, rol)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (email) DO UPDATE
+            SET rol = EXCLUDED.rol
+        """, ("Ruben", "Admin", "ruben.admin@educonnect.com", _admin_pass, "administrador"))
+        _conn.commit()
+        print("✅ Admin garantizado: ruben.admin@educonnect.com / 1234567")
+        _cur.close(); _conn.close()
+    except Exception as e:
+        print(f"⚠️  Auto-seed admin warning: {e}")
+
 if __name__ == "__main__":
     init_db()
+

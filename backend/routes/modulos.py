@@ -70,7 +70,7 @@ class AsignarDocente(BaseModel):
 
 @router.post("/asignar-docente")
 def asignar_docente(data: AsignarDocente, current_user: dict = Depends(get_current_user)):
-    if current_user["rol"] not in ["jefe_carrera", "director", "admin"]:
+    if current_user["rol"] not in ["jefe_carrera", "director", "admin", "administrador"]:
         raise HTTPException(status_code=403, detail="No autorizado")
     conn = get_db_connection()
     if not conn: raise HTTPException(status_code=500, detail="Error DB")
@@ -79,7 +79,12 @@ def asignar_docente(data: AsignarDocente, current_user: dict = Depends(get_curre
         cur.execute("UPDATE modulos SET docente_id = %s WHERE id = %s", (data.docente_id, data.modulo_id))
         conn.commit()
         return {"mensaje": "Docente asignado correctamente"}
-    finally: conn.close()
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
 
 @router.get("/stats")
 def get_stats():
