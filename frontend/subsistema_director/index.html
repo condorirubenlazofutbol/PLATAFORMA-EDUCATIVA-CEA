@@ -207,6 +207,11 @@ header{background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(12px);border-bottom
   <div id="dirDoc" style="display:none;">
     <div class="search-bar">
       <input type="text" id="searchDoc" placeholder="Buscar docente..." oninput="renderDocentes()">
+      <select id="filtroAreaDoc" onchange="renderDocentes()">
+        <option value="">Todas las Áreas</option>
+        <option value="tecnica">🔵 Área Técnica</option>
+        <option value="humanistica">🟣 Área Humanística</option>
+      </select>
     </div>
     <div id="dirDocContent"><div class="loading">⏳ Cargando plantel docente...</div></div>
   </div>
@@ -621,9 +626,12 @@ function renderDocentes() {
   const areaLabels = { tecnica: { label: '👨‍🔧 Área Técnica', cls: 'area-tec' }, humanistica: { label: '📚 Área Humanística', cls: 'area-hum' } };
 
   let html = '';
+  const areaFiltro = document.getElementById('filtroAreaDoc')?.value;
   const orderedAreas = ['tecnica', 'humanistica'];
 
   for (const area of orderedAreas) {
+    if (areaFiltro && area !== areaFiltro) continue;
+    
     const aInfo = areaLabels[area];
     let totalArea = 0;
     let carrerasHtml = '';
