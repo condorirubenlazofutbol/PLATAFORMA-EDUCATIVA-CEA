@@ -7,7 +7,7 @@ CARRERAS_TECNICAS = [
     "Educación Parvularia",
     "Fisioterapia",
     "Contabilidad General",
-    "Corte y Confección",
+    "Confección Textil",
     "Belleza Integral",
     "Gastronomía"
 ]

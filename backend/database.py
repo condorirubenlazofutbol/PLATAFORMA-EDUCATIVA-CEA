@@ -498,6 +498,11 @@ def init_db():
             except:
                 connection.rollback()
 
+        try:
+            cursor.execute("UPDATE carreras SET nombre = 'Confección Textil' WHERE nombre = 'Corte y Confección'")
+        except:
+            connection.rollback()
+            
         connection.commit()
         print("Tablas PostgreSQL creadas/verificadas correctamente.")
     except Exception as e:
