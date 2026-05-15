@@ -9,8 +9,25 @@ from routes.auth import get_current_user
 from pydantic import BaseModel
 from typing import Optional, List
 import io
+import json
 
 router = APIRouter()
+
+
+# ── Modelo para importación JSON desde el cliente ──────────────────
+class TemaImport(BaseModel):
+    numero: int
+    titulo: str
+    subtemas: Optional[str] = ""   # "A · B · C · D" separado por ·
+
+class ModuloImport(BaseModel):
+    nombre: str
+    nivel: str
+    area: Optional[str] = ""
+    carrera_nombre: Optional[str] = ""
+    numero: Optional[str] = ""
+    temas: Optional[List[TemaImport]] = []
+
 
 
 def rows_to_dicts(cursor, rows):
@@ -463,3 +480,92 @@ def historial_importaciones(current_user: dict = Depends(get_current_user)):
         return {"importaciones": rows_to_dicts(cur, cur.fetchall())}
     finally:
         cur.close(); conn.close()
+
+
+# ─── IMPORTAR MALLA DESDE JSON (cliente parsea el Excel) ────────────────────
+
+@router.post("/importar")
+def importar_malla_json(data: ModuloImport, current_user: dict = Depends(get_current_user)):
+    """
+    Recibe un módulo completo (nombre, nivel, área, carrera, temas con subtemas)
+    procesado en el cliente desde el Excel de Malla Curricular CEA.
+    Busca o crea la carrera automáticamente.
+    """
+    if current_user["rol"] not in ["jefe_carrera", "director", "administrador", "admin"]:
+        raise HTTPException(403, "Solo Jefe de Carrera o Director pueden importar la malla.")
+
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+
+        # 1. Resolver carrera (buscar por nombre, o crear si no existe)
+        area = (data.area or "Técnica").strip()
+        carrera_nombre = (data.carrera_nombre or data.nombre).strip()
+
+        cur.execute(
+            "SELECT id FROM carreras WHERE LOWER(nombre) = LOWER(%s) LIMIT 1",
+            (carrera_nombre,)
+        )
+        row = cur.fetchone()
+        if row:
+            carrera_id = row[0]
+        else:
+            # Crear la carrera automáticamente
+            cur.execute(
+                "SELECT id FROM subsistemas LIMIT 1"
+            )
+            sub = cur.fetchone()
+            subsistema_id = sub[0] if sub else 1
+            cur.execute(
+                "INSERT INTO carreras (subsistema_id, nombre, area) VALUES (%s, %s, %s) RETURNING id",
+                (subsistema_id, carrera_nombre, area)
+            )
+            carrera_id = cur.fetchone()[0]
+
+        nivel = data.nivel.strip()
+
+        # 2. Insertar el módulo (upsert por nombre+nivel+carrera_id)
+        cur.execute("""
+            SELECT id FROM modulos
+            WHERE carrera_id = %s AND LOWER(nombre) = LOWER(%s) AND nivel = %s
+            LIMIT 1
+        """, (carrera_id, data.nombre, nivel))
+        mod_row = cur.fetchone()
+
+        if mod_row:
+            modulo_id = mod_row[0]
+        else:
+            cur.execute("""
+                INSERT INTO modulos (carrera_id, nombre, nivel, area, orden)
+                VALUES (%s, %s, %s, %s, 0) RETURNING id
+            """, (carrera_id, data.nombre, nivel, area))
+            modulo_id = cur.fetchone()[0]
+
+        # 3. Insertar los temas con sus subtemas
+        for tema in (data.temas or []):
+            # Convertir "A · B · C · D" a lista JSON
+            subs_raw = (tema.subtemas or "").strip()
+            subs_list = [s.strip() for s in subs_raw.split("·") if s.strip()] if subs_raw else []
+
+            cur.execute("""
+                INSERT INTO temas (modulo_id, numero, titulo, subtitulos)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (modulo_id, numero) DO UPDATE
+                SET titulo = EXCLUDED.titulo, subtitulos = EXCLUDED.subtitulos
+            """, (modulo_id, tema.numero, tema.titulo, json.dumps(subs_list, ensure_ascii=False)))
+
+        conn.commit()
+        return {
+            "mensaje": f"Módulo '{data.nombre}' importado correctamente.",
+            "modulo_id": modulo_id,
+            "carrera_id": carrera_id
+        }
+
+    except HTTPException:
+        conn.rollback(); raise
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(500, f"Error al importar módulo: {str(e)}")
+    finally:
+        cur.close(); conn.close()
+

@@ -472,48 +472,194 @@
         setJefArea(jefArea);
     });
 
+    // ═══════════════════════════════════════════════════════════════
+    //   PLANTILLA MALLA CURRICULAR — NIVEL PRO
+    // ═══════════════════════════════════════════════════════════════
     function descargarPlantillaMalla() {
         const wb = XLSX.utils.book_new();
-        const wsData = [
-            ["Nivel", "Nombre del Módulo"],
-            ["Nivel Básico", "Ofimática Básica"],
-            ["Nivel Básico", "Sistemas Operativos"],
-            ["Nivel Auxiliar", "Diseño Gráfico I"],
-            ["Nivel Medio I", "Programación Web I"],
-            ["Aplicados (Primer Año)", "Matemática Aplicada"]
-        ];
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        applyProTableStyles(ws);
-        XLSX.utils.book_append_sheet(wb, ws, "Plantilla_Malla");
-        XLSX.writeFile(wb, "Plantilla_Malla_Curricular_CEA.xlsx");
-    }
 
-    function applyProTableStyles(ws) {
-        const styleHeader = {
-            font: { bold: true, color: { rgb: "FFFFFF" } },
-            fill: { fgColor: { rgb: "334155" } },
-            alignment: { horizontal: "center", vertical: "center" },
-            border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
+        // ── HOJA 1: INSTRUCCIONES ──────────────────────────────────
+        const instrData = [
+            ["PLANTILLA DE MALLA CURRICULAR", "CEA Pailón — Prof. Herman Ortiz Camargo", "", "", ""],
+            ["", "", "", "", ""],
+            ["INSTRUCCIONES DE LLENADO", "", "", "", ""],
+            ["", "", "", "", ""],
+            ["1.", "ÁREA:", "Escriba exactamente: Técnica  ó  Humanística", "", ""],
+            ["2.", "CARRERA / MATERIA:", "Si es Técnica, escriba el nombre de la carrera (Ej: Sistemas Informáticos).", "", ""],
+            ["", "", "Si es Humanística, escriba la materia (Ej: Matemática, Lenguaje, etc.)", "", ""],
+            ["3.", "NIVEL / CURSO:", "Si es Técnica: Nivel Básico / Nivel Auxiliar / Nivel Medio I / Nivel Medio II", "", ""],
+            ["", "", "Si es Humanística: Aplicados (Primer Año) / Complementarios (Segundo Año) / Especializados (Tercer Año)", "", ""],
+            ["4.", "MÓDULO 1 al 5:", "Escriba el título del módulo en la columna correspondiente.", "", ""],
+            ["5.", "TEMAS 1-4:", "Escriba el título de cada tema (Columnas E-H).", "", ""],
+            ["6.", "SUBTEMAS A-D:", "Escriba los subtítulos o subtemas de cada tema (Columnas I-L).", "", ""],
+            ["", "", "", "", ""],
+            ["IMPORTANTE:", "No elimine ni modifique los encabezados de color.", "", "", ""],
+            ["", "Llene una fila por Módulo. Cada módulo tiene 4 temas y cada tema hasta 4 subtemas.", "", "", ""],
+            ["", "La primera fila de datos empieza en la fila 5 de la hoja 'Malla_CEA'.", "", "", ""],
+        ];
+        const wsInstr = XLSX.utils.aoa_to_sheet(instrData);
+        wsInstr['!cols'] = [{wch:5},{wch:22},{wch:70},{wch:5},{wch:5}];
+
+        // Estilos de instrucciones
+        const sTitle  = { font:{bold:true,sz:16,color:{rgb:"FFFFFF"}}, fill:{fgColor:{rgb:"0C2D5E"}}, alignment:{horizontal:"center",vertical:"center"} };
+        const sSec    = { font:{bold:true,sz:12,color:{rgb:"FFFFFF"}}, fill:{fgColor:{rgb:"1E3A5F"}}, alignment:{horizontal:"left",vertical:"center"} };
+        const sImpt   = { font:{bold:true,sz:11,color:{rgb:"DC2626"}}, alignment:{horizontal:"left",vertical:"center"} };
+        const sNum    = { font:{bold:true,color:{rgb:"0EA5E9"}}, alignment:{horizontal:"center"} };
+        const sText   = { alignment:{horizontal:"left",wrapText:true} };
+
+        if(wsInstr['A1']) wsInstr['A1'].s = sTitle;
+        if(wsInstr['B1']) wsInstr['B1'].s = sTitle;
+        if(wsInstr['A3']) wsInstr['A3'].s = sSec;
+        ["A5","A6","A8","A10","A11","A12"].forEach(k=>{ if(wsInstr[k]) wsInstr[k].s = sNum; });
+        ["A14","A15"].forEach(k=>{ if(wsInstr[k]) wsInstr[k].s = sImpt; });
+
+        wsInstr['!merges'] = [
+            {s:{r:0,c:0},e:{r:0,c:4}},
+            {s:{r:2,c:0},e:{r:2,c:4}},
+            {s:{r:13,c:1},e:{r:13,c:4}},
+            {s:{r:14,c:1},e:{r:14,c:4}},
+        ];
+        wsInstr['!rows'] = [{hpt:30},{hpt:8},{hpt:24}];
+        XLSX.utils.book_append_sheet(wb, wsInstr, "📋 Instrucciones");
+
+        // ── HOJA 2: MALLA CURRICULAR PRO ──────────────────────────
+        const COLS = [
+            "ÁREA",           // A - col 0
+            "CARRERA / MATERIA",  // B - col 1
+            "NIVEL / CURSO",  // C - col 2
+            "MÓDULO",         // D - col 3
+            "TÍTULO DEL MÓDULO",  // E - col 4
+            "TEMA 1",         // F - col 5
+            "TEMA 2",         // G - col 6
+            "TEMA 3",         // H - col 7
+            "TEMA 4",         // I - col 8
+            "SUBTEMAS TEMA 1 (A,B,C,D)", // J - col 9
+            "SUBTEMAS TEMA 2 (A,B,C,D)", // K - col 10
+            "SUBTEMAS TEMA 3 (A,B,C,D)", // L - col 11
+            "SUBTEMAS TEMA 4 (A,B,C,D)", // M - col 12
+        ];
+
+        // Datos de ejemplo (5 módulos)
+        const ejemplo = [
+            COLS,
+            ["Técnica","Sistemas Informáticos","Nivel Básico","Módulo 1","Introducción a la Informática","Historia y evolución de las computadoras","Componentes del hardware","Software y sistemas operativos","Redes de computadoras básicas","Historia · Tipos de computadoras · Generaciones · Aplicaciones actuales","CPU · RAM · Disco Duro · Periféricos","Windows · Linux · macOS · Uso básico","LAN · WAN · Internet · Protocolo TCP/IP"],
+            ["Técnica","Sistemas Informáticos","Nivel Básico","Módulo 2","Ofimática Básica","Procesador de texto","Hoja de cálculo","Presentaciones digitales","Gestión de archivos y carpetas","Formato · Tablas · Imágenes · Impresión","Fórmulas básicas · Gráficos · Filtros · Formatos","Diseño de slides · Animaciones · Transiciones · Exportar","Estructura de carpetas · Comprimir · Copias de seguridad · Nube"],
+            ["Técnica","Sistemas Informáticos","Nivel Básico","Módulo 3","Pensamiento Computacional","Algoritmos y diagramas de flujo","Lógica de programación","Variables y tipos de datos","Estructuras de control básicas","Concepto · Pasos · Símbolos · Ejemplos prácticos","Condiciones · Bucles · Funciones · Pseudocódigo","Enteros · Decimales · Texto · Booleanos","If-else · While · For · Switch"],
+            ["Técnica","Sistemas Informáticos","Nivel Básico","Módulo 4","Lógica de Programación I","Introducción a Scratch","Proyectos con Scratch","Introducción a Python","Scripts básicos en Python","Interfaz · Bloques · Personajes · Escenarios","Juego simple · Historia · Quiz · Animación","Instalación · Sintaxis · Comentarios · Variables","Entrada/Salida · Condiciones · Bucles · Funciones simples"],
+            ["Técnica","Sistemas Informáticos","Nivel Básico","Módulo 5","Módulo Emergente I (IA Básica)","Introducción a la Inteligencia Artificial","Herramientas de IA actuales","Ética en la IA","Proyecto integrador con IA","Qué es la IA · Historia · Tipos · Aplicaciones","ChatGPT · Gemini · Copilot · DALL·E","Uso responsable · Sesgos · Privacidad · Regulación","Prompt engineering · Automatización · Proyecto final"],
+            // Fila vacía para que el usuario llene más
+            ["","","","","","","","","","","","",""],
+            ["HUMANÍSTICA","Matemática","Aplicados (Primer Año)","Módulo 1","Números y Operaciones Básicas","Números naturales y enteros","Fracciones y decimales","Potencias y raíces","Proporcionalidad","Definición · Recta numérica · Valor absoluto · Operaciones","Tipos de fracciones · Operaciones · Decimales · Porcentajes","Potencia entera · Raíz cuadrada · Notación científica · Jerarquía","Razones · Proporciones · Regla de tres · Porcentajes aplicados"],
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(ejemplo);
+
+        // ─ Estilos ─
+        const COL_COLORS = {
+            0: "0C2D5E",  // Área - azul oscuro
+            1: "134074",  // Carrera - azul medio
+            2: "1B4F72",  // Nivel - azul
+            3: "0369A1",  // Módulo # - celeste oscuro
+            4: "0EA5E9",  // Título módulo - celeste vivo
+            5: "065F46",  // Tema 1 - verde
+            6: "047857",  // Tema 2 - verde
+            7: "059669",  // Tema 3 - verde
+            8: "10B981",  // Tema 4 - verde claro
+            9: "7C3AED",  // Subtemas 1 - violeta
+            10:"6D28D9",  // Subtemas 2
+            11:"5B21B6",  // Subtemas 3
+            12:"4C1D95",  // Subtemas 4 - violeta oscuro
         };
-        const styleDataCenter = {
-            alignment: { horizontal: "center", vertical: "center" },
-            border: { top: {style:"thin"}, bottom: {style:"thin"}, left: {style:"thin"}, right: {style:"thin"} }
-        };
-        if (!ws['!ref']) return;
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        for (let C = range.s.c; C <= range.e.c; ++C) {
-            const headerCell = XLSX.utils.encode_cell({ r: 0, c: C });
-            if (ws[headerCell]) ws[headerCell].s = styleHeader;
-            for (let R = 1; R <= range.e.r; ++R) {
-                const dataCell = XLSX.utils.encode_cell({ r: R, c: C });
-                if (ws[dataCell]) ws[dataCell].s = styleDataCenter;
+
+        const makeHeaderStyle = (colIdx) => ({
+            font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: COL_COLORS[colIdx] || "334155" } },
+            alignment: { horizontal: "center", vertical: "center", wrapText: true },
+            border: {
+                top:    { style: "medium", color: { rgb: "FFFFFF" } },
+                bottom: { style: "medium", color: { rgb: "FFFFFF" } },
+                left:   { style: "thin",   color: { rgb: "FFFFFF" } },
+                right:  { style: "thin",   color: { rgb: "FFFFFF" } }
+            }
+        });
+
+        const makeDataStyle = (colIdx, rowIdx) => ({
+            font: { sz: 10, color: { rgb: rowIdx % 2 === 0 ? "1E293B" : "0F172A" } },
+            fill: { fgColor: { rgb: rowIdx % 2 === 0 ? "EFF6FF" : "DBEAFE" } },
+            alignment: { horizontal: "left", vertical: "top", wrapText: true },
+            border: {
+                top:    { style: "thin", color: { rgb: "CBD5E1" } },
+                bottom: { style: "thin", color: { rgb: "CBD5E1" } },
+                left:   { style: "thin", color: { rgb: "CBD5E1" } },
+                right:  { style: "thin", color: { rgb: "CBD5E1" } }
+            }
+        });
+
+        // Encabezados (fila 0)
+        for (let c = 0; c < COLS.length; c++) {
+            const addr = XLSX.utils.encode_cell({r:0, c});
+            if (ws[addr]) ws[addr].s = makeHeaderStyle(c);
+        }
+        // Filas de datos
+        for (let r = 1; r < ejemplo.length; r++) {
+            for (let c = 0; c < COLS.length; c++) {
+                const addr = XLSX.utils.encode_cell({r, c});
+                if (ws[addr]) ws[addr].s = makeDataStyle(c, r);
             }
         }
-        const colWidths = [];
-        for (let C = range.s.c; C <= range.e.c; ++C) colWidths.push({wch: 35});
-        ws['!cols'] = colWidths;
+
+        // Anchos de columna
+        ws['!cols'] = [
+            {wch:12},  // Área
+            {wch:24},  // Carrera
+            {wch:26},  // Nivel
+            {wch:12},  // Módulo #
+            {wch:30},  // Título módulo
+            {wch:28},  // Tema 1
+            {wch:28},  // Tema 2
+            {wch:28},  // Tema 3
+            {wch:28},  // Tema 4
+            {wch:45},  // Subtemas 1
+            {wch:45},  // Subtemas 2
+            {wch:45},  // Subtemas 3
+            {wch:45},  // Subtemas 4
+        ];
+        ws['!rows'] = [{hpt:38}]; // altura encabezado
+
+        // Agregar hojas vacías para que el usuario llene más módulos
+        for (let m = 1; m <= 5; m++) {
+            const wsM = XLSX.utils.aoa_to_sheet([
+                COLS,
+                [`Técnica ó Humanística`, `Nombre Carrera/Materia`, `Nivel/Ciclo`, `Módulo ${m}`, `(Título del Módulo ${m})`, `(Tema 1)`, `(Tema 2)`, `(Tema 3)`, `(Tema 4)`, `(Subtemas T1: A · B · C · D)`, `(Subtemas T2: A · B · C · D)`, `(Subtemas T3: A · B · C · D)`, `(Subtemas T4: A · B · C · D)`]
+            ]);
+            for (let c = 0; c < COLS.length; c++) {
+                const addr = XLSX.utils.encode_cell({r:0, c});
+                if (wsM[addr]) wsM[addr].s = makeHeaderStyle(c);
+            }
+            wsM['!cols'] = ws['!cols'];
+            XLSX.utils.book_append_sheet(wb, wsM, `Módulo ${m}`);
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws, "📚 Malla_CEA");
+        XLSX.writeFile(wb, "Plantilla_Malla_Curricular_CEA_PRO.xlsx");
+
+        Swal.fire({
+            icon: 'success',
+            title: '¡Plantilla descargada!',
+            html: `<div style="text-align:left;font-size:0.9rem;line-height:1.7;">
+                <b>Instrucciones:</b><br>
+                1. Abre el archivo Excel descargado.<br>
+                2. Lee la hoja <b>📋 Instrucciones</b>.<br>
+                3. Llena la hoja <b>📚 Malla_CEA</b> con tus módulos.<br>
+                4. Guarda y sube el archivo aquí con el botón <b>📤 Importar Malla</b>.
+            </div>`,
+            confirmButtonText: 'Entendido',
+            background: '#0f172a', color: '#f8fafc',
+            confirmButtonColor: '#0ea5e9'
+        });
     }
 
+    // ── Importar Malla Curricular desde Excel Pro ─────────────────
     async function importarMallaExcel(input) {
         const file = input.files[0];
         if (!file) return;
@@ -523,46 +669,97 @@
             try {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, {type: 'array'});
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(sheet);
+
+                // Buscar hoja principal
+                const sheetName = workbook.SheetNames.find(n =>
+                    n.includes('Malla_CEA') || n.includes('Malla') || n === workbook.SheetNames[0]
+                ) || workbook.SheetNames[0];
+
+                const sheet = workbook.Sheets[sheetName];
+                const rows = XLSX.utils.sheet_to_json(sheet, {defval: ""});
 
                 if (rows.length === 0) {
-                    Swal.fire('Archivo vacío', 'El archivo Excel no contiene datos.', 'warning');
-                    return;
+                    Swal.fire('Archivo vacío', 'La hoja seleccionada no tiene datos.', 'warning');
+                    input.value = ""; return;
                 }
 
-                Swal.fire({title:'Importando...', text:'Por favor espera', allowOutsideClick:false, didOpen:()=>{Swal.showLoading()}});
+                const preview = rows.slice(0, 3).map(r =>
+                    `<tr><td>${r['ÁREA']||r['area']||''}</td><td>${r['TÍTULO DEL MÓDULO']||r['CARRERA / MATERIA']||''}</td><td>${r['NIVEL / CURSO']||r['nivel']||''}</td></tr>`
+                ).join('');
 
-                let success = 0;
-                let fails = 0;
+                const confirm = await Swal.fire({
+                    title: `📊 Vista previa (${rows.length} filas)`,
+                    html: `<div style="font-size:0.82rem;overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;">
+                            <thead><tr style="background:#1e293b;color:#94a3b8;">
+                                <th style="padding:6px;">Área</th><th style="padding:6px;">Módulo/Carrera</th><th style="padding:6px;">Nivel</th>
+                            </tr></thead><tbody>${preview}</tbody>
+                        </table>
+                    </div><p style="margin-top:12px;color:#94a3b8;font-size:0.8rem;">¿Importar ${rows.length} módulo(s)?</p>`,
+                    showCancelButton: true,
+                    confirmButtonText: '✅ Sí, importar',
+                    cancelButtonText: 'Cancelar',
+                    background: '#0f172a', color: '#f8fafc',
+                    confirmButtonColor: '#0ea5e9'
+                });
+                if (!confirm.isConfirmed) { input.value = ""; return; }
+
+                Swal.fire({title:'Importando malla...', allowOutsideClick:false, background:'#0f172a', color:'#f8fafc', didOpen:()=>{Swal.showLoading()}});
+
+                let success = 0, fails = 0;
 
                 for (const row of rows) {
-                    const nivel = row["Nivel"] || row["nivel"];
-                    const nombre = row["Nombre del Módulo"] || row["nombre"] || row["modulo"];
-                    
-                    if (nivel && nombre) {
-                        try {
-                            const r = await fetch(`${API_URL}/modulos`, {
-                                method: 'POST',
-                                headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
-                                body: JSON.stringify({ nombre: nombre, nivel: nivel })
-                            });
-                            if (r.ok) success++; else fails++;
-                        } catch (err) { fails++; }
-                    } else {
-                        fails++;
-                    }
+                    const area   = row["ÁREA"] || row["area"] || "";
+                    const nombre = row["TÍTULO DEL MÓDULO"] || row["nombre"] || row["Nombre del Módulo"] || "";
+                    const nivel  = row["NIVEL / CURSO"] || row["Nivel"] || row["nivel"] || "";
+                    const carrera= row["CARRERA / MATERIA"] || row["carrera"] || "";
+                    const modNum = row["MÓDULO"] || "";
+                    const t1 = row["TEMA 1"] || "";
+                    const t2 = row["TEMA 2"] || "";
+                    const t3 = row["TEMA 3"] || "";
+                    const t4 = row["TEMA 4"] || "";
+                    const st1= row["SUBTEMAS TEMA 1 (A,B,C,D)"] || "";
+                    const st2= row["SUBTEMAS TEMA 2 (A,B,C,D)"] || "";
+                    const st3= row["SUBTEMAS TEMA 3 (A,B,C,D)"] || "";
+                    const st4= row["SUBTEMAS TEMA 4 (A,B,C,D)"] || "";
+
+                    if (!nombre || !nivel) { fails++; continue; }
+
+                    const payload = {
+                        nombre, nivel, area,
+                        carrera_nombre: carrera,
+                        numero: modNum,
+                        temas: [
+                            { numero:1, titulo:t1, subtemas:st1 },
+                            { numero:2, titulo:t2, subtemas:st2 },
+                            { numero:3, titulo:t3, subtemas:st3 },
+                            { numero:4, titulo:t4, subtemas:st4 },
+                        ].filter(t => t.titulo)
+                    };
+
+                    try {
+                        const r = await fetch(`${API_URL}/malla/importar`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
+                            body: JSON.stringify(payload)
+                        });
+                        if (r.ok) success++; else fails++;
+                    } catch (err) { fails++; }
                 }
 
                 Swal.fire({
-                    icon: 'info',
-                    title: 'Importación Completada',
-                    text: `Se agregaron ${success} módulos exitosamente. Fallaron: ${fails}.`
+                    icon: success > 0 ? 'success' : 'warning',
+                    title: 'Importación completada',
+                    html: `<div style="font-size:0.9rem;">
+                        ✅ <b>${success}</b> módulos importados<br>
+                        ${fails > 0 ? `⚠️ <b>${fails}</b> filas con errores o vacías` : ''}
+                    </div>`,
+                    background: '#0f172a', color: '#f8fafc', confirmButtonColor: '#0ea5e9'
                 });
 
             } catch (err) {
                 console.error(err);
-                Swal.fire('Error', 'No se pudo leer el archivo Excel.', 'error');
+                Swal.fire('Error', 'No se pudo leer el archivo. Asegúrate de usar la Plantilla CEA.', 'error');
             }
             input.value = "";
         };
