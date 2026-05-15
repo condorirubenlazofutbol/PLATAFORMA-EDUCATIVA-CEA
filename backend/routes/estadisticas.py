@@ -214,10 +214,19 @@ def directorio_agrupado(current_user: dict = Depends(get_current_user)):
             nivel = r["nivel"] or "Sin Nivel"
             paralelo = r["paralelo"] or "A"
             turno = r["turno"] or "Noche"
-            # Si hay más de un paralelo en este curso, añadir el paralelo a la clave
-            base_nivel = f"{nivel} ({turno})"
-            clave_nivel = f"{base_nivel} - Paralelo {paralelo}" if len(paralelo_counts[(area, carrera, nivel, turno)]) > 1 else base_nivel
-            grupos[area][carrera][clave_nivel].append(r)
+            
+            if area == "humanistica":
+                # En humanística se agrupa por Curso (Nivel) en lugar de Especialidad
+                # Nivel (ej: Aplicados) se convierte en la carrera
+                carrera_hum = nivel
+                # Y el nivel a mostrar es el Paralelo
+                clave_nivel = f"Paralelo {paralelo} ({turno})"
+                grupos[area][carrera_hum][clave_nivel].append(r)
+            else:
+                # Si hay más de un paralelo en este curso, añadir el paralelo a la clave
+                base_nivel = f"{nivel} ({turno})"
+                clave_nivel = f"{base_nivel} - Paralelo {paralelo}" if len(paralelo_counts[(area, carrera, nivel, turno)]) > 1 else base_nivel
+                grupos[area][carrera][clave_nivel].append(r)
 
         # Docentes (incluye jefe_carrera para mostrar su rol correcto)
         cur.execute("""

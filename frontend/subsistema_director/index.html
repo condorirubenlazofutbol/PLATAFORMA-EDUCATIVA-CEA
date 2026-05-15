@@ -520,7 +520,7 @@ function renderDirectorio() {
         <div class="dir-carrera">
           <div class="dir-carrera-header">
             <div>
-              <div class="dir-carrera-title">${area === 'humanistica' ? `📚 Especialidad: ${carrera}` : `🎓 ${carrera}`}</div>
+              <div class="dir-carrera-title">${area === 'humanistica' ? `📚 Curso: ${carrera}` : `🎓 ${carrera}`}</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
               <span class="dir-carrera-badge">${totalCarrera} estudiantes</span>
@@ -581,12 +581,23 @@ function renderDocentes() {
     grupos[esp].push(d);
   });
 
-  // Detectar el área de cada especialidad mirando los grupos de estudiantes
+  // Catálogo de áreas enviado por el backend
   const areaDeEsp = {};
+  if (dirData.catalogo_areas) {
+    for (const [carrera, area] of Object.entries(dirData.catalogo_areas)) {
+      areaDeEsp[carrera] = area.includes('cnica') ? 'tecnica' : 'humanistica';
+    }
+  }
+
+  // Predefinir materias humanísticas comunes por si el catálogo falla o el nombre es libre
+  const materiasHum = ['Matematica', 'Matemática', 'Lenguaje', 'Literatura', 'Ciencias Naturales', 'Ciencias Sociales', 'Filosofia', 'Filosofía'];
+  materiasHum.forEach(m => areaDeEsp[m] = 'humanistica');
+
+  // Completar áreas a partir de las agrupaciones de estudiantes (Técnica)
   if (dirData.grupos) {
     for (const area in dirData.grupos) {
       for (const carrera in dirData.grupos[area]) {
-        areaDeEsp[carrera] = area;
+        if (!areaDeEsp[carrera]) areaDeEsp[carrera] = area;
       }
     }
   }
