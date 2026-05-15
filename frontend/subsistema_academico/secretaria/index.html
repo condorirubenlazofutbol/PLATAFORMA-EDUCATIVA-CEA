@@ -555,30 +555,37 @@
             </div>
         </section>
 
-        <!-- TAB: USUARIOS -->
+        <!-- TAB: USUARIOS / DIRECTORIO -->
         <section id="tab-usuarios" class="tab-panel">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Directorio Institucional</h3>
-                    <div class="flex-center">
-                        <input type="text" id="user-filter" placeholder="Filtrar por nombre..." oninput="filtrarUsuarios(this.value)">
+                <div class="card-header" style="flex-direction:column; align-items:flex-start; gap:1rem;">
+                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                        <h3 class="card-title">👥 Directorio Institucional</h3>
+                        <span id="dir-count" style="font-size:0.78rem; color:var(--muted); font-weight:700;"></span>
+                    </div>
+                    <!-- Barra de Búsqueda Pro -->
+                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap; width:100%;">
+                        <input type="text" id="user-filter" placeholder="🔍 Buscar por nombre, correo o CI..." oninput="aplicarFiltrosDir()" style="flex:1; min-width:200px;">
+                        <select id="dir-filter-rol" onchange="aplicarFiltrosDir()" style="width:auto; padding:8px 12px;">
+                            <option value="">Todos los Roles</option>
+                            <option value="estudiante">🎓 Estudiantes</option>
+                            <option value="docente">👩‍🏫 Docentes</option>
+                            <option value="director">🏛️ Director</option>
+                            <option value="secretaria">📋 Secretaría</option>
+                            <option value="jefe_carrera">📚 Jefe Carrera</option>
+                            <option value="administrador">🔑 Admin</option>
+                        </select>
+                        <button class="btn-action btn-outline" onclick="exportarDirectorio()">📥 Exportar</button>
                     </div>
                 </div>
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
-                                <th>Usuario</th>
-                                <th>Correo</th>
-                                <th>CI</th>
-                                <th>Rol</th>
-                                <th>Nivel</th>
-                                <th>Acciones</th>
+                                <th>Usuario</th><th>Correo</th><th>CI</th><th>Rol</th><th>Nivel / Carrera</th><th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="user-table-body">
-                            <!-- JS -->
-                        </tbody>
+                        <tbody id="user-table-body"><tr><td colspan="6" style="text-align:center; color:var(--muted);">⏳ Cargando...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -587,10 +594,35 @@
         <!-- TAB: LISTA INSCRITOS -->
         <section id="tab-inscritos" class="tab-panel">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">📋 Lista de Inscritos</h3>
-                    <div class="flex-center">
-                        <input type="text" id="filter-inscritos" placeholder="Buscar por nombre, CI, carrera..." oninput="filtrarInscritos(this.value)" style="min-width:250px;">
+                <div class="card-header" style="flex-direction:column; align-items:flex-start; gap:1rem;">
+                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                        <h3 class="card-title">📋 Lista de Inscritos</h3>
+                        <span id="ins-count" style="font-size:0.78rem; color:var(--muted); font-weight:700;"></span>
+                    </div>
+                    <!-- Barra de Búsqueda Pro -->
+                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap; width:100%;">
+                        <input type="text" id="filter-inscritos" placeholder="🔍 Buscar por nombre, CI, carrera, nivel..." oninput="aplicarFiltrosInscritos()" style="flex:1; min-width:200px;">
+                        <select id="ins-filter-area" onchange="aplicarFiltrosInscritos()" style="width:auto; padding:8px 12px;">
+                            <option value="">Todas las Áreas</option>
+                            <option value="Humanística">📖 Humanística</option>
+                            <option value="Técnica">⚙️ Técnica</option>
+                        </select>
+                        <select id="ins-filter-nivel" onchange="aplicarFiltrosInscritos()" style="width:auto; padding:8px 12px;">
+                            <option value="">Todos los Niveles</option>
+                            <option>Aplicados (Primer Año)</option>
+                            <option>Complementarios (Segundo Año)</option>
+                            <option>Especializados (Tercer Año)</option>
+                            <option>Nivel Básico</option>
+                            <option>Nivel Auxiliar</option>
+                            <option>Nivel Medio I</option>
+                            <option>Nivel Medio II</option>
+                        </select>
+                        <select id="ins-filter-estado" onchange="aplicarFiltrosInscritos()" style="width:auto; padding:8px 12px;">
+                            <option value="">Todos los Estados</option>
+                            <option value="activo">✅ Activo</option>
+                            <option value="pausado">⏸️ Pausado</option>
+                            <option value="retirado">❌ Retirado</option>
+                        </select>
                         <button class="btn-action btn-outline" onclick="exportarInscritos()">📥 Exportar Excel</button>
                     </div>
                 </div>
@@ -601,7 +633,7 @@
                             <th>Nivel</th><th>Paralelo</th><th>Turno</th><th>Estado</th><th>Acciones</th>
                         </tr></thead>
                         <tbody id="inscritos-tbody">
-                            <tr><td colspan="8" style="text-align:center; color:var(--muted);">⏳ Cargando...</td></tr>
+                            <tr><td colspan="9" style="text-align:center; color:var(--muted);">⏳ Cargando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -870,20 +902,26 @@
             try {
                 const r = await fetch(`${API_URL}/auth/usuarios`, { headers: {'Authorization': `Bearer ${token}`} });
                 allUsers = await r.json();
-                if(Array.isArray(allUsers)) renderUserTable(allUsers);
+                if(Array.isArray(allUsers)) {
+                    renderUserTable(allUsers);
+                    const el = document.getElementById('dir-count');
+                    if(el) el.textContent = `${allUsers.length} usuario(s) total`;
+                }
             } catch (e) { console.error(e); }
         }
 
         async function loadInscritos() {
             const tbody = document.getElementById('inscritos-tbody');
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--muted);">⏳ Cargando inscripciones...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--muted);">⏳ Cargando inscripciones...</td></tr>`;
             try {
                 const r = await fetch(`${API_URL}/auth/inscripciones`, { headers: {'Authorization': `Bearer ${token}`} });
                 const d = await r.json();
                 allInscritos = d.inscripciones || [];
                 renderInscritosTable(allInscritos);
+                const el = document.getElementById('ins-count');
+                if(el) el.textContent = `${allInscritos.length} de ${allInscritos.length} inscrito(s)`;
             } catch(e) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--rose);">❌ Error cargando inscripciones.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--rose);">❌ Error cargando inscripciones.</td></tr>`;
             }
         }
 
@@ -1049,6 +1087,21 @@
             XLSX.writeFile(wb, `Inscritos_CEA_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
         }
 
+        function exportarDirectorio() {
+            if(!allUsers || !allUsers.length) return Swal.fire('Aviso', 'No hay datos para exportar.', 'info');
+            const dataToExport = allUsers.map(u => ({
+                'Nombre':    `${u.nombre} ${u.apellido || ''}`.trim(),
+                'CI/Carnet': u.carnet || '-',
+                'Email':     u.email,
+                'Rol':       u.rol,
+                'Nivel/Carrera': u.nivel_asignado || '-'
+            }));
+            const ws = createProSheet(dataToExport, 'DIRECTORIO INSTITUCIONAL CEA');
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Directorio');
+            XLSX.writeFile(wb, `Directorio_CEA_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
+        }
+
         function renderUserTable(list) {
             const tbody = document.getElementById('user-table-body');
             tbody.innerHTML = list.map(u => `
@@ -1063,13 +1116,44 @@
             `).join('');
         }
 
-        function filtrarUsuarios(val) {
-            const filtered = allUsers.filter(u => 
-                (u.nombre + ' ' + (u.apellido||'')).toLowerCase().includes(val.toLowerCase()) ||
-                (u.carnet || '').includes(val)
-            );
+        function aplicarFiltrosDir() {
+            const q   = (document.getElementById('user-filter').value || '').toLowerCase();
+            const rol = (document.getElementById('dir-filter-rol').value || '').toLowerCase();
+            const filtered = allUsers.filter(u => {
+                const nombre = `${u.nombre} ${u.apellido || ''} ${u.email} ${u.carnet || ''} ${u.nivel_asignado || ''}`.toLowerCase();
+                const matchQ   = !q   || nombre.includes(q);
+                const matchRol = !rol || (u.rol || '').toLowerCase() === rol;
+                return matchQ && matchRol;
+            });
             renderUserTable(filtered);
+            const el = document.getElementById('dir-count');
+            if (el) el.textContent = `${filtered.length} resultado(s) de ${allUsers.length}`;
         }
+
+        // Alias para compatibilidad con oninput legado
+        function filtrarUsuarios(val) { aplicarFiltrosDir(); }
+
+        function aplicarFiltrosInscritos() {
+            const q      = (document.getElementById('filter-inscritos').value || '').toLowerCase();
+            const area   = (document.getElementById('ins-filter-area').value || '');
+            const nivel  = (document.getElementById('ins-filter-nivel').value || '').toLowerCase();
+            const estado = (document.getElementById('ins-filter-estado').value || '').toLowerCase();
+
+            const filtered = allInscritos.filter(i => {
+                const texto = `${i.nombre} ${i.apellido} ${i.carnet || ''} ${i.carrera_nombre || ''} ${i.nivel || ''} ${i.paralelo || ''} ${i.email || ''}`.toLowerCase();
+                const matchQ      = !q      || texto.includes(q);
+                const matchArea   = !area   || (i.carrera_area || '').includes(area);
+                const matchNivel  = !nivel  || (i.nivel || '').toLowerCase().includes(nivel);
+                const matchEstado = !estado || (i.estado || 'activo').toLowerCase() === estado;
+                return matchQ && matchArea && matchNivel && matchEstado;
+            });
+
+            renderInscritosTable(filtered);
+            const el = document.getElementById('ins-count');
+            if (el) el.textContent = `${filtered.length} de ${allInscritos.length} inscrito(s)`;
+        }
+
+        function filtrarInscritos(val) { aplicarFiltrosInscritos(); }
 
         async function loadElecciones() {
             try {
