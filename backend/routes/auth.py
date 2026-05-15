@@ -1000,3 +1000,20 @@ def retirar_jefe_carrera(data: PromoverJefeRequest, current_user: dict = Depends
         if conn:
             conn.close()
 
+@router.get("/fix-carreras")
+def fix_carreras():
+    conn = get_db_connection()
+    if not conn:
+        return {"error": "No DB connection"}
+    cur = conn.cursor()
+    try:
+        cur.execute("UPDATE carreras SET nombre = 'Confección Textil' WHERE nombre ILIKE '%Corte%Confecc%'")
+        conn.commit()
+        return {"status": "ok", "message": "Carrera actualizada a Confección Textil correctamente."}
+    except Exception as e:
+        conn.rollback()
+        return {"error": str(e)}
+    finally:
+        cur.close()
+        conn.close()
+
