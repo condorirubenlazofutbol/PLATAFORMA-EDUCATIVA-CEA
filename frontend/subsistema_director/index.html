@@ -585,19 +585,19 @@ function renderDocentes() {
   const areaDeEsp = {};
   if (dirData.catalogo_areas) {
     for (const [carrera, area] of Object.entries(dirData.catalogo_areas)) {
-      areaDeEsp[carrera] = area.includes('cnica') ? 'tecnica' : 'humanistica';
+      areaDeEsp[carrera.toUpperCase()] = area.includes('cnica') ? 'tecnica' : 'humanistica';
     }
   }
 
   // Predefinir materias humanísticas comunes por si el catálogo falla o el nombre es libre
-  const materiasHum = ['Matematica', 'Matemática', 'Lenguaje', 'Literatura', 'Ciencias Naturales', 'Ciencias Sociales', 'Filosofia', 'Filosofía'];
+  const materiasHum = ['MATEMATICA', 'MATEMÁTICA', 'LENGUAJE', 'LITERATURA', 'CIENCIAS NATURALES', 'CIENCIAS SOCIALES', 'FILOSOFIA', 'FILOSOFÍA'];
   materiasHum.forEach(m => areaDeEsp[m] = 'humanistica');
 
   // Completar áreas a partir de las agrupaciones de estudiantes (Técnica)
   if (dirData.grupos) {
     for (const area in dirData.grupos) {
       for (const carrera in dirData.grupos[area]) {
-        if (!areaDeEsp[carrera]) areaDeEsp[carrera] = area;
+        if (!areaDeEsp[carrera.toUpperCase()]) areaDeEsp[carrera.toUpperCase()] = area;
       }
     }
   }
@@ -629,7 +629,7 @@ function renderDocentes() {
     let carrerasHtml = '';
 
     const carrerasDelArea = Object.entries(grupos)
-      .filter(([esp, _]) => (areaDeEsp[esp] || 'tecnica') === area)
+      .filter(([esp, _]) => (areaDeEsp[esp.toUpperCase()] || 'tecnica') === area)
       .sort();
 
     if (carrerasDelArea.length === 0) continue;
