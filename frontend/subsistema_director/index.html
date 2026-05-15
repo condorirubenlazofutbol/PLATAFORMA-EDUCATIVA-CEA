@@ -1108,38 +1108,50 @@ function exportarExcelPro() {
 
   } else {
       if (dirData.docentes && dirData.docentes.length > 0) {
-          const groupedDocentes = {};
-          
-          dirData.docentes.forEach(d => {
-            const isT = (d.area_designada && d.area_designada.toLowerCase().includes('tecnica')) || 
-                        (d.especialidad && Object.keys(dirData.grupos?.tecnica || {}).includes(d.especialidad));
-            let areaDoc = isT ? 'Técnica' : 'Humanística';
 
-            let esp = d.especialidad;
-            if (!esp || esp.trim() === '' || esp === 'Sin Especialidad') esp = areaDoc === 'Humanística' ? 'Área Humanística' : 'Área Técnica';
-            
-            if (!groupedDocentes[esp]) groupedDocentes[esp] = { area: areaDoc, data: [] };
+          // Solo 2 hojas: Humanística y Técnica
+          const tecnicaCarreras = Object.keys(dirData.grupos?.tecnica || {});
+          const areaConfig = [
+            { key: 'humanistica', label: 'Humanística', sheetName: 'Humanística' },
+            { key: 'tecnica',     label: 'Técnica',     sheetName: 'Técnica' }
+          ];
 
-            groupedDocentes[esp].data.push({
-              'CI': d.carnet, 'Apellidos': d.apellido, 'Nombres': d.nombre,
-              'Área': areaDoc, 'Especialidad / Carrera': esp, 'Cursos Asignados': d.nivel_asignado || 'Sin Asignar',
-              'Estado': d.estado, 'Fecha Ingreso': d.fecha_ingreso
-            });
-          });
-          
-          for (const [esp, obj] of Object.entries(groupedDocentes)) {
-              let sheetName = esp.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31) || "Docentes";
-              
-              const ws = createProSheet(obj.data, "REPORTE GENERAL DE DOCENTES", obj.area, esp);
-              
-              let finalName = sheetName; let counter = 1;
-              while(wb.SheetNames.includes(finalName)) { finalName = sheetName.substring(0, 28) + "_" + counter; counter++; }
-              XLSX.utils.book_append_sheet(wb, ws, finalName);
+          for (const cfg of areaConfig) {
+            const docsDelArea = dirData.docentes
+              .filter(d => {
+                const isT = (d.area_designada && d.area_designada.toLowerCase().includes('tecnica'))
+                         || (d.especialidad && tecnicaCarreras.includes(d.especialidad));
+                return cfg.key === 'tecnica' ? isT : !isT;
+              })
+              .sort((a, b) => {
+                const espA = a.especialidad || '';
+                const espB = b.especialidad || '';
+                if (espA !== espB) return espA.localeCompare(espB);
+                return (a.apellido || '').localeCompare(b.apellido || '');
+              });
+
+            if (docsDelArea.length === 0) continue;
+
+            const data = docsDelArea.map((d, i) => ({
+              'N°': i + 1,
+              'CI': d.carnet || 'S/N',
+              'Apellidos': d.apellido,
+              'Nombres': d.nombre,
+              'Especialidad / Carrera': d.especialidad || '—',
+              'Curso Asignado': d.nivel_asignado || 'Sin Asignar',
+              'Estado': d.estado,
+              'Fecha Ingreso': (d.fecha_ingreso || '').split('T')[0]
+            }));
+
+            const ws = createProSheet(data, `REPORTE GENERAL DE DOCENTES – ${cfg.label.toUpperCase()}`, cfg.key, '', '');
+            XLSX.utils.book_append_sheet(wb, ws, cfg.sheetName);
           }
+
       } else {
-          return alert("No hay docentes para exportar.");
+          return alert('No hay docentes para exportar.');
       }
       
+      if (wb.SheetNames.length === 0) return alert('No hay docentes para exportar.');
       XLSX.writeFile(wb, `Docentes_CEA_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
   }
 }
