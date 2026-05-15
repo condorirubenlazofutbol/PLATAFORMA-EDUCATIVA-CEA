@@ -499,7 +499,7 @@ def init_db():
                 connection.rollback()
 
         try:
-            cursor.execute("UPDATE carreras SET nombre = 'Confección Textil' WHERE nombre = 'Corte y Confección'")
+            cursor.execute("UPDATE carreras SET nombre = 'Confección Textil' WHERE nombre ILIKE '%Corte%Confecc%'")
         except:
             connection.rollback()
             

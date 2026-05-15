@@ -1373,13 +1373,14 @@ async function modalAsignarNivel(id, nombre) {
                 for (const carrera in dirData.grupos['humanistica']) {
                     const niveles = dirData.grupos['humanistica'][carrera];
                     for (const nivelKey in niveles) {
-                        // La clave puede ser "Aplicados... (Turno Noche)" o "Aplicados... (Turno Noche) - Paralelo A"
-                        if (nivelKey.startsWith(c.base)) {
+                        // En Humanística, la carrera contiene el nivel (ej: "Aplicados (Primer Año)")
+                        // y nivelKey contiene el paralelo (ej: "Paralelo A (Noche)")
+                        if (carrera.startsWith(c.base) || nivelKey.startsWith(c.base)) {
                             const estudiantes = niveles[nivelKey];
-                            if (estudiantes.total >= 1) {
-                                const matchTurno = nivelKey.match(/\((Mañana|Tarde|Noche)\)/) || nivelKey.match(/\(Turno (.*?)\)/);
+                            if (estudiantes.total >= 20) {
+                                const matchTurno = nivelKey.match(/\((Mañana|Tarde|Noche)\)/) || nivelKey.match(/\(Turno (.*?)\)/) || carrera.match(/\((Mañana|Tarde|Noche)\)/);
                                 const turno = matchTurno ? matchTurno[1] : 'Noche';
-                                const matchParalelo = nivelKey.match(/Paralelo ([A-Z])$/);
+                                const matchParalelo = nivelKey.match(/Paralelo ([A-Z])$/) || nivelKey.match(/Paralelo ([A-Z])/);
                                 const paralelo = matchParalelo ? matchParalelo[1] : null;
                                 const mapKey = `${turno}-${paralelo}`;
                                 paralelosEnCurso.set(mapKey, { p: paralelo, t: turno });
@@ -1423,8 +1424,8 @@ async function modalAsignarNivel(id, nombre) {
 
         if (!checkboxesHtml) {
             checkboxesHtml = `<div style="padding:15px;text-align:center;color:#f97316;background:rgba(249,115,22,0.1);border-radius:8px;font-size:.9rem;">
-                No hay cursos con estudiantes inscritos en esta área actualmente.<br>
-                <small>Registra estudiantes en la Malla Curricular para habilitar los cursos.</small>
+                No hay cursos habilitados para tu especialidad.<br>
+                <small>Recuerda que el Ministerio requiere un <b>mínimo de 20 estudiantes</b> inscritos en un nivel para habilitar oficialmente el curso.</small>
             </div>`;
         }
 
@@ -1447,7 +1448,7 @@ async function modalAsignarNivel(id, nombre) {
             const nivelesCarrera = dirData.grupos['tecnica'][espDocente];
             Object.keys(nivelesCarrera).forEach(nivelKey => {
                 const estudiantes = nivelesCarrera[nivelKey];
-                if (estudiantes.total >= 1) {
+                if (estudiantes.total >= 15) {
                     let label = nivelKey;
                     if (label.includes('Paralelo')) {
                         label = label.replace(' - Paralelo ', ' — Paralelo ');
@@ -1511,7 +1512,8 @@ async function modalAsignarNivel(id, nombre) {
             </select>`;
         } else {
             selectorHtml = `<div style="padding:15px;text-align:center;color:#f97316;background:rgba(249,115,22,0.1);border-radius:8px;font-size:.9rem;">
-                No hay niveles configurados para la carrera <b>${espDocente}</b>.
+                No hay cursos habilitados para la carrera <b>${espDocente}</b>.<br>
+                <small>Recuerda que el Ministerio requiere un <b>mínimo de 15 estudiantes</b> inscritos en un nivel para habilitar oficialmente el curso.</small>
             </div>
             <input type="hidden" id="sel-nivel" value="">`;
         }
