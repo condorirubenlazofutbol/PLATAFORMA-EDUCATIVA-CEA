@@ -339,6 +339,7 @@ async def importar_estudiantes_excel(nivel: str, turno: str = "Noche", file: Upl
                            apellido = EXCLUDED.apellido,
                            nivel_asignado = EXCLUDED.nivel_asignado,
                            carnet = EXCLUDED.carnet,
+                           rol = EXCLUDED.rol,
                            estado = 'activo'
                        RETURNING id""",
                     (nombres, apellidos, email, password, nivel, carnet)
@@ -786,6 +787,7 @@ async def bulk_register(nivel: str, turno: str = "Noche", rol: str = "estudiante
                        apellido = EXCLUDED.apellido,
                        nivel_asignado = EXCLUDED.nivel_asignado,
                        carnet = EXCLUDED.carnet,
+                       rol = EXCLUDED.rol,
                        estado = 'activo'
                    RETURNING id""",
                 (subsistema_id, nombre, apellido, email, hashed, db_rol, nivel, s_carnet)
