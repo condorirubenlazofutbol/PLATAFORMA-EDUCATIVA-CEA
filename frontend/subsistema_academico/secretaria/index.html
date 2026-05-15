@@ -602,10 +602,13 @@
                     <!-- Barra de Búsqueda Pro -->
                     <div style="display:flex; gap:0.6rem; flex-wrap:wrap; width:100%;">
                         <input type="text" id="filter-inscritos" placeholder="🔍 Buscar por nombre, CI, carrera, nivel..." oninput="aplicarFiltrosInscritos()" style="flex:1; min-width:200px;">
-                        <select id="ins-filter-area" onchange="aplicarFiltrosInscritos()" style="width:auto; padding:8px 12px;">
+                        <select id="ins-filter-area" onchange="onAreaFilterChange()" style="width:auto; padding:8px 12px;">
                             <option value="">Todas las Áreas</option>
                             <option value="Humanística">📖 Humanística</option>
                             <option value="Técnica">⚙️ Técnica</option>
+                        </select>
+                        <select id="ins-filter-carrera" onchange="aplicarFiltrosInscritos()" style="width:auto; padding:8px 12px; display:none;">
+                            <option value="">Todas las Carreras</option>
                         </select>
                         <select id="ins-filter-nivel" onchange="aplicarFiltrosInscritos()" style="width:auto; padding:8px 12px;">
                             <option value="">Todos los Niveles</option>
@@ -1136,21 +1139,52 @@
         function aplicarFiltrosInscritos() {
             const q      = (document.getElementById('filter-inscritos').value || '').toLowerCase();
             const area   = (document.getElementById('ins-filter-area').value || '');
+            const carrera = (document.getElementById('ins-filter-carrera').value || '');
             const nivel  = (document.getElementById('ins-filter-nivel').value || '').toLowerCase();
             const estado = (document.getElementById('ins-filter-estado').value || '').toLowerCase();
 
             const filtered = allInscritos.filter(i => {
                 const texto = `${i.nombre} ${i.apellido} ${i.carnet || ''} ${i.carrera_nombre || ''} ${i.nivel || ''} ${i.paralelo || ''} ${i.email || ''}`.toLowerCase();
-                const matchQ      = !q      || texto.includes(q);
-                const matchArea   = !area   || (i.carrera_area || '').includes(area);
-                const matchNivel  = !nivel  || (i.nivel || '').toLowerCase().includes(nivel);
-                const matchEstado = !estado || (i.estado || 'activo').toLowerCase() === estado;
-                return matchQ && matchArea && matchNivel && matchEstado;
+                const matchQ        = !q        || texto.includes(q);
+                const matchArea     = !area     || (i.carrera_area || '').includes(area);
+                const matchCarrera  = !carrera  || (i.carrera_nombre || '').includes(carrera);
+                const matchNivel    = !nivel    || (i.nivel || '').toLowerCase().includes(nivel);
+                const matchEstado   = !estado   || (i.estado || 'activo').toLowerCase() === estado;
+                return matchQ && matchArea && matchCarrera && matchNivel && matchEstado;
             });
 
             renderInscritosTable(filtered);
             const el = document.getElementById('ins-count');
             if (el) el.textContent = `${filtered.length} de ${allInscritos.length} inscrito(s)`;
+        }
+
+        function onAreaFilterChange() {
+            const area = document.getElementById('ins-filter-area').value;
+            const selectNivel = document.getElementById('ins-filter-nivel');
+            const selectCarrera = document.getElementById('ins-filter-carrera');
+            
+            if (area === 'Humanística') {
+                selectCarrera.style.display = 'none';
+                selectCarrera.value = '';
+                selectNivel.innerHTML = '<option value="">Todos los Niveles</option>' + 
+                    ['Aplicados (Primer Año)', 'Complementarios (Segundo Año)', 'Especializados (Tercer Año)']
+                    .map(l => `<option value="${l}">${l}</option>`).join('');
+            } else if (area === 'Técnica') {
+                selectCarrera.style.display = 'inline-block';
+                const tecnicas = (typeof carrerasDB !== 'undefined' ? carrerasDB : []).filter(c => c.area && c.area.toLowerCase().includes('técnica'));
+                selectCarrera.innerHTML = '<option value="">Todas las Carreras</option>' + 
+                    tecnicas.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+                selectNivel.innerHTML = '<option value="">Todos los Niveles</option>' + 
+                    ['Nivel Básico', 'Nivel Auxiliar', 'Nivel Medio I', 'Nivel Medio II']
+                    .map(l => `<option value="${l}">${l}</option>`).join('');
+            } else {
+                selectCarrera.style.display = 'none';
+                selectCarrera.value = '';
+                selectNivel.innerHTML = '<option value="">Todos los Niveles</option>' + 
+                    ['Aplicados (Primer Año)', 'Complementarios (Segundo Año)', 'Especializados (Tercer Año)', 'Nivel Básico', 'Nivel Auxiliar', 'Nivel Medio I', 'Nivel Medio II']
+                    .map(l => `<option value="${l}">${l}</option>`).join('');
+            }
+            aplicarFiltrosInscritos();
         }
 
         function filtrarInscritos(val) { aplicarFiltrosInscritos(); }
