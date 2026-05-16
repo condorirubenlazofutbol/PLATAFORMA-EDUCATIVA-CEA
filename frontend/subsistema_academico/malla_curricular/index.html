@@ -247,11 +247,8 @@
             const headers = ['Numero de Módulo', 'Temas de cada Módulo', 'Contenido Detallado (Subtemas)'];
             let ws_data = [headers];
             
-            const area = isJefeCarrera ? 
-                (((user.area_designada || '').toLowerCase().includes('tecnica') || 
-                  (user.especialidad && carrerasDB.find(c => c.nombre === user.especialidad && c.area.toLowerCase().includes('tecnica')))) ? 'tecnica' : 'humanistica') 
-                : currentMallaArea;
-
+            // currentMallaArea is reliably set by applyJefeCarreraUI() after carrerasDB loads
+            const area = currentMallaArea || 'humanistica';
             const modulosA_Generar = area === 'tecnica' ? 5 : 2;
             
             for(let m=1; m<=modulosA_Generar; m++) {
@@ -260,7 +257,7 @@
                     const row = [
                         t === 1 ? nombreModulo : '', // Solo en la primera fila del módulo
                         `TEMA ${t}`,
-                        `SUBTITULO 1\nSUBTITULO 2\nSUBTITULO 3\nSUBTITULO 4`
+                        `SUBTITULO 1, SUBTITULO 2, SUBTITULO 3, SUBTITULO 4`
                     ];
                     ws_data.push(row);
                 }
@@ -331,12 +328,8 @@
                 let errores = 0, correctas = 0;
                 const dataRows = raw.slice(1);
 
-                // Determinar limites
-                const areaSelect = isJefeCarrera ? 
-                    (((user.area_designada || '').toLowerCase().includes('tecnica') || 
-                      (user.especialidad && carrerasDB.find(c => c.nombre === user.especialidad && c.area.toLowerCase().includes('tecnica')))) ? 'tecnica' : 'humanistica') 
-                    : currentMallaArea;
-                    
+                // Determinar limites — currentMallaArea is set reliably after applyJefeCarreraUI()
+                const areaSelect = currentMallaArea || 'humanistica';
                 const maxModulos = areaSelect === 'tecnica' ? 5 : 2;
 
                 let lastModulo = "";
@@ -370,11 +363,13 @@
                     }
 
                     const numTema = mod.temas.length + 1;
-                    const subArray = subsRaw ? subsRaw.split(/\n|\r|,/).map(s=>s.trim()).filter(Boolean) : [];
+                    // Split subtemas by comma, trim whitespace, max 4
+                    let subArray = subsRaw ? subsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
+                    if (subArray.length > 4) subArray = subArray.slice(0, 4);
 
                     const rowErrs = [];
                     if (!temaRaw) rowErrs.push('Falta nombre del tema');
-                    if (subArray.length < 1) rowErrs.push('Faltan subtemas');
+                    if (subArray.length < 1) rowErrs.push('Agrega al menos 1 subtema (separados por coma, máximo 4)');
 
                     if (rowErrs.length > 0) {
                         errores++;
