@@ -1418,7 +1418,8 @@ async function modalAsignarNivel(id, nombre) {
                         (d.especialidad && Object.keys(dirData.grupos?.tecnica || {}).includes(d.especialidad));
             const nombreDocente = `${d.nombre} ${d.apellido}`.trim();
             if (isT) {
-                asignacionesTecnica[d.nivel_asignado] = nombreDocente;
+                if (!asignacionesTecnica[d.especialidad]) asignacionesTecnica[d.especialidad] = {};
+                asignacionesTecnica[d.especialidad][d.nivel_asignado] = nombreDocente;
             } else {
                 if (!asignacionesHumanistica[d.especialidad]) asignacionesHumanistica[d.especialidad] = {};
                 d.nivel_asignado.split(',').forEach(n => asignacionesHumanistica[d.especialidad][n.trim()] = nombreDocente);
@@ -1582,7 +1583,8 @@ async function modalAsignarNivel(id, nombre) {
                 } else {
                     isSelected = n.value.startsWith(nivelActual) && n.value.includes('Noche');
                 }
-                const asignadoA = asignacionesTecnica[n.value];
+                const asignacionesPorEspecialidadTecnica = asignacionesTecnica[espDocente] || {};
+                const asignadoA = asignacionesPorEspecialidadTecnica[n.value];
                 const labelAsignado = asignadoA ? `🔴 ${n.label} (Asignado a: ${asignadoA})` : n.label;
                 const styleAsignado = asignadoA ? 'color:#ef4444; font-weight:bold;' : '';
                 return `<option value="${n.value}" ${isSelected ? 'selected' : ''} style="${styleAsignado}">${labelAsignado}</option>`;
