@@ -135,12 +135,12 @@
         </div>
         <input type="file" id="excel-import-input" hidden accept=".xlsx,.xls" onchange="validateAndImportExcel(this)">
 
-        <!-- Panel Admin -->
+                <!-- Panel Admin -->
         <div class="card admin-panel" id="adminPanel">
             <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem;">
                 <div>
                     <h1>Gestión de Programa</h1>
-                    <p style="color: var(--muted); margin-top:0.3rem;">Añade módulos manualmente o importa desde Excel con validación automática.</p>
+                    <p style="color: var(--muted); margin-top:0.3rem;" id="adminSubtitle">Añade módulos manualmente o importa desde Excel con validación automática.</p>
                 </div>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     <button class="btn-excel download" onclick="downloadPlantilla()" type="button">📥 Descargar Plantilla</button>
@@ -148,7 +148,7 @@
                 </div>
             </div>
 
-            <div style="display:flex; gap:10px; margin-bottom: 1.5rem; margin-top: 1.5rem;">
+            <div id="manual-buttons" style="display:flex; gap:10px; margin-bottom: 1.5rem; margin-top: 1.5rem;">
                 <button class="btn-add" id="btn-area-humanistica" onclick="setMallaArea('humanistica')" type="button" style="background: var(--primary);">Humanística</button>
                 <button class="btn-add" id="btn-area-tecnica" onclick="setMallaArea('tecnica')" type="button" style="background: rgba(255,255,255,0.1); color: var(--muted);">Técnica</button>
             </div>
@@ -166,11 +166,11 @@
                     <label id="label-nivel">Ciclo / Nivel</label>
                     <select id="nivel" required></select>
                 </div>
-                <div class="input-group">
+                <div class="input-group" id="group-modulo">
                     <label>Nombre del Módulo</label>
-                    <input type="text" id="nombre_modulo" required placeholder="Ej: Módulo 1 - Álgebra Básica">
+                    <input type="text" id="nombre_modulo" placeholder="Ej: Módulo 1 - Álgebra Básica">
                 </div>
-                <button type="submit" class="btn-add">➕ Añadir Módulo</button>
+                <button type="submit" class="btn-add" id="btn-add-submit">➕ Añadir Módulo</button>
             </form>
         </div>
 
@@ -215,35 +215,44 @@
 
         // ─── PLANTILLA EXCEL ───────────────────────────────────────────────
         function downloadPlantilla() {
-            const headers = [
-                'Nivel', 'Area', 'Carrera_Curso',
-                'Modulo',
-                'Tema1', 'Subtitulos_T1',
-                'Tema2', 'Subtitulos_T2',
-                'Tema3', 'Subtitulos_T3',
-                'Tema4', 'Subtitulos_T4'
-            ];
-            const ejemplos = [
-                ['Aplicados (Primer Año)', 'Humanística', 'Matemática',
-                 'Módulo 1 - Álgebra Básica',
-                 'Introducción al Álgebra', 'Definición,Variables,Constantes,Expresiones',
-                 'Operaciones Algebraicas', 'Suma,Resta,Multiplicación,División',
-                 'Ecuaciones Lineales', 'Concepto,Solución,Verificación,Aplicaciones',
-                 'Inecuaciones', 'Definición,Tipos,Resolución,Gráfica'],
-                ['Nivel Básico', 'Técnica', 'Sistemas Informáticos',
-                 'Módulo 1 - Fundamentos TI',
-                 'Hardware', 'CPU,RAM,Disco Duro,Periféricos',
-                 'Software', 'Sistema Operativo,Aplicaciones,Licencias,Instalación',
-                 'Redes Básicas', 'LAN,WAN,Protocolo TCP/IP,DNS',
-                 'Seguridad Informática', 'Antivirus,Contraseñas,Phishing,Backup'],
-            ];
-            const ws = XLSX.utils.aoa_to_sheet([headers, ...ejemplos]);
-            // Estilos de ancho de columnas
-            ws['!cols'] = headers.map((h, i) => ({ wch: [10,12,22,30,28,35,28,35,28,35,28,35][i] || 20 }));
+            const headers = ['Numero de Módulo', 'Temas de cada Módulo', 'Contenido Detallado (Subtemas)'];
+            let ws_data = [headers];
+            
+            const area = isJefeCarrera ? 
+                (((user.area_designada || '').toLowerCase().includes('tecnica') || 
+                  (user.especialidad && carrerasDB.find(c => c.nombre === user.especialidad && c.area.toLowerCase().includes('tecnica')))) ? 'tecnica' : 'humanistica') 
+                : currentMallaArea;
+
+            const modulosA_Generar = area === 'tecnica' ? 5 : 2;
+            
+            for(let m=1; m<=modulosA_Generar; m++) {
+                const nombreModulo = `MÓDULO ${['I','II','III','IV','V'][m-1]}: TÍTULO DEL MÓDULO`;
+                for(let t=1; t<=4; t++) {
+                    const row = [
+                        t === 1 ? nombreModulo : '', // Solo en la primera fila del módulo
+                        `${t}. Título del Tema ${t}`,
+                        `${t}.1. Subtema 1\n${t}.2. Subtema 2\n${t}.3. Subtema 3\n${t}.4. Subtema 4`
+                    ];
+                    ws_data.push(row);
+                }
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(ws_data);
+            
+            // Combinar celdas del Módulo
+            if(!ws['!merges']) ws['!merges'] = [];
+            for(let m=1; m<=modulosA_Generar; m++) {
+                const startRow = 1 + (m-1)*4;
+                const endRow = startRow + 3;
+                ws['!merges'].push({ s: {r: startRow, c: 0}, e: {r: endRow, c: 0} });
+            }
+
+            // Estilos
+            ws['!cols'] = [{wch: 35}, {wch: 45}, {wch: 60}];
             applyProTableStyles(ws);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Malla_CEA');
-            XLSX.writeFile(wb, 'Plantilla_Malla_Curricular_CEA.xlsx');
+            XLSX.writeFile(wb, `Plantilla_Malla_${area === 'tecnica' ? 'Tecnica' : 'Humanistica'}.xlsx`);
         }
 
         function applyProTableStyles(ws) {
@@ -290,89 +299,93 @@
                 summaryDiv.innerHTML = '';
                 pendingImportRows    = [];
 
-                let errores = 0, advertencias = 0, correctas = 0;
-                const dataRows = raw.slice(1); // skip header
+                let errores = 0, correctas = 0;
+                const dataRows = raw.slice(1);
+
+                // Determinar limites
+                const areaSelect = isJefeCarrera ? 
+                    (((user.area_designada || '').toLowerCase().includes('tecnica') || 
+                      (user.especialidad && carrerasDB.find(c => c.nombre === user.especialidad && c.area.toLowerCase().includes('tecnica')))) ? 'tecnica' : 'humanistica') 
+                    : currentMallaArea;
+                    
+                const maxModulos = areaSelect === 'tecnica' ? 5 : 2;
+
+                let lastModulo = "";
+                const modulosParsed = [];
 
                 dataRows.forEach((row, idx) => {
-                    const fila = idx + 2; // Excel fila real
-                    const [nivel, area, carreraCurso, modulo,
-                           t1, s1, t2, s2, t3, s3, t4, s4] = row.map(c => (c || '').toString().trim());
+                    const fila = idx + 2;
+                    let moduloRaw = (row[0] || '').toString().trim();
+                    let temaRaw = (row[1] || '').toString().trim();
+                    let subsRaw = (row[2] || '').toString().trim();
+                    
+                    if (!moduloRaw && !temaRaw && !subsRaw) return; // empty row
 
-                    const rowErrors = [];
-                    const rowWarns  = [];
-
-                    // Validaciones obligatorias
-                    if (!nivel)       rowErrors.push('Falta columna <b>Nivel</b>');
-                    if (!area)        rowErrors.push('Falta columna <b>Área</b>');
-                    if (!carreraCurso) rowErrors.push('Falta columna <b>Carrera/Curso</b>');
-                    if (!modulo)      rowErrors.push('Falta columna <b>Módulo</b>');
-
-                    // Validar 4 temas y sus 4 subtítulos cada uno
-                    const temas = [
-                        { num: 1, titulo: t1, subs: s1 },
-                        { num: 2, titulo: t2, subs: s2 },
-                        { num: 3, titulo: t3, subs: s3 },
-                        { num: 4, titulo: t4, subs: s4 },
-                    ];
-                    temas.forEach(t => {
-                        if (!t.titulo) {
-                            rowErrors.push(`Falta el <b>Tema ${t.num}</b>`);
-                        } else {
-                            const subList = t.subs ? t.subs.split(',').map(s => s.trim()).filter(Boolean) : [];
-                            if (subList.length < 4) {
-                                rowErrors.push(`Tema ${t.num} "<i>${t.titulo}</i>" necesita 4 subtítulos separados por coma (tiene ${subList.length})`);
-                            }
-                        }
-                    });
-
-                    // Advertencias
-                    if (area && !['Humanística','Técnica','humanistica','tecnica'].includes(area)) {
-                        rowWarns.push(`Área "<b>${area}</b>" no reconocida — revise (Human\u00edstica / T\u00e9cnica)`);
+                    if (moduloRaw) {
+                        lastModulo = moduloRaw;
+                    } else if (temaRaw && lastModulo) {
+                        moduloRaw = lastModulo; // heredar de la fila combinada
                     }
 
-                    const hasErrors = rowErrors.length > 0;
-                    const haswarn   = rowWarns.length > 0;
+                    if (!moduloRaw) {
+                        errores++;
+                        resultDiv.innerHTML += `<div class="v-row err"><span class="v-icon">❌</span><div class="v-msg">Fila ${fila}: Falta el nombre del Módulo.</div></div>`;
+                        return;
+                    }
 
-                    if (hasErrors) errores++;
-                    else if (haswarn) { advertencias++; correctas++; }
-                    else correctas++;
+                    // Encontrar o crear modulo
+                    let mod = modulosParsed.find(m => m.nombre === moduloRaw);
+                    if (!mod) {
+                        mod = { nombre: moduloRaw, temas: [] };
+                        modulosParsed.push(mod);
+                    }
 
-                    const type = hasErrors ? 'err' : (haswarn ? 'warn' : 'ok');
-                    const icon = hasErrors ? '❌' : (haswarn ? '⚠️' : '✅');
-                    const msgs = [...rowErrors, ...rowWarns];
+                    const numTema = mod.temas.length + 1;
+                    const subArray = subsRaw ? subsRaw.split(/\n|\r|,/).map(s=>s.trim()).filter(Boolean) : [];
 
-                    resultDiv.innerHTML += `
-                        <div class="v-row ${type}">
-                            <span class="v-icon">${icon}</span>
-                            <div class="v-msg">
-                                <b>Fila ${fila}:</b> ${modulo || '(sin nombre)'} — ${carreraCurso || ''}
-                                ${msgs.length ? '<br><small style="opacity:0.9;">• ' + msgs.join('<br>• ') + '</small>' : ''}
-                            </div>
-                            <span class="v-meta">${nivel || ''} · ${area || ''}</span>
-                        </div>`;
+                    const rowErrs = [];
+                    if (!temaRaw) rowErrs.push('Falta nombre del tema');
+                    if (subArray.length < 1) rowErrs.push('Faltan subtemas');
 
-                    if (!hasErrors) {
-                        // Preparar payload válido para importar
-                        pendingImportRows.push({ nivel, area, carreraCurso, modulo,
-                            temas: temas.map(t => ({
-                                numero: t.num,
-                                titulo: t.titulo,
-                                subtitulos: (t.subs||'').split(',').map(s=>s.trim()).filter(Boolean)
-                            }))
+                    if (rowErrs.length > 0) {
+                        errores++;
+                        resultDiv.innerHTML += `<div class="v-row err"><span class="v-icon">❌</span><div class="v-msg">Fila ${fila} [${moduloRaw}]: ${rowErrs.join(', ')}</div></div>`;
+                    } else {
+                        mod.temas.push({
+                            numero: numTema,
+                            titulo: temaRaw,
+                            subtitulos: subArray
                         });
                     }
                 });
 
-                // Resumen
+                // Validar estructura a nivel macro
+                if (modulosParsed.length !== maxModulos) {
+                    errores++;
+                    resultDiv.innerHTML += `<div class="v-row err"><span class="v-icon">❌</span><div class="v-msg">Se encontraron ${modulosParsed.length} módulos, pero el área ${areaSelect} requiere exactamente ${maxModulos} módulos.</div></div>`;
+                }
+
+                modulosParsed.forEach(mod => {
+                    if (mod.temas.length !== 4) {
+                        errores++;
+                        resultDiv.innerHTML += `<div class="v-row err"><span class="v-icon">❌</span><div class="v-msg">El módulo "${mod.nombre}" tiene ${mod.temas.length} temas, pero debe tener exactamente 4.</div></div>`;
+                    } else {
+                        // All good for this module
+                        correctas++;
+                        resultDiv.innerHTML += `<div class="v-row ok"><span class="v-icon">✅</span><div class="v-msg">Módulo verificado: ${mod.nombre} (4 temas)</div></div>`;
+                        pendingImportRows.push(mod);
+                    }
+                });
+
                 const allOk = errores === 0;
                 summaryDiv.style.background = allOk ? 'rgba(34,197,94,0.1)' : 'rgba(244,63,94,0.1)';
                 summaryDiv.style.color = allOk ? '#86efac' : '#fda4af';
                 summaryDiv.style.border = `1px solid ${allOk ? 'rgba(34,197,94,0.3)' : 'rgba(244,63,94,0.3)'}`;
                 summaryDiv.innerHTML = allOk
-                    ? `✅ Validación exitosa — ${correctas} filas listas para importar.`
-                    : `❌ ${errores} fila(s) con errores · ${advertencias} advertencia(s) · ${correctas} correctas. Corrija los errores antes de importar.`;
+                    ? `✅ Validación exitosa — ${modulosParsed.length} módulos listos para importar.`
+                    : `❌ ${errores} errores detectados. Corrija los errores en el Excel antes de importar.`;
 
-                btnConfirm.style.display = allOk && pendingImportRows.length ? '' : 'none';
+                btnConfirm.style.display = allOk ? '' : 'none';
                 document.getElementById('validatorOverlay').classList.add('open');
             };
             reader.readAsArrayBuffer(file);
@@ -381,29 +394,49 @@
 
         async function confirmarImport() {
             if (!pendingImportRows.length) return;
-            document.getElementById('btnConfirmImport').textContent = '⏳ Importando...';
-            document.getElementById('btnConfirmImport').disabled = true;
+            const btn = document.getElementById('btnConfirmImport');
+            btn.textContent = '⏳ Importando...';
+            btn.disabled = true;
+
+            const areaSelect = isJefeCarrera ? 
+                (((user.area_designada || '').toLowerCase().includes('tecnica') || 
+                  (user.especialidad && carrerasDB.find(c => c.nombre === user.especialidad && c.area.toLowerCase().includes('tecnica')))) ? 'tecnica' : 'humanistica') 
+                : currentMallaArea;
+            
+            const areaLabel = areaSelect === 'tecnica' ? 'Técnica' : 'Humanística';
+            
+            // Determinar id de carrera
+            let targetCarreraId;
+            if (isJefeCarrera) {
+                const cDB = carrerasDB.find(c => c.nombre === user.especialidad);
+                if (cDB) targetCarreraId = cDB.id;
+            } else {
+                targetCarreraId = areaSelect === 'humanistica' ? 
+                    document.getElementById('nombre_materia').value : 
+                    document.getElementById('carrera_tecnica').value;
+            }
+            
+            const nivelSelected = document.getElementById('nivel').value;
+
+            if (!targetCarreraId) {
+                Swal.fire('Error', 'No se detectó la carrera asociada. Contacte soporte.', 'error');
+                btn.textContent = '✅ Confirmar e Importar';
+                btn.disabled = false;
+                return;
+            }
 
             let ok = 0, fail = 0;
-            for (const row of pendingImportRows) {
-                // Buscar carrera en DB
-                const matchArea = row.area.toLowerCase().includes('hum') ? 'Humanística' : 'Técnica';
-                const carrera = carrerasDB.find(c =>
-                    c.nombre.toLowerCase() === row.carreraCurso.toLowerCase() &&
-                    c.area.includes(matchArea)
-                );
-                if (!carrera) { fail++; continue; }
-
+            for (const mod of pendingImportRows) {
                 try {
                     const res = await fetch(`${API_URL}/malla/modulo`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify({
-                            carrera_id: carrera.id,
-                            nombre: row.modulo,
-                            nivel: row.nivel,
-                            area: matchArea,
-                            temas: row.temas
+                            carrera_id: parseInt(targetCarreraId),
+                            nombre: mod.nombre,
+                            nivel: nivelSelected,
+                            area: areaLabel,
+                            temas: mod.temas
                         })
                     });
                     res.ok ? ok++ : fail++;
@@ -411,13 +444,15 @@
             }
 
             document.getElementById('validatorOverlay').classList.remove('open');
+            btn.textContent = '✅ Confirmar e Importar';
+            btn.disabled = false;
+            
             Swal.fire(
-                ok > 0 ? '¡Importación Completa!' : 'Sin cambios',
-                `✅ ${ok} módulo(s) importados correctamente.${fail ? `\n⚠️ ${fail} no pudieron importarse (verifique permisos o carrera).` : ''}`,
+                ok > 0 ? '¡Importación Completa!' : 'Error',
+                `✅ ${ok} módulo(s) importados correctamente para ${nivelSelected}.${fail ? `\n⚠️ ${fail} fallaron.` : ''}`,
                 ok > 0 ? 'success' : 'warning'
             ).then(() => cargarMalla());
         }
-
 
         let carrerasDB = [];
 
