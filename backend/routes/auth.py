@@ -55,18 +55,33 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         token = auth.create_access_token(data={"sub": row[2]})
         rol_retornado = row[4]
         es_jefe = row[8]
+        nivel_asignado = row[5]  # contains carrera name for técnica, or materia for humanística
         
-        # Normalizar roles: unificar variantes para que el frontend funcione correctamente
+        # Normalizar roles
         if rol_retornado == 'profesor':
             rol_retornado = 'docente'
         elif rol_retornado == 'jefe':
             rol_retornado = 'jefe_carrera'
-            
         if es_jefe:
             rol_retornado = 'jefe_carrera'
         
+        # Buscar el área correspondiente a la especialidad del Jefe de Carrera
+        area_designada = None
+        if nivel_asignado and rol_retornado == 'jefe_carrera':
+            try:
+                conn2 = get_db_connection()
+                cur2 = conn2.cursor()
+                cur2.execute("SELECT area FROM carreras WHERE nombre = %s AND estado = 'activo' LIMIT 1", (nivel_asignado,))
+                ar = cur2.fetchone()
+                cur2.close(); conn2.close()
+                area_designada = ar[0] if ar else 'Humanística'  # fallback: materia = humanística
+            except:
+                area_designada = 'Humanística'
+        
         return {"access_token": token, "token_type": "bearer",
-                "rol": rol_retornado, "nombre": row[1], "nivel_asignado": row[5], "subsistema_id": row[7]}
+                "rol": rol_retornado, "nombre": row[1], "nivel_asignado": nivel_asignado,
+                "especialidad": nivel_asignado, "area_designada": area_designada,
+                "subsistema_id": row[7]}
     except HTTPException as he:
         raise he
     except Exception as e:

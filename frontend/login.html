@@ -161,7 +161,9 @@
                     localStorage.setItem('user', JSON.stringify({
                         nombre: data.nombre,
                         rol: data.rol,
-                        nivel_asignado: data.nivel_asignado
+                        nivel_asignado: data.nivel_asignado,
+                        especialidad: data.especialidad || data.nivel_asignado,
+                        area_designada: data.area_designada
                     }));
                     history.replaceState(null, '', 'login.html');
                     setTimeout(() => { 

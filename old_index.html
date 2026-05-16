@@ -1,0 +1,1292 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Institucional | Director CEA</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --primary: #0ea5e9; --secondary: #48d18e; --violet: #8b5cf6; --dorado: #f59e0b; --rojo: #f43f5e;
+  --bg-dark: #0b0f1a; --card-bg: rgba(19, 25, 41, 0.7); --border: rgba(255, 255, 255, 0.1);
+  --text: #f8fafc; --muted: #94a3b8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background-color:var(--bg-dark);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(circle at 10% 20%, rgba(14, 165, 233, 0.05), transparent 25%),
+              radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.05), transparent 25%);
+  z-index: -1; pointer-events: none;
+}
+header{background:rgba(11, 15, 26, 0.8);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+.h-brand{display:flex;align-items:center;gap:12px;}
+.h-logo{width:42px;height:42px;border-radius:50%;border:2px solid var(--dorado);object-fit:cover;}
+.h-title h1{color:#fff;font-size:1rem;font-weight:800;}
+.h-title p{color:var(--muted);font-size:.75rem;}
+.btn-back{padding:8px 16px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;text-decoration:none;transition:.2s;}
+.btn-back:hover{background:rgba(255,255,255,.1);border-color:white;}
+
+.container{max-width:1200px;margin:0 auto;padding:24px 20px;}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;}
+.kpi-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:20px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(10px);}
+.kpi-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;}
+.kpi-info h3{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.kpi-info .num{font-size:1.8rem;font-weight:900;color:var(--text);line-height:1;}
+.icon-blue{background:rgba(14,165,233,0.1);color:var(--primary);}
+.icon-green{background:rgba(72,209,142,0.1);color:var(--secondary);}
+.icon-orange{background:rgba(245,158,11,0.1);color:var(--dorado);}
+.icon-purple{background:rgba(139,92,246,0.1);color:var(--violet);}
+
+/* CHARTS & TABLES */
+.layout{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
+.panel{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:20px;backdrop-filter:blur(10px);}
+.panel-title{font-size:.95rem;font-weight:800;color:var(--primary);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;}
+.chart-wrap{position:relative;height:300px;width:100%;}
+
+.tbl{width:100%;border-collapse:collapse;font-size:.82rem;}
+.tbl th{background:rgba(255,255,255,0.02);color:var(--muted);padding:10px;text-align:left;font-weight:700;text-transform:uppercase;font-size:.7rem; border-bottom: 1px solid var(--border);}
+.tbl td{padding:12px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(255,255,255,0.02);}
+.badge{padding:4px 8px;border-radius:6px;font-size:.7rem;font-weight:700;}
+.b-ok{background:rgba(72,209,142,0.1);color:var(--secondary);border:1px solid var(--secondary);}
+.b-err{background:rgba(244,63,94,0.1);color:var(--rojo);border:1px solid var(--rojo);}
+
+.feed-item{display:flex;gap:12px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.feed-item:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.feed-icon{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;border:1px solid var(--border);}
+.feed-content strong{font-size:.85rem;color:var(--text);display:block;}
+.feed-content span{font-size:.75rem;color:var(--muted);}
+
+.loading{text-align:center;padding:60px;color:var(--muted);font-weight:600;}
+.tab-btn{padding:10px 20px;border-radius:10px 10px 0 0;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-bottom:none;color:var(--muted);font-weight:700;cursor:pointer;font-size:.9rem;}
+.tab-btn.active{background:var(--card-bg);color:var(--primary);border-top:2px solid var(--primary);}
+.btn-sm{padding:4px 8px;font-size:.7rem;border-radius:4px;border:none;cursor:pointer;font-weight:700;background:var(--rojo);color:white;}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr;}}
+@media(max-width:700px){
+  header{flex-wrap:nowrap;gap:6px;padding:8px 10px;}
+  .h-brand{flex-wrap:nowrap;gap:8px;}
+  .h-logo{width:32px;height:32px;font-size:1rem !important;}
+  .h-title h1{font-size:.85rem;}
+  .h-title p{font-size:.65rem;}
+  .btn-back{font-size:.65rem;padding:6px 10px;white-space:nowrap;}
+  
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .kpi-card{padding:12px;gap:8px;}
+  .kpi-icon{width:40px;height:40px;font-size:1.2rem;}
+  .kpi-info h3{font-size:.65rem;}
+  .kpi-info .num{font-size:1.4rem;}
+  
+  .container{padding:10px 8px;}
+  .tabs{flex-wrap:nowrap;gap:2px;padding:6px 6px 0;overflow-x:auto;scroll-behavior:smooth;}
+  .tab-btn{padding:8px 12px;font-size:.75rem;white-space:nowrap;}
+  
+  .acciones-globales{padding:8px;gap:4px;flex-wrap:nowrap;overflow-x:auto;}
+  .acciones-globales span{display:none;}
+  .btn-del{font-size:.65rem !important;padding:6px 8px !important;white-space:nowrap;}
+  
+  .dir-tabs{flex-wrap:nowrap;gap:4px;}
+  .dir-tab-btn{padding:6px 10px;font-size:.75rem;flex:1;text-align:center;white-space:nowrap;}
+  
+  .search-bar input, .search-bar select{padding:8px 10px;font-size:.75rem;min-width:140px;}
+  
+  .dir-area-header{padding:10px 12px;}
+  .dir-area-title{font-size:.85rem;}
+  .area-badge{font-size:.6rem;padding:2px 6px;}
+  .dir-area-body{padding:10px 8px;}
+  
+  .dir-carrera-header{padding:8px 10px;gap:4px;}
+  .dir-carrera-title{font-size:.8rem;}
+  .dir-carrera-badge{font-size:.65rem;}
+  .dir-carrera-actions{gap:4px;}
+  
+  .dir-nivel{padding:8px 10px;}
+  .dir-nivel-title{font-size:.75rem;}
+  .dir-nivel-count{font-size:.65rem;}
+}
+@media(max-width:420px){
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+}
+.tbl-wrap{overflow-x:auto;width:100%;}
+/* Accordion Directorio */
+.dir-area{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;margin-bottom:16px;overflow:hidden;}
+.dir-area-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);}
+.dir-area-header:hover{background:rgba(255,255,255,0.06);}
+.dir-area-title{font-size:1rem;font-weight:800;display:flex;align-items:center;gap:10px;}
+.area-badge{padding:4px 12px;border-radius:20px;font-size:.72rem;font-weight:800;text-transform:uppercase;}
+.area-tec{background:rgba(14,165,233,0.15);color:var(--primary);border:1px solid var(--primary);}
+.area-hum{background:rgba(139,92,246,0.15);color:var(--violet);border:1px solid var(--violet);}
+.dir-area-body{padding:16px 20px;display:none;}
+.dir-area-body.open{display:block;}
+.dir-carrera{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;}
+.dir-carrera-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--border);}
+.dir-carrera-title{font-size:.9rem;font-weight:700;color:var(--text);}
+.dir-carrera-badge{background:rgba(245,158,11,0.15);color:var(--dorado);border:1px solid var(--dorado);padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800;}
+.dir-carrera-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.dir-nivel{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.04);}
+.dir-nivel:last-child{border-bottom:none;}
+.dir-nivel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;}
+.dir-nivel-title{font-size:.82rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.dir-nivel-count{background:rgba(72,209,142,0.15);color:var(--secondary);border:1px solid var(--secondary);padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:800;}
+.btn-del{padding:5px 10px;font-size:.7rem;border-radius:6px;border:none;cursor:pointer;font-weight:700;transition:.2s;}
+.btn-del-ind{background:rgba(244,63,94,0.1);color:#f43f5e;border:1px solid #f43f5e;}
+.btn-del-ind:hover{background:#f43f5e;color:white;}
+.btn-del-grp{background:rgba(245,158,11,0.1);color:var(--dorado);border:1px solid var(--dorado);}
+.btn-del-grp:hover{background:var(--dorado);color:#111;}
+.btn-del-area{background:rgba(139,92,246,0.1);color:var(--violet);border:1px solid var(--violet);}
+.btn-del-area:hover{background:var(--violet);color:white;}
+.btn-del-all{background:rgba(244,63,94,0.1);color:#f43f5e;border:1px solid #f43f5e;}
+.btn-del-all:hover{background:#f43f5e;color:white;}
+.search-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.search-bar input{flex:1;min-width:180px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:white;font-family:'Inter',sans-serif;font-size:.88rem;}
+.search-bar select{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:white;font-family:'Inter',sans-serif;font-size:.88rem;}
+.dir-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+.dir-tab-btn{padding:9px 20px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted);font-weight:700;font-size:.85rem;cursor:pointer;transition:.2s;}
+.dir-tab-btn.active{background:var(--primary);color:white;border-color:var(--primary);}
+.acciones-globales{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;padding:14px 16px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;align-items:center;}
+.acciones-globales span{font-size:.82rem;font-weight:700;color:var(--muted);margin-right:4px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-brand">
+    <div class="h-logo" style="display:flex;align-items:center;justify-content:center;background:var(--dorado);font-size:1.2rem;">­ƒôê</div>
+    <div class="h-title">
+      <h1>Dashboard Institucional</h1>
+      <p>Vista General Director ┬À CEA Pail├│n</p>
+    </div>
+  </div>
+  <a href="../portal/index.html" class="btn-back">ÔåÉ Volver al Portal</a>
+</header>
+
+<div class="tabs" style="max-width:1200px;margin:20px auto 0;padding:0 20px;display:flex;gap:10px;">
+  <button class="tab-btn active" onclick="switchTab('dashboard')">­ƒôè Dashboard General</button>
+  <button class="tab-btn" onclick="switchTab('directorio')">­ƒôï Directorio y Base de Datos</button>
+</div>
+
+<div class="container" id="tab-dashboard">
+  <div id="mainContent">
+    <div class="loading">ÔÅ│ Recopilando estad├¡sticas en tiempo real...</div>
+  </div>
+</div>
+
+<div class="container" id="tab-directorio" style="display:none;">
+  <!-- Acciones Globales -->
+  <div class="acciones-globales">
+    <span>Acciones:</span>
+    <button class="btn-back" style="background:var(--secondary);color:#111;border:none;font-size:.8rem;padding:8px 14px;" onclick="exportarExcelPro()">­ƒôÑ Exportar Excel</button>
+    <button class="btn-del btn-del-all" style="font-size:.8rem;padding:8px 14px;" onclick="eliminarTodos('estudiante')">&#x1F5D1; Eliminar TODOS Estudiantes</button>
+    <button class="btn-del btn-del-grp" style="font-size:.8rem;padding:8px 14px;" onclick="eliminarTodos('docente')">&#x1F5D1; Eliminar TODOS Docentes</button>
+  </div>
+
+  <!-- Tabs Estudiantes / Docentes -->
+  <div class="dir-tabs">
+    <button class="dir-tab-btn active" id="dTab-est" onclick="switchDirTab('est')">­ƒæ¿ÔÇì­ƒÄô Estudiantes</button>
+    <button class="dir-tab-btn" id="dTab-doc" onclick="switchDirTab('doc')">­ƒæ¿ÔÇì­ƒÅ½ Docentes</button>
+  </div>
+
+  <!-- Panel Estudiantes -->
+  <div id="dirEst">
+    <div class="search-bar">
+      <input type="text" id="searchEst" placeholder="Buscar por nombre o CI..." oninput="renderDirectorio()">
+      <select id="filtroArea" onchange="renderDirectorio()">
+        <option value="">Todas las ├üreas</option>
+        <option value="tecnica">­ƒöÁ ├ürea T├®cnica</option>
+        <option value="humanistica">­ƒƒú ├ürea Human├¡stica</option>
+      </select>
+    </div>
+    <div id="dirEstContent"><div class="loading">ÔÅ│ Cargando directorio...</div></div>
+  </div>
+
+  <!-- Panel Docentes -->
+  <div id="dirDoc" style="display:none;">
+    <div class="search-bar">
+      <input type="text" id="searchDoc" placeholder="Buscar docente..." oninput="renderDocentes()">
+    </div>
+    <div id="dirDocContent"><div class="loading">ÔÅ│ Cargando plantel docente...</div></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="../portal/js/api.js"></script>
+<script>
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user')||'{}');
+if(!token || !['director','administrador','secretaria'].includes(user.rol)) window.location.href='../login.html';
+
+async function init() {
+  const content = document.getElementById('mainContent');
+  content.innerHTML = `
+    <div class="loading" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:80px 20px;">
+      <div style="font-size:2rem;animation:spin 1.5s linear infinite;">ÔÜÖ´©Å</div>
+      <div style="font-size:1rem;font-weight:700;color:var(--primary);">Conectando con el servidor...</div>
+      <div style="font-size:0.82rem;color:var(--muted);max-width:400px;text-align:center;">El servidor puede tardar hasta 50 segundos en despertar si estuvo inactivo. Por favor espera.</div>
+      <div id="retryMsg" style="font-size:0.78rem;color:var(--muted);"></div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+  `;
+
+  // Retry hasta 3 veces con delay incremental (Render free tier wake-up)
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      if (attempt > 1) {
+        document.getElementById('retryMsg').textContent = `Intento ${attempt}/3... esperando respuesta del servidor.`;
+        await new Promise(r => setTimeout(r, attempt * 8000));
+      }
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 55000);
+
+      const [resR, resC, resN, resA] = await Promise.all([
+        fetch(`${API_BASE}/estadisticas/resumen`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal}),
+        fetch(`${API_BASE}/estadisticas/por-carrera`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal}),
+        fetch(`${API_BASE}/estadisticas/por-nivel`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal}),
+        fetch(`${API_BASE}/estadisticas/actividad-reciente`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal})
+      ]);
+
+      clearTimeout(timeout);
+
+      if (!resR.ok) {
+        const errText = await resR.text();
+        throw new Error(`Error del servidor (${resR.status}): ${errText.slice(0, 120)}`);
+      }
+
+      const sum = await resR.json();
+      const {carreras} = await resC.json();
+      const {niveles} = await resN.json();
+      const act = await resA.json();
+
+      renderUI(sum, carreras, niveles, act);
+      return; // ├®xito, salir
+
+    } catch(e) {
+      if (attempt === 3) {
+        content.innerHTML = `
+          <div class="loading" style="color:var(--rojo);flex-direction:column;gap:14px;display:flex;align-items:center;padding:60px 20px;">
+            <div style="font-size:2.5rem;">ÔØî</div>
+            <div style="font-weight:800;font-size:1.1rem;">No se pudo conectar con el servidor</div>
+            <div style="color:var(--muted);font-size:0.85rem;max-width:450px;text-align:center;">El servidor de estad├¡sticas no responde. Puede estar reinici├índose. Espera un momento y recarga la p├ígina.</div>
+            <button onclick="location.reload()" style="margin-top:12px;padding:10px 24px;background:var(--primary);border:none;border-radius:10px;color:white;font-weight:800;cursor:pointer;font-size:0.9rem;">­ƒöä Recargar P├ígina</button>
+          </div>
+        `;
+      }
+    }
+  }
+}
+
+function renderUI(sum, carreras, niveles, act) {
+  const c = document.getElementById('mainContent');
+  
+  c.innerHTML = `
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon icon-blue">­ƒæ¿ÔÇì­ƒÄô</div>
+        <div class="kpi-info"><h3>Estudiantes Activos</h3><div class="num">${sum.total_estudiantes}</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon icon-purple">­ƒæ¿ÔÇì­ƒÅ½</div>
+        <div class="kpi-info"><h3>Plantel Docente</h3><div class="num">${sum.total_docentes}</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon icon-green">Ô£à</div>
+        <div class="kpi-info"><h3>Tasa de Aprobaci├│n</h3><div class="num">${sum.tasa_aprobacion}%</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon icon-orange">­ƒô£</div>
+        <div class="kpi-info"><h3>Cert. / Constancias</h3><div class="num">${sum.total_certificados+sum.total_constancias}</div></div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- Columna Principal -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div class="panel">
+          <div class="panel-title">Distribuci├│n por Carrera</div>
+          <div class="chart-wrap"><canvas id="carreraChart"></canvas></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Rendimiento por Nivel de Formaci├│n</div>
+          <div style="overflow-x:auto;">
+            <table class="tbl">
+              <thead><tr><th>Nivel</th><th>Inscritos</th><th>Aprobados</th><th>Promedio General</th></tr></thead>
+              <tbody>
+                ${niveles.map(n=>`<tr>
+                  <td><strong>${n.nivel}</strong></td>
+                  <td>${n.inscritos}</td>
+                  <td><span class="badge b-ok">${n.aprobados}</span></td>
+                  <td><strong>${n.promedio}</strong> / 100</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Secundaria -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div class="panel">
+          <div class="panel-title">Certificados Recientes</div>
+          <div>
+            ${act.certificados_recientes.length ? act.certificados_recientes.map(x=>`
+              <div class="feed-item">
+                <div class="feed-icon">­ƒÄô</div>
+                <div class="feed-content">
+                  <strong>${x.nombre} ${x.apellido||''}</strong>
+                  <span>${x.modulo}</span><br>
+                  <span style="font-size:.65rem;">${new Date(x.fecha).toLocaleDateString()} ┬À ${x.codigo}</span>
+                </div>
+              </div>`).join('') : '<p style="color:var(--muted);font-size:.8rem;">Sin emisiones recientes</p>'}
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Nuevos Estudiantes</div>
+          <div>
+            ${act.usuarios_recientes.filter(u=>u.rol==='estudiante').slice(0,5).map(x=>`
+              <div class="feed-item">
+                <div class="feed-icon">­ƒæñ</div>
+                <div class="feed-content">
+                  <strong>${x.nombre} ${x.apellido||''}</strong>
+                  <span>Matriculado el ${new Date(x.fecha).toLocaleDateString()}</span>
+                </div>
+              </div>`).join('') || '<p style="color:var(--muted);font-size:.8rem;">Sin registros recientes</p>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Render Chart
+  const ctx = document.getElementById('carreraChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: carreras.map(c=>c.carrera.substring(0,20)+(c.carrera.length>20?'...':'')),
+      datasets: [
+        { label: 'Inscritos', data: carreras.map(c=>c.inscritos), backgroundColor: '#3b82f6', borderRadius: 4 },
+        { label: 'Aprobados', data: carreras.map(c=>c.aprobados), backgroundColor: '#10b981', borderRadius: 4 },
+        { label: 'Reprobados/Abandonos', data: carreras.map(c=>c.reprobados), backgroundColor: '#ef4444', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } }
+    }
+  });
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`button[onclick="switchTab('${tabId}')"]`).classList.add('active');
+  document.getElementById('tab-dashboard').style.display = tabId === 'dashboard' ? 'block' : 'none';
+  document.getElementById('tab-directorio').style.display = tabId === 'directorio' ? 'block' : 'none';
+  if(tabId === 'directorio' && !document.directorioLoaded) loadDirectorio();
+}
+
+// ÔòÉÔòÉ DIRECTORIO PRO ÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉÔòÉ
+let dirData = null;
+
+async function loadDirectorio() {
+  const estEl = document.getElementById('dirEstContent');
+  const docEl = document.getElementById('dirDocContent');
+  estEl.innerHTML = '<div class="loading">ÔÅ│ Cargando directorio institucional...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/estadisticas/directorio-agrupado`, {headers:{Authorization:`Bearer ${token}`}});
+    if(!res.ok) throw new Error(`Error ${res.status}`);
+    dirData = await res.json();
+    document.directorioLoaded = true;
+    renderDirectorio();
+    renderDocentes();
+  } catch(e) {
+    estEl.innerHTML = `<div class="loading" style="color:var(--rojo);">ÔØî ${e.message} ÔÇö <button onclick="loadDirectorio()" style="background:var(--primary);border:none;color:white;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:700;">Reintentar</button></div>`;
+  }
+}
+
+function switchDirTab(tab) {
+  document.getElementById('dirEst').style.display = tab === 'est' ? '' : 'none';
+  document.getElementById('dirDoc').style.display = tab === 'doc' ? '' : 'none';
+  document.getElementById('dTab-est').classList.toggle('active', tab === 'est');
+  document.getElementById('dTab-doc').classList.toggle('active', tab === 'doc');
+}
+
+function renderDirectorio() {
+  if (!dirData) return;
+  const query = (document.getElementById('searchEst').value || '').toLowerCase();
+  const areaFiltro = document.getElementById('filtroArea').value.toLowerCase();
+  const container = document.getElementById('dirEstContent');
+
+  const grupos = dirData.grupos || {};
+  let html = '';
+
+  const areaLabels = { tecnica: { label: '­ƒöÁ ├ürea T├®cnica', cls: 'area-tec' }, humanistica: { label: '­ƒƒú ├ürea Human├¡stica', cls: 'area-hum' } };
+  
+  const nivelOrder = {
+    'Nivel B├ísico': 1, 'Nivel Auxiliar': 2, 'Nivel Medio I': 3, 'Nivel Medio II': 4,
+    'Aplicados (Primer A├▒o)': 1, 'Complementarios (Segundo A├▒o)': 2, 'Especializados (Tercer A├▒o)': 3
+  };
+  function sortNiveles([nA], [nB]) {
+    const getBase = k => k.replace(/ \(.*$/, '').trim();
+    const getTurnoOrder = k => {
+        if (k.includes('Ma├▒ana')) return 1;
+        if (k.includes('Tarde')) return 2;
+        return 3;
+    };
+    
+    const oA = nivelOrder[getBase(nA)] || 99;
+    const oB = nivelOrder[getBase(nB)] || 99;
+    if (oA !== oB) return oA - oB;
+    
+    const ta = getTurnoOrder(nA);
+    const tb = getTurnoOrder(nB);
+    if (ta !== tb) return ta - tb;
+    
+    return nA.localeCompare(nB);
+  }
+
+  const orderedAreas = Object.keys(grupos).sort((a,b) => {
+    if(a==='humanistica') return -1;
+    if(b==='humanistica') return 1;
+    return a.localeCompare(b);
+  });
+
+  for (const area of orderedAreas) {
+    if (areaFiltro && area !== areaFiltro) continue;
+    const aInfo = areaLabels[area] || { label: `­ƒôé ${area}`, cls: 'area-tec' };
+    const carreras = grupos[area];
+    let totalArea = 0;
+
+    let carrerasHtml = '';
+    for (const [carrera, niveles] of Object.entries(carreras).sort()) {
+      let totalCarrera = 0;
+      let nivelesHtml = '';
+
+      for (const [nivel, data] of Object.entries(niveles).sort(sortNiveles)) {
+        const alumnos = (data.alumnos || []).filter(a => {
+          if (!query) return true;
+          return `${a.nombre} ${a.apellido} ${a.carnet}`.toLowerCase().includes(query);
+        });
+        if (alumnos.length === 0) continue;
+        totalCarrera += alumnos.length;
+
+        const alumnosRows = alumnos.map(a => `
+          <tr>
+            <td><strong>${a.carnet || 'S/N'}</strong></td>
+            <td>${a.apellido} ${a.nombre}</td>
+            <td><span class="badge ${a.estado==='activo'?'b-ok':'b-err'}">${a.estado}</span></td>
+            <td><span class="badge" style="background:rgba(14,165,233,0.1);color:var(--primary);">${a.turno || 'Noche'}</span></td>
+            <td style="font-weight:700;color:var(--violet);">${a.paralelo || 'A'}</td>
+            <td>${(a.fecha_inscripcion || '').split('T')[0]}</td>
+            <td style="white-space:nowrap;">
+              <button class="btn-del btn-del-ind" onclick="eliminarIndividual(${a.id},'${(a.apellido+' '+a.nombre).replace(/'/g,"\\'")}')">­ƒùæ Eliminar</button>
+              <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${a.id},'${a.carnet}')">­ƒöæ Clave</button>
+            </td>
+          </tr>`).join('');
+
+        nivelesHtml += `
+          <div class="dir-nivel">
+            <div class="dir-nivel-header">
+              <span class="dir-nivel-title">${area === 'humanistica' ? `Especialidad ${carrera} - ${nivel}` : nivel}</span>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <span class="dir-nivel-count">${alumnos.length} alumnos</span>
+                <button class="btn-sm" style="background:#10b981; color:white; border:none;" onclick="descargarExcelCurso('${area}', '${carrera}', '${nivel}')">­ƒôÑ Excel</button>
+                <button class="btn-del btn-del-grp" onclick="eliminarPorNivel('${nivel.replace(/'/g,"\\'")}','${carrera.replace(/'/g,"\\'")}')">­ƒùæ Eliminar Nivel</button>
+              </div>
+            </div>
+            <div class="tbl-wrap">
+              <table class="tbl">
+                <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Estado</th><th>Turno</th><th>P.</th><th>Inscrito</th><th>Acciones</th></tr></thead>
+                <tbody>${alumnosRows}</tbody>
+              </table>
+            </div>
+          </div>`;
+      }
+
+      if (!nivelesHtml) continue;
+      totalArea += totalCarrera;
+
+      carrerasHtml += `
+        <div class="dir-carrera">
+          <div class="dir-carrera-header">
+            <div>
+              <div class="dir-carrera-title">${area === 'humanistica' ? `­ƒôÜ Especialidad: ${carrera}` : `­ƒÄô ${carrera}`}</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span class="dir-carrera-badge">${totalCarrera} estudiantes</span>
+              <button class="btn-del btn-del-grp" onclick="eliminarPorCarrera('${carrera.replace(/'/g,"\\'")}')">­ƒùæ Eliminar Carrera</button>
+            </div>
+          </div>
+          ${nivelesHtml}
+        </div>`;
+    }
+
+    if (!carrerasHtml) continue;
+
+    html += `
+      <div class="dir-area">
+        <div class="dir-area-header" onclick="toggleArea(this)">
+          <div class="dir-area-title">
+            <span class="area-badge ${aInfo.cls}">${aInfo.label}</span>
+            <span style="font-size:.85rem;color:var(--muted);font-weight:600;">${totalArea} estudiantes en total</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-del btn-del-area" onclick="event.stopPropagation();eliminarPorArea('${area}')">­ƒùæ Eliminar ├ürea</button>
+            <span style="color:var(--muted);font-size:1.2rem;">Ôû╝</span>
+          </div>
+        </div>
+        <div class="dir-area-body open">${carrerasHtml}</div>
+      </div>`;
+  }
+
+  container.innerHTML = html || '<div class="loading">No se encontraron estudiantes que coincidan.</div>';
+}
+
+function toggleArea(header) {
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function renderDocentes() {
+  if (!dirData || !dirData.docentes) return;
+  const query = (document.getElementById('searchDoc').value || '').toLowerCase();
+  const docentes = dirData.docentes.filter(d =>
+    !query || `${d.nombre} ${d.apellido} ${d.carnet} ${d.especialidad}`.toLowerCase().includes(query)
+  );
+
+  const container = document.getElementById('dirDocContent');
+  if (!docentes.length) { container.innerHTML = '<div class="loading">Sin docentes registrados.</div>'; return; }
+
+  // Detectar jefe actual por especialidad ÔÇö usa la flag es_jefe (no el rol)
+  const jefesPorEsp = {};
+  docentes.forEach(d => { if (d.es_jefe) jefesPorEsp[d.especialidad] = d.id; });
+
+  // Agrupar por especialidad
+  const grupos = {};
+  docentes.forEach(d => {
+    const esp = d.especialidad || 'Sin Especialidad';
+    if (!grupos[esp]) grupos[esp] = [];
+    grupos[esp].push(d);
+  });
+
+  // Detectar el ├írea de cada especialidad mirando los grupos de estudiantes
+  const areaDeEsp = {};
+  if (dirData.grupos) {
+    for (const area in dirData.grupos) {
+      for (const carrera in dirData.grupos[area]) {
+        areaDeEsp[carrera] = area;
+      }
+    }
+  }
+
+  // Paralelos disponibles por carrera
+  const paralelosPorCarrera = {};
+  if (dirData.grupos) {
+    for (const area in dirData.grupos) {
+      for (const carrera in dirData.grupos[area]) {
+        const paralelos = new Set();
+        for (const nivel in dirData.grupos[area][carrera]) {
+          (dirData.grupos[area][carrera][nivel].alumnos || []).forEach(a => {
+            if (a.paralelo) paralelos.add(a.paralelo);
+          });
+        }
+        paralelosPorCarrera[carrera] = [...paralelos].sort();
+      }
+    }
+  }
+
+  let html = '';
+  for (const [esp, docs] of Object.entries(grupos).sort()) {
+    const areaActual = areaDeEsp[esp] || 'tecnica';
+    const tieneJefe = jefesPorEsp.hasOwnProperty(esp);
+    html += `
+      <div class="dir-carrera" style="margin-bottom:12px;">
+        <div class="dir-carrera-header">
+          <div class="dir-carrera-title">
+            ${areaActual === 'humanistica' ? '­ƒôÜ' : '­ƒÄô'} ${esp}
+            ${tieneJefe ? '<span class="badge" style="background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid #f59e0b;margin-left:8px;font-size:0.65rem;">­ƒÅà JEFE ASIGNADO</span>' : ''}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="dir-carrera-badge">${docs.length} docentes</span>
+            <button class="btn-del btn-del-grp" onclick="eliminarDocentesPorEsp('${esp.replace(/'/g,"\\'")}')" >­ƒùæ Eliminar</button>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Curso/Nivel Designado</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody>${docs.map(d => {
+              const esJefe = d.es_jefe === true;
+              const nivelAsig = d.nivel_asignado || '';
+              const tieneNivel = nivelAsig && nivelAsig.trim() !== '';
+
+              // Detectar asignaci├│n ┬½hu├®rfana┬╗: el docente tiene nivel sin paralelo
+              // pero el grupo ya se dividi├│ en paralelos (la clave en grupos incluye "Paralelo")
+              let esHuerfano = false;
+              if (tieneNivel && areaActual === 'tecnica' && dirData.grupos?.tecnica?.[esp]) {
+                  const clavesGrupo = Object.keys(dirData.grupos.tecnica[esp]);
+                  // Verificar si TODAS las claves que empiezan con el nivel del docente tienen "Paralelo"
+                  // pero el nivel asignado NO tiene "Paralelo"
+                  const nivelBase = nivelAsig.replace(/ - Paralelo [A-Z]$/, '').trim();
+                  const clavesDelNivel = clavesGrupo.filter(k => k.startsWith(nivelBase));
+                  const todasConParalelo = clavesDelNivel.length > 1 && clavesDelNivel.every(k => k.includes('Paralelo'));
+                  const asignadoSinParalelo = !nivelAsig.includes('Paralelo');
+                  esHuerfano = todasConParalelo && asignadoSinParalelo;
+              }
+
+              const rowStyle = esHuerfano
+                ? 'background:linear-gradient(90deg,rgba(251,146,60,0.08),rgba(239,68,68,0.05));border-left:3px solid #f97316;'
+                : esJefe
+                ? 'background:linear-gradient(90deg,rgba(245,158,11,0.06),rgba(139,92,246,0.06));border-left:3px solid #f59e0b;'
+                : tieneNivel ? 'border-left:3px solid rgba(72,209,142,0.5);' : '';
+
+              return `
+              <tr style="${rowStyle}">
+                <td><strong>${d.carnet||'S/N'}</strong></td>
+                <td>
+                  ${d.apellido} ${d.nombre}
+                  ${esJefe ? '<br><span class="badge" style="background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;font-size:0.65rem;margin-top:3px;display:inline-block;">­ƒÅà Jefe de Carrera</span>' : ''}
+                  ${esHuerfano ? '<br><span class="badge" style="background:rgba(251,146,60,0.2);color:#fb923c;border:1px solid #f97316;font-size:0.62rem;margin-top:3px;display:inline-block;">ÔÜá´©Å REASIGNAR PARALELO</span>' : ''}
+                </td>
+                <td style="font-size:.78rem;">
+                  ${esHuerfano
+                    ? `<span style="color:#f97316;font-weight:700;">ÔÜá´©Å ${nivelAsig} <small style="font-weight:400;opacity:.8">(curso dividido)</small></span>`
+                    : tieneNivel
+                    ? `<span style="color:#48d18e;font-weight:700;">Ô£à ${nivelAsig}</span>`
+                    : `<span style="color:var(--muted);font-style:italic;">Sin designar</span>`
+                  }
+                </td>
+                <td><span class="badge ${d.estado==='activo'?'b-ok':'b-err'}">${d.estado}</span></td>
+                <td style="white-space:nowrap;">
+                  <button class="btn-del btn-del-ind" onclick="eliminarDocente(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">­ƒùæ Eliminar</button>
+                  <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">­ƒöæ Clave</button>
+                  <button class="btn-sm" style="margin-left:4px;background:${esHuerfano?'linear-gradient(90deg,#f97316,#ef4444)':tieneNivel?'linear-gradient(90deg,#48d18e,#0ea5e9)':'var(--primary)'};color:white;border:none;" onclick="modalAsignarNivel(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">
+                    ${esHuerfano ? '­ƒöä Reasignar Paralelo' : tieneNivel ? 'Ô£Å´©Å Cambiar Nivel' : '­ƒôÿ Asignar Nivel'}
+                  </button>
+                  ${esJefe
+                    ? `<button class="btn-sm" style="margin-left:4px;background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;border:none;" onclick="modalRetirarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">­ƒÅà Jefe Actual ┬À Retirar</button>`
+                    : `<button class="btn-sm" style="margin-left:4px;background:var(--violet);color:white;border:none;" onclick="modalNombrarJefe(${d.id},'${esp.replace(/'/g,"\\'")}')">­ƒÄû´©Å Nombrar Jefe</button>`
+                  }
+                </td>
+              </tr>`;
+            }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+  container.innerHTML = html;
+}
+
+// ÔöÇÔöÇ Funciones de Eliminaci├│n ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+async function apiEliminar(body, confirm_msg) {
+  if (!confirm(confirm_msg + '\n\nÔÜá´©Å Esta acci├│n es IRREVERSIBLE.')) return;
+  const r2 = confirm('┬┐Est├ís COMPLETAMENTE SEGURO? Confirma una segunda vez.');
+  if (!r2) return;
+  try {
+    const res = await fetch(`${API_BASE}/estadisticas/eliminar-inscripciones`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert(`Ô£à ${data.mensaje}`);
+      document.directorioLoaded = false;
+      loadDirectorio();
+    } else {
+      alert(`ÔØî Error: ${data.detail}`);
+    }
+  } catch(e) { alert(`ÔØî Error de red: ${e.message}`); }
+}
+
+function eliminarIndividual(id, nombre) {
+  apiEliminar({ tipo: 'individual', usuario_id: id }, `┬┐Eliminar a "${nombre}" del sistema?`);
+}
+
+function eliminarPorCarrera(carrera) {
+  apiEliminar({ tipo: 'carrera', carrera }, `┬┐Eliminar TODOS los estudiantes de la carrera "${carrera}"?`);
+}
+
+function eliminarPorNivel(nivelCompuesto, carrera) {
+  const baseNivel = nivelCompuesto.replace(/ \(.*$/, '').trim();
+  let turno = 'Noche';
+  if (nivelCompuesto.includes('Ma├▒ana')) turno = 'Ma├▒ana';
+  if (nivelCompuesto.includes('Tarde')) turno = 'Tarde';
+  apiEliminar({ tipo: 'nivel', nivel: baseNivel, turno: turno }, `┬┐Eliminar todos los estudiantes del nivel "${nivelCompuesto}" (${carrera})?`);
+}
+
+function eliminarPorArea(area) {
+  const label = area === 'tecnica' ? 'T├®cnica' : 'Human├¡stica';
+  apiEliminar({ tipo: 'area', area }, `┬┐Eliminar TODOS los estudiantes del ├ürea ${label}?`);
+}
+
+function eliminarDocentesPorEsp(especialidad) {
+  apiEliminar({ tipo: 'carrera', carrera: especialidad, rol: 'docente' }, `┬┐Eliminar TODOS los docentes de la especialidad "${especialidad}"?`);
+}
+
+// ÔöÇÔöÇ Eliminar docente individual (usa DELETE /auth/usuarios/{id}) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+async function eliminarDocente(id, nombre) {
+    const conf = await Swal.fire({
+        title: '­ƒùæ Eliminar Docente',
+        html: `┬┐Est├ís seguro de que deseas eliminar a <b>${nombre}</b> del sistema?<br><br>
+               <small style="color:#f43f5e;">ÔÜá´©Å Esta acci├│n es IRREVERSIBLE. Se eliminar├í su cuenta de acceso y todos sus datos.</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f43f5e',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'S├¡, eliminar',
+        cancelButtonText: 'Cancelar',
+        background: '#0b1220',
+        color: '#f8fafc'
+    });
+
+    if (!conf.isConfirmed) return;
+
+    // Segunda confirmaci├│n
+    const conf2 = await Swal.fire({
+        title: '┬┐COMPLETAMENTE SEGURO?',
+        html: `Vas a eliminar permanentemente a <b>${nombre}</b>.<br>Esta acci├│n <u>no se puede deshacer</u>.`,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#f43f5e',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'S├¡, ELIMINAR DEFINITIVAMENTE',
+        cancelButtonText: 'Cancelar',
+        background: '#0b1220',
+        color: '#f8fafc'
+    });
+
+    if (!conf2.isConfirmed) return;
+
+    try {
+        Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const res = await fetch(`${API_BASE}/auth/usuarios/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        Swal.close();
+        if (res.ok) {
+            Swal.fire({
+                title: 'Ô£à Docente Eliminado',
+                html: `<b>${nombre}</b> ha sido eliminado del sistema.`,
+                icon: 'success',
+                timer: 2500,
+                timerProgressBar: true,
+                showConfirmButton: false
+            });
+            document.directorioLoaded = false;
+            loadDirectorio();
+        } else {
+            Swal.fire('Error', data.detail || 'No se pudo eliminar al docente', 'error');
+        }
+    } catch(e) {
+        Swal.fire('Error', 'Error de red: ' + e.message, 'error');
+    }
+}
+
+function eliminarTodos(rol) {
+  const label = rol === 'docente' ? 'DOCENTES' : 'ESTUDIANTES';
+  apiEliminar({ tipo: 'todos', rol }, `┬┐Eliminar ABSOLUTAMENTE TODOS LOS ${label} del sistema?`);
+}
+
+// ÔöÇÔöÇ Reset Clave ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+async function resetPassword(id, carnet) {
+  if(!carnet || carnet === 'null' || carnet === 'S/N') return alert("El usuario no tiene carnet registrado para restablecer.");
+  if(!confirm(`┬┐Restablecer la contrase├▒a a ${carnet} (su CI)?`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/auth/usuarios/${id}/password`, {
+      method: 'PUT',
+      headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ new_password: carnet.trim() })
+    });
+    if(res.ok) alert("Ô£à Contrase├▒a restablecida correctamente al CI del usuario.");
+    else alert("ÔØî Error al restablecer contrase├▒a.");
+  } catch(e) { alert("Error de red"); }
+}
+
+// ÔöÇÔöÇ Exportar Excel Pro ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+function exportarExcelPro() {
+  if(!dirData || !dirData.grupos) return alert("Espera a que carguen los datos del directorio.");
+  const wb = XLSX.utils.book_new();
+
+  const nivelOrder = {
+    'Nivel B├ísico': 1, 'Nivel Auxiliar': 2, 'Nivel Medio I': 3, 'Nivel Medio II': 4,
+    'Aplicados (Primer A├▒o)': 1, 'Complementarios (Segundo A├▒o)': 2, 'Especializados (Tercer A├▒o)': 3
+  };
+
+  // Crear una hoja por cada Carrera (ordenada por niveles l├│gicamente)
+  for (const area in dirData.grupos) {
+    for (const carrera in dirData.grupos[area]) {
+      const niveles = dirData.grupos[area][carrera];
+      
+      const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => {
+        return (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99);
+      });
+
+      const data = [];
+      sortedNiveles.forEach(([nivel, d]) => {
+        d.alumnos.forEach((a) => {
+          data.push({
+            'Nivel/Curso': nivel,
+            'CI': a.carnet || 'S/N',
+            'Apellidos': a.apellido,
+            'Nombres': a.nombre,
+            'Paralelo': a.paralelo || 'A',
+            'Estado': a.estado,
+            'Fecha Inscripci├│n': a.fecha_inscripcion || ''
+          });
+        });
+      });
+
+      if (data.length > 0) {
+        let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31);
+        if(!sheetName) sheetName = "Estudiantes";
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), sheetName);
+      }
+    }
+  }
+
+  // Hoja docentes
+  if (dirData.docentes && dirData.docentes.length > 0) {
+      const docs = dirData.docentes.map(d => ({
+        'CI': d.carnet, 'Apellidos': d.apellido, 'Nombres': d.nombre, 'Email': d.email,
+        'Especialidad': d.especialidad, 'Estado': d.estado, 'Fecha Ingreso': d.fecha_ingreso
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docs), "Plantel Docente");
+  }
+
+  XLSX.writeFile(wb, `Directorio_CEA_Pailon_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
+}
+
+// ÔöÇÔöÇ Nombrar Jefe de Carrera ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+async function modalNombrarJefe(id, especialidad) {
+    if (!especialidad || especialidad === 'Sin Especialidad') {
+        Swal.fire('Atenci├│n', 'El docente necesita una especialidad asignada antes de ser Jefe.', 'warning');
+        return;
+    }
+
+    // Verificar si ya hay un jefe en esta carrera (distinto del docente actual)
+    const jefePrevio = (dirData.docentes || []).find(
+        d => d.especialidad === especialidad && d.rol === 'jefe_carrera' && d.id !== id
+    );
+
+    let texto = `┬┐Ascender a este docente como Jefe de "${especialidad}"?`;
+    if (jefePrevio) {
+        texto = `Ya existe un Jefe en "${especialidad}": ${jefePrevio.apellido} ${jefePrevio.nombre}.\n\n┬┐Reemplazarlo por este docente?`;
+    }
+    
+    const conf = await Swal.fire({
+        title: '­ƒÄû´©Å Nombrar Jefe de Carrera',
+        text: texto,
+        icon: jefePrevio ? 'warning' : 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#8b5cf6',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: jefePrevio ? 'S├¡, reemplazar Jefe' : 'S├¡, nombrar Jefe'
+    });
+
+    if (conf.isConfirmed) {
+        Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            const r2 = await fetch(`${API_BASE}/auth/promover-jefe-carrera`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+                body: JSON.stringify({ usuario_id: id, carrera_id: null, especialidad_nombre: especialidad })
+            });
+            const d2 = await r2.json();
+            Swal.close();
+            if (r2.ok) {
+                await Swal.fire({
+                    title: '­ƒÅà ┬íJefe Nombrado!',
+                    html: `<b>${d2.mensaje}</b><br><br><small style="color:#94a3b8;">El docente seguir├í en la lista y puede ser asignado a cursos normalmente. Solo se diferencia en que es responsable de subir la malla curricular.</small>`,
+                    icon: 'success',
+                    confirmButtonColor: '#8b5cf6'
+                });
+                document.directorioLoaded = false;
+                loadDirectorio();
+            } else {
+                const msg = r2.status === 403
+                    ? 'ÔÜá´©Å Solo el Director puede nombrar Jefes de Carrera.\n\nCierre sesi├│n e ingrese con las credenciales del Director.'
+                    : (d2.detail || 'Error al promover');
+                Swal.fire('Sin permiso', msg, r2.status === 403 ? 'warning' : 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Error inesperado: ' + e.message, 'error');
+        }
+    }
+}
+
+// ÔöÇÔöÇ Retirar designaci├│n de Jefe ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+async function modalRetirarJefe(id, nombre) {
+    const conf = await Swal.fire({
+        title: '­ƒÅà Retirar Jefatura',
+        html: `┬┐Retirar la designaci├│n de Jefe de Carrera a <b>${nombre}</b>?<br><br>
+               <small style="color:#94a3b8;">El docente seguir├í activo y podr├í dictar clases normalmente, pero ya no ser├í responsable de la malla curricular.</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'S├¡, retirar',
+        cancelButtonText: 'Cancelar',
+        background: '#0b1220',
+        color: '#f8fafc'
+    });
+
+    if (conf.isConfirmed) {
+        Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            const r = await fetch(`${API_BASE}/auth/retirar-jefe-carrera`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+                body: JSON.stringify({ usuario_id: id })
+            });
+            const d = await r.json();
+            Swal.close();
+            if (r.ok) {
+                Swal.fire({
+                    title: 'Ô£à Jefatura Retirada',
+                    html: `<b>${nombre}</b> ya no es Jefe de Carrera. Puede nombrar a otro docente de la misma especialidad.`,
+                    icon: 'success',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+                document.directorioLoaded = false;
+                loadDirectorio();
+            } else {
+                Swal.fire('Error', d.detail || 'No se pudo retirar la jefatura', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Error de red: ' + e.message, 'error');
+        }
+    }
+}
+
+// ÔöÇÔöÇ Asignar Nivel/Curso al docente (Nivel Pro) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+async function modalAsignarNivel(id, nombre) {
+    try {
+        const docente = (dirData.docentes || []).find(d => d.id === id);
+        const espDocente = docente ? (docente.especialidad || '') : '';
+    const nivelActual = docente ? (docente.nivel_asignado || '') : '';
+
+    // Detecci├│n de ├írea ÔÇö usa el cat├ílogo oficial del backend (independiente de inscripciones)
+    // Si la carrera del docente est├í en el cat├ílogo con area='t├®cnica' ÔåÆ t├®cnica
+    // Si est├í como 'human├¡stica' o no est├í en el cat├ílogo ÔåÆ human├¡stica
+    const catalogo = dirData.catalogo_areas || {};
+    let areaDocente = catalogo[espDocente] || null;
+
+    if (!areaDocente) {
+        // Fallback: buscar en grupos de estudiantes
+        const carrerasTecnicas = new Set(
+            dirData.grupos && dirData.grupos['tecnica']
+                ? Object.keys(dirData.grupos['tecnica'])
+                : []
+        );
+        areaDocente = carrerasTecnicas.has(espDocente) ? 'tecnica' : 'humanistica';
+    }
+    // Normalizar (puede venir como 'T├®cnica' con may├║scula del backend)
+    areaDocente = areaDocente.toLowerCase().replace('├®','e').replace('├í','a').replace('├│','o');
+    const esTecnica = areaDocente.includes('tecnica') || areaDocente.includes('t├®cnica');
+    areaDocente = esTecnica ? 'tecnica' : 'humanistica';
+
+    let htmlContenido = '';
+    let titulo = '';
+
+    if (areaDocente === 'humanistica') {
+        // HUMAN├ìSTICA: checkboxes multi-select ÔÇö puede dar 1, 2 o los 3 cursos
+        titulo = '­ƒôÜ Asignar Cursos ÔÇö ├ürea Human├¡stica';
+
+        // Detectar los cursos disponibles con sus paralelos (si hay >40 inscritos)
+        const cursosHum = [
+            { id: 'ap', base: 'Aplicados (Primer A├▒o)',        emoji: '­ƒôù', color: '139,92,246' },
+            { id: 'co', base: 'Complementarios (Segundo A├▒o)', emoji: '­ƒôÿ', color: '14,165,233' },
+            { id: 'es', base: 'Especializados (Tercer A├▒o)',   emoji: '­ƒôÖ', color: '72,209,142' }
+        ];
+
+        let checkboxesHtml = '';
+        cursosHum.forEach(c => {
+            // FILTRO PRO: Solo mostrar el curso si coincide con la especialidad/materia del docente
+            // Si la especialidad est├í en blanco o es "Human├¡stica" gen├®rico, mostrar todos.
+            const keyword = c.base.split(' ')[0]; // "Aplicados", "Complementarios", "Especializados"
+            if (espDocente && espDocente.toLowerCase() !== 'human├¡stica' && espDocente.toLowerCase() !== 'humanistica') {
+                if (!espDocente.includes(keyword)) {
+                    return; // El docente no est├í inscrito para impartir este nivel espec├¡fico
+                }
+            }
+
+            // Buscar si este curso tiene paralelos en los grupos de estudiantes
+            const paralelosEnCurso = new Map(); // key -> {p, t}
+            if (dirData.grupos && dirData.grupos['humanistica']) {
+                for (const carrera in dirData.grupos['humanistica']) {
+                    const niveles = dirData.grupos['humanistica'][carrera];
+                    for (const nivelKey in niveles) {
+                        // La clave puede ser "Aplicados... (Turno Noche)" o "Aplicados... (Turno Noche) - Paralelo A"
+                        if (nivelKey.startsWith(c.base)) {
+                            const estudiantes = niveles[nivelKey];
+                            if (estudiantes.total >= 15) {
+                                const matchTurno = nivelKey.match(/\((Ma├▒ana|Tarde|Noche)\)/) || nivelKey.match(/\(Turno (.*?)\)/);
+                                const turno = matchTurno ? matchTurno[1] : 'Noche';
+                                const matchParalelo = nivelKey.match(/Paralelo ([A-Z])$/);
+                                const paralelo = matchParalelo ? matchParalelo[1] : null;
+                                const mapKey = `${turno}-${paralelo}`;
+                                paralelosEnCurso.set(mapKey, { p: paralelo, t: turno });
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (paralelosEnCurso.size > 0) {
+                [...paralelosEnCurso.values()].sort((a,b) => (a.t + (a.p||'')).localeCompare(b.t + (b.p||''))).forEach(({p, t}) => {
+                    const val = p ? `${c.base} (${t}) - Paralelo ${p}` : `${c.base} (${t})`;
+                    const checked = nivelActual.includes(c.base) && (p ? nivelActual.includes(`Paralelo ${p}`) : true) && nivelActual.includes(t) ? 'checked' : '';
+                    checkboxesHtml += `
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
+                        <input type="checkbox" id="ch-${c.id}-${p ? p.toLowerCase() : 'all'}-${t.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
+                        <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> ÔÇö ${p ? `Paralelo ${p}` : 'General'} <small style="color:var(--muted)">(${t})</small></span>
+                    </label>`;
+                });
+            }
+        });
+
+        if (!checkboxesHtml) {
+            checkboxesHtml = `<div style="padding:15px;text-align:center;color:#f97316;background:rgba(249,115,22,0.1);border-radius:8px;font-size:.9rem;">
+                No hay cursos habilitados para tu especialidad.<br>
+                <small>Recuerda que el Ministerio requiere un <b>m├¡nimo de 15 estudiantes</b> inscritos en un nivel para habilitar oficialmente el curso.</small>
+            </div>`;
+        }
+
+        htmlContenido = `
+            <p style="font-size:.85rem;color:#94a3b8;margin-bottom:12px;">
+                Prof. <strong>${nombre}</strong> ┬À Materia: <strong>${espDocente}</strong><br>
+                <small>Selecciona los cursos que impartir├í.</small>
+            </p>
+            <div style="display:flex;flex-direction:column;gap:10px;text-align:left;">
+                ${checkboxesHtml}
+            </div>`;
+
+    } else {
+        // T├ëCNICA: un solo nivel + paralelo si existe
+        titulo = '­ƒÄô Asignar Nivel ÔÇö ├ürea T├®cnica';
+
+        const nivelesDisponiblesMap = new Map();
+
+        if (dirData.grupos && dirData.grupos['tecnica'] && dirData.grupos['tecnica'][espDocente]) {
+            const nivelesCarrera = dirData.grupos['tecnica'][espDocente];
+            Object.keys(nivelesCarrera).forEach(nivelKey => {
+                const estudiantes = nivelesCarrera[nivelKey];
+                if (estudiantes.total >= 15) {
+                    let label = nivelKey;
+                    if (label.includes('Paralelo')) {
+                        label = label.replace(' - Paralelo ', ' ÔÇö Paralelo ');
+                    }
+                    nivelesDisponiblesMap.set(nivelKey, label);
+                }
+            });
+        }
+
+        const nivelOrder = {'Nivel B├ísico':1,'Nivel Auxiliar':2,'Nivel Medio I':3,'Nivel Medio II':4};
+        const getNivelBase = k => k.replace(/ \(.*$/, '').trim();
+        const getTurnoOrder = k => {
+            if (k.includes('Ma├▒ana')) return 1;
+            if (k.includes('Tarde')) return 2;
+            return 3;
+        };
+
+        const nivelesDisponibles = Array.from(nivelesDisponiblesMap.entries())
+            .map(([value, label]) => ({ value, label }))
+            .sort((a, b) => {
+                const oa = nivelOrder[getNivelBase(a.value)] || 9;
+                const ob = nivelOrder[getNivelBase(b.value)] || 9;
+                if (oa !== ob) return oa - ob;
+                
+                const ta = getTurnoOrder(a.value);
+                const tb = getTurnoOrder(b.value);
+                if (ta !== tb) return ta - tb;
+
+                return a.value.localeCompare(b.value);
+            });
+
+        let selectorHtml = '';
+        if (nivelesDisponibles.length > 0) {
+            const opciones = nivelesDisponibles.map(n => {
+                const hasTurno = nivelActual.includes('Ma├▒ana') || nivelActual.includes('Tarde') || nivelActual.includes('Noche');
+                let isSelected = false;
+                if (hasTurno) {
+                    isSelected = nivelActual === n.value;
+                } else {
+                    isSelected = n.value.startsWith(nivelActual) && n.value.includes('Noche');
+                }
+                return `<option value="${n.value}" ${isSelected ? 'selected' : ''}>${n.label}</option>`;
+            }).join('');
+            
+            selectorHtml = `<select id="sel-nivel" style="width:100%;padding:12px;border-radius:10px;background:#1e2a3a;color:#f8fafc;border:1px solid rgba(14,165,233,0.4);font-size:0.95rem;">
+                <option value="">ÔÇö Selecciona un Nivel habilitado ÔÇö</option>
+                ${opciones}
+            </select>`;
+        } else {
+            selectorHtml = `<div style="padding:15px;text-align:center;color:#f97316;background:rgba(249,115,22,0.1);border-radius:8px;font-size:.9rem;">
+                No hay cursos habilitados para la carrera <b>${espDocente}</b>.<br>
+                <small>Recuerda que el Ministerio requiere un <b>m├¡nimo de 15 estudiantes</b> inscritos en un nivel para habilitar oficialmente el curso.</small>
+            </div>
+            <input type="hidden" id="sel-nivel" value="">`;
+        }
+
+        htmlContenido = `
+            <p style="font-size:.85rem;color:#94a3b8;margin-bottom:12px;">
+                Prof. <strong>${nombre}</strong> ┬À Carrera: <strong>${espDocente}</strong><br>
+                <small>Selecciona el curso habilitado que impartir├í.</small>
+            </p>
+            ${selectorHtml}`;
+    }
+
+    const result = await Swal.fire({
+        title: titulo,
+        html: htmlContenido,
+        showCancelButton: true,
+        confirmButtonColor: '#0ea5e9',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: '­ƒÆ¥ Guardar Asignaci├│n',
+        background: '#0b1220',
+        color: '#f8fafc',
+        focusConfirm: false,
+        preConfirm: () => {
+            if (areaDocente === 'humanistica') {
+                // Recoger TODOS los checkboxes marcados del contenedor (IDs din├ímicos)
+                const sel = [...document.querySelectorAll('.swal2-html-container input[type="checkbox"]:checked')]
+                    .map(el => el.value);
+                if (sel.length === 0) {
+                    Swal.showValidationMessage('Debes seleccionar al menos un curso.');
+                    return false;
+                }
+                return sel.join(', ');
+            } else {
+                const val = document.getElementById('sel-nivel')?.value;
+                if (!val) { Swal.showValidationMessage('Debes seleccionar un nivel.'); return false; }
+                return val;
+            }
+        }
+    });
+
+    if (result.isConfirmed && result.value) {
+        try {
+            const r = await fetch(`${API_BASE}/auth/usuarios/${id}/especialidad`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+                body: JSON.stringify({ especialidad: result.value })
+            });
+            const d = await r.json();
+            if (r.ok) {
+                Swal.fire({
+                    title: 'Ô£à Asignado',
+                    html: `El nivel <b>${result.value}</b> fue asignado correctamente al docente.`,
+                    icon: 'success',
+                    timer: 2500,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+                document.directorioLoaded = false;
+                loadDirectorio();
+            } else if (r.status === 409) {
+                // Conflicto: ya existe otro docente con ese nivel/materia
+                Swal.fire({
+                    title: 'ÔÜá´©Å Conflicto de Asignaci├│n',
+                    html: `<div style="text-align:left;font-size:.9rem;line-height:1.6;">
+                        ${d.detail || 'Este nivel ya est├í ocupado por otro docente.'}
+                        <br><br>
+                        <small style="color:#94a3b8;">­ƒÆí Para reasignar, primero retire la asignaci├│n al docente actual usando el bot├│n <b>"Cambiar Nivel"</b> y luego asigne el nuevo.</small>
+                    </div>`,
+                    icon: 'warning',
+                    confirmButtonColor: '#f59e0b',
+                    confirmButtonText: 'Entendido'
+                });
+            } else if (r.status === 403) {
+                Swal.fire('Sin permiso', 'ÔÜá´©Å Solo el Director puede designar niveles a docentes.', 'warning');
+            } else {
+                Swal.fire('Error', d.detail || 'Error al guardar', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Error de red: ' + e.message, 'error');
+        }
+    }
+    } catch (criticalError) {
+        alert("ERROR CR├ìTICO en Asignar Nivel:\n" + criticalError.message + "\nPor favor reporta este mensaje o env├¡a una captura de pantalla.");
+        console.error("Critical Error in modalAsignarNivel:", criticalError);
+    }
+}
+
+function descargarExcelCurso(area, carrera, nivel) {
+    if (!dirData || !dirData.grupos) return;
+    const alumnos = dirData.grupos[area][carrera][nivel]?.alumnos;
+    if (!alumnos || alumnos.length === 0) return alert("No hay alumnos en este curso.");
+
+    const isHum = area === 'humanistica';
+    
+    // Encabezado Pro
+    const data = [
+        ["CENTRO DE EDUCACI├ôN ALTERNATIVA 'PAIL├ôN'"],
+        ["LISTA OFICIAL DE ESTUDIANTES"],
+        [""],
+        ["├üREA:", isHum ? "Human├¡stica" : "T├®cnica"],
+        [isHum ? "ESPECIALIDAD:" : "CARRERA:", carrera],
+        ["NIVEL / CURSO:", nivel],
+        ["FECHA DE REPORTE:", new Date().toLocaleDateString()],
+        [""],
+        ["N┬░", "Carnet / CI", "Apellidos", "Nombres", "Paralelo", "Estado", "Fecha Inscripci├│n"]
+    ];
+
+    alumnos.forEach((a, index) => {
+        data.push([
+            index + 1,
+            a.carnet || 'S/N',
+            a.apellido,
+            a.nombre,
+            a.paralelo || 'A',
+            a.estado,
+            a.fecha_inscripcion || ''
+        ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    
+    // Combinar celdas para el t├¡tulo
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // CEA Pailon
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }  // Lista Oficial
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Lista Curso");
+    
+    // Auto-ajustar ancho de columnas
+    const colWidths = [
+        { wch: 5 },  // N┬░
+        { wch: 15 }, // CI
+        { wch: 25 }, // Apellidos
+        { wch: 25 }, // Nombres
+        { wch: 10 }, // Paralelo
+        { wch: 12 }, // Estado
+        { wch: 15 }  // Fecha
+    ];
+    ws['!cols'] = colWidths;
+
+    const safeCarrera = carrera.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const safeNivel = nivel.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    XLSX.writeFile(wb, `Lista_${safeCarrera}_${safeNivel}.xlsx`);
+}
+
+init();
+
+</script>
+</body>
+</html>

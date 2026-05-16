@@ -1,0 +1,1010 @@
+
+const token = localStorage.getItem('token');
+const user = JSON.parse(localStorage.getItem('user')||'{}');
+if(!token || !['director','administrador','secretaria'].includes(user.rol)) window.location.href='../login.html';
+
+async function init() {
+  const content = document.getElementById('mainContent');
+  content.innerHTML = `
+    <div class="loading" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:80px 20px;">
+      <div style="font-size:2rem;animation:spin 1.5s linear infinite;">⚙️</div>
+      <div style="font-size:1rem;font-weight:700;color:var(--primary);">Conectando con el servidor...</div>
+      <div style="font-size:0.82rem;color:var(--muted);max-width:400px;text-align:center;">El servidor puede tardar hasta 50 segundos en despertar si estuvo inactivo. Por favor espera.</div>
+      <div id="retryMsg" style="font-size:0.78rem;color:var(--muted);"></div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+  `;
+
+  // Retry hasta 3 veces con delay incremental (Render free tier wake-up)
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      if (attempt > 1) {
+        document.getElementById('retryMsg').textContent = `Intento ${attempt}/3... esperando respuesta del servidor.`;
+        await new Promise(r => setTimeout(r, attempt * 8000));
+      }
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 55000);
+
+      const [resR, resC, resN, resA] = await Promise.all([
+        fetch(`${API_BASE}/estadisticas/resumen`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal}),
+        fetch(`${API_BASE}/estadisticas/por-carrera`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal}),
+        fetch(`${API_BASE}/estadisticas/por-nivel`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal}),
+        fetch(`${API_BASE}/estadisticas/actividad-reciente`, {headers:{Authorization:`Bearer ${token}`}, signal: controller.signal})
+      ]);
+
+      clearTimeout(timeout);
+
+      if (!resR.ok) {
+        const errText = await resR.text();
+        throw new Error(`Error del servidor (${resR.status}): ${errText.slice(0, 120)}`);
+      }
+
+      const sum = await resR.json();
+      const {carreras} = await resC.json();
+      const {niveles} = await resN.json();
+      const act = await resA.json();
+
+      renderUI(sum, carreras, niveles, act);
+      return; // éxito, salir
+
+    } catch(e) {
+      if (attempt === 3) {
+        content.innerHTML = `
+          <div class="loading" style="color:var(--rojo);flex-direction:column;gap:14px;display:flex;align-items:center;padding:60px 20px;">
+            <div style="font-size:2.5rem;">❌</div>
+            <div style="font-weight:800;font-size:1.1rem;">No se pudo conectar con el servidor</div>
+            <div style="color:var(--muted);font-size:0.85rem;max-width:450px;text-align:center;">El servidor de estadísticas no responde. Puede estar reiniciándose. Espera un momento y recarga la página.</div>
+            <button onclick="location.reload()" style="margin-top:12px;padding:10px 24px;background:var(--primary);border:none;border-radius:10px;color:white;font-weight:800;cursor:pointer;font-size:0.9rem;">🔄 Recargar Página</button>
+          </div>
+        `;
+      }
+    }
+  }
+}
+
+function renderUI(sum, carreras, niveles, act) {
+  const c = document.getElementById('mainContent');
+  
+  c.innerHTML = `
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon icon-blue">👨‍🎓</div>
+        <div class="kpi-info"><h3>Estudiantes Activos</h3><div class="num">${sum.total_estudiantes}</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon icon-purple">👨‍🏫</div>
+        <div class="kpi-info"><h3>Plantel Docente</h3><div class="num">${sum.total_docentes}</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon icon-green">✅</div>
+        <div class="kpi-info"><h3>Tasa de Aprobación</h3><div class="num">${sum.tasa_aprobacion}%</div></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon icon-orange">📜</div>
+        <div class="kpi-info"><h3>Cert. / Constancias</h3><div class="num">${sum.total_certificados+sum.total_constancias}</div></div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- Columna Principal -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div class="panel">
+          <div class="panel-title">Distribución por Carrera</div>
+          <div class="chart-wrap"><canvas id="carreraChart"></canvas></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Rendimiento por Nivel de Formación</div>
+          <div style="overflow-x:auto;">
+            <table class="tbl">
+              <thead><tr><th>Nivel</th><th>Inscritos</th><th>Aprobados</th><th>Promedio General</th></tr></thead>
+              <tbody>
+                ${niveles.map(n=>`<tr>
+                  <td><strong>${n.nivel}</strong></td>
+                  <td>${n.inscritos}</td>
+                  <td><span class="badge b-ok">${n.aprobados}</span></td>
+                  <td><strong>${n.promedio}</strong> / 100</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Secundaria -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div class="panel">
+          <div class="panel-title">Certificados Recientes</div>
+          <div>
+            ${act.certificados_recientes.length ? act.certificados_recientes.map(x=>`
+              <div class="feed-item">
+                <div class="feed-icon">🎓</div>
+                <div class="feed-content">
+                  <strong>${x.nombre} ${x.apellido||''}</strong>
+                  <span>${x.modulo}</span><br>
+                  <span style="font-size:.65rem;">${new Date(x.fecha).toLocaleDateString()} · ${x.codigo}</span>
+                </div>
+              </div>`).join('') : '<p style="color:var(--muted);font-size:.8rem;">Sin emisiones recientes</p>'}
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Nuevos Estudiantes</div>
+          <div>
+            ${act.usuarios_recientes.filter(u=>u.rol==='estudiante').slice(0,5).map(x=>`
+              <div class="feed-item">
+                <div class="feed-icon">👤</div>
+                <div class="feed-content">
+                  <strong>${x.nombre} ${x.apellido||''}</strong>
+                  <span>Matriculado el ${new Date(x.fecha).toLocaleDateString()}</span>
+                </div>
+              </div>`).join('') || '<p style="color:var(--muted);font-size:.8rem;">Sin registros recientes</p>'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Render Chart
+  const ctx = document.getElementById('carreraChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: carreras.map(c=>c.carrera.substring(0,20)+(c.carrera.length>20?'...':'')),
+      datasets: [
+        { label: 'Inscritos', data: carreras.map(c=>c.inscritos), backgroundColor: '#3b82f6', borderRadius: 4 },
+        { label: 'Aprobados', data: carreras.map(c=>c.aprobados), backgroundColor: '#10b981', borderRadius: 4 },
+        { label: 'Reprobados/Abandonos', data: carreras.map(c=>c.reprobados), backgroundColor: '#ef4444', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true, grid: { color: '#e2e8f0' } }, x: { grid: { display: false } } }
+    }
+  });
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`button[onclick="switchTab('${tabId}')"]`).classList.add('active');
+  document.getElementById('tab-dashboard').style.display = tabId === 'dashboard' ? 'block' : 'none';
+  document.getElementById('tab-directorio').style.display = tabId === 'directorio' ? 'block' : 'none';
+  if(tabId === 'directorio' && !document.directorioLoaded) loadDirectorio();
+}
+
+// ══ DIRECTORIO PRO ══════════════════════════════════
+let dirData = null;
+
+async function loadDirectorio() {
+  const estEl = document.getElementById('dirEstContent');
+  const docEl = document.getElementById('dirDocContent');
+  estEl.innerHTML = '<div class="loading">⏳ Cargando directorio institucional...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/estadisticas/directorio-agrupado`, {headers:{Authorization:`Bearer ${token}`}});
+    if(!res.ok) throw new Error(`Error ${res.status}`);
+    dirData = await res.json();
+    document.directorioLoaded = true;
+    renderDirectorio();
+    renderDocentes();
+  } catch(e) {
+    estEl.innerHTML = `<div class="loading" style="color:var(--rojo);">❌ ${e.message} — <button onclick="loadDirectorio()" style="background:var(--primary);border:none;color:white;padding:6px 14px;border-radius:8px;cursor:pointer;font-weight:700;">Reintentar</button></div>`;
+  }
+}
+
+function switchDirTab(tab) {
+  document.getElementById('dirEst').style.display = tab === 'est' ? '' : 'none';
+  document.getElementById('dirDoc').style.display = tab === 'doc' ? '' : 'none';
+  document.getElementById('dTab-est').classList.toggle('active', tab === 'est');
+  document.getElementById('dTab-doc').classList.toggle('active', tab === 'doc');
+}
+
+function renderDirectorio() {
+  if (!dirData) return;
+  const query = (document.getElementById('searchEst').value || '').toLowerCase();
+  const areaFiltro = document.getElementById('filtroArea').value.toLowerCase();
+  const container = document.getElementById('dirEstContent');
+
+  const grupos = dirData.grupos || {};
+  let html = '';
+
+  const areaLabels = { tecnica: { label: '🔵 Área Técnica', cls: 'area-tec' }, humanistica: { label: '🟣 Área Humanística', cls: 'area-hum' } };
+  
+  const nivelOrder = {
+    'Nivel Básico': 1, 'Nivel Auxiliar': 2, 'Nivel Medio I': 3, 'Nivel Medio II': 4,
+    'Aplicados (Primer Año)': 1, 'Complementarios (Segundo Año)': 2, 'Especializados (Tercer Año)': 3
+  };
+  function sortNiveles([nA], [nB]) {
+    const oA = nivelOrder[nA] || 99;
+    const oB = nivelOrder[nB] || 99;
+    if (oA !== oB) return oA - oB;
+    return nA.localeCompare(nB);
+  }
+
+  const orderedAreas = Object.keys(grupos).sort((a,b) => {
+    if(a==='humanistica') return -1;
+    if(b==='humanistica') return 1;
+    return a.localeCompare(b);
+  });
+
+  for (const area of orderedAreas) {
+    if (areaFiltro && area !== areaFiltro) continue;
+    const aInfo = areaLabels[area] || { label: `📂 ${area}`, cls: 'area-tec' };
+    const carreras = grupos[area];
+    let totalArea = 0;
+
+    let carrerasHtml = '';
+    for (const [carrera, niveles] of Object.entries(carreras).sort()) {
+      let totalCarrera = 0;
+      let nivelesHtml = '';
+
+      for (const [nivel, data] of Object.entries(niveles).sort(sortNiveles)) {
+        const alumnos = data.alumnos.filter(a => {
+          if (!query) return true;
+          return `${a.nombre} ${a.apellido} ${a.carnet}`.toLowerCase().includes(query);
+        });
+        if (alumnos.length === 0) continue;
+        totalCarrera += alumnos.length;
+
+        const alumnosRows = alumnos.map(a => `
+          <tr>
+            <td><strong>${a.carnet || 'S/N'}</strong></td>
+            <td>${a.apellido} ${a.nombre}</td>
+            <td><span class="badge ${a.estado==='activo'?'b-ok':'b-err'}">${a.estado}</span></td>
+            <td><span class="badge" style="background:rgba(14,165,233,0.1);color:var(--primary);">${a.turno || 'Noche'}</span></td>
+            <td style="font-weight:700;color:var(--violet);">${a.paralelo || 'A'}</td>
+            <td>${(a.fecha_inscripcion || '').split('T')[0]}</td>
+            <td style="white-space:nowrap;">
+              <button class="btn-del btn-del-ind" onclick="eliminarIndividual(${a.id},'${(a.apellido+' '+a.nombre).replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+              <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${a.id},'${a.carnet}')">🔑 Clave</button>
+            </td>
+          </tr>`).join('');
+
+        nivelesHtml += `
+          <div class="dir-nivel">
+            <div class="dir-nivel-header">
+              <span class="dir-nivel-title">${area === 'humanistica' ? `Especialidad ${carrera} - ${nivel}` : nivel}</span>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <span class="dir-nivel-count">${alumnos.length} alumnos</span>
+                <button class="btn-sm" style="background:#10b981; color:white; border:none;" onclick="descargarExcelCurso('${area}', '${carrera}', '${nivel}')">📥 Excel</button>
+                <button class="btn-del btn-del-grp" onclick="eliminarPorNivel('${nivel.replace(/'/g,"\\'")}','${carrera.replace(/'/g,"\\'")}')">🗑 Eliminar Nivel</button>
+              </div>
+            </div>
+            <div class="tbl-wrap">
+              <table class="tbl">
+                <thead><tr><th>CI</th><th>Apellidos y Nombres</th><th>Estado</th><th>Turno</th><th>P.</th><th>Inscrito</th><th>Acciones</th></tr></thead>
+                <tbody>${alumnosRows}</tbody>
+              </table>
+            </div>
+          </div>`;
+      }
+
+      if (!nivelesHtml) continue;
+      totalArea += totalCarrera;
+
+      carrerasHtml += `
+        <div class="dir-carrera">
+          <div class="dir-carrera-header">
+            <div>
+              <div class="dir-carrera-title">${area === 'humanistica' ? `📚 Especialidad: ${carrera}` : `🎓 ${carrera}`}</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <span class="dir-carrera-badge">${totalCarrera} estudiantes</span>
+              <button class="btn-del btn-del-grp" onclick="eliminarPorCarrera('${carrera.replace(/'/g,"\\'")}')">🗑 Eliminar Carrera</button>
+            </div>
+          </div>
+          ${nivelesHtml}
+        </div>`;
+    }
+
+    if (!carrerasHtml) continue;
+
+    html += `
+      <div class="dir-area">
+        <div class="dir-area-header" onclick="toggleArea(this)">
+          <div class="dir-area-title">
+            <span class="area-badge ${aInfo.cls}">${aInfo.label}</span>
+            <span style="font-size:.85rem;color:var(--muted);font-weight:600;">${totalArea} estudiantes en total</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button class="btn-del btn-del-area" onclick="event.stopPropagation();eliminarPorArea('${area}')">🗑 Eliminar Área</button>
+            <span style="color:var(--muted);font-size:1.2rem;">▼</span>
+          </div>
+        </div>
+        <div class="dir-area-body open">${carrerasHtml}</div>
+      </div>`;
+  }
+
+  container.innerHTML = html || '<div class="loading">No se encontraron estudiantes que coincidan.</div>';
+}
+
+function toggleArea(header) {
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+function renderDocentes() {
+  if (!dirData || !dirData.docentes) return;
+  const query = (document.getElementById('searchDoc').value || '').toLowerCase();
+  const docentes = dirData.docentes.filter(d =>
+    !query || `${d.nombre} ${d.apellido} ${d.carnet} ${d.especialidad}`.toLowerCase().includes(query)
+  );
+
+  const container = document.getElementById('dirDocContent');
+  if (!docentes.length) { container.innerHTML = '<div class="loading">Sin docentes registrados.</div>'; return; }
+
+  // Detectar jefe actual por especialidad — usa la flag es_jefe (no el rol)
+  const jefesPorEsp = {};
+  docentes.forEach(d => { if (d.es_jefe) jefesPorEsp[d.especialidad] = d.id; });
+
+  // Agrupar por especialidad
+  const grupos = {};
+  docentes.forEach(d => {
+    const esp = d.especialidad || 'Sin Especialidad';
+    if (!grupos[esp]) grupos[esp] = [];
+    grupos[esp].push(d);
+  });
+
+  // Detectar el área de cada especialidad mirando los grupos de estudiantes
+  const areaDeEsp = {};
+  if (dirData.grupos) {
+    for (const area in dirData.grupos) {
+      for (const carrera in dirData.grupos[area]) {
+        areaDeEsp[carrera] = area;
+      }
+    }
+  }
+
+  // Paralelos disponibles por carrera
+  const paralelosPorCarrera = {};
+  if (dirData.grupos) {
+    for (const area in dirData.grupos) {
+      for (const carrera in dirData.grupos[area]) {
+        const paralelos = new Set();
+        for (const nivel in dirData.grupos[area][carrera]) {
+          (dirData.grupos[area][carrera][nivel].alumnos || []).forEach(a => {
+            if (a.paralelo) paralelos.add(a.paralelo);
+          });
+        }
+        paralelosPorCarrera[carrera] = [...paralelos].sort();
+      }
+    }
+  }
+
+  let html = '';
+  for (const [esp, docs] of Object.entries(grupos).sort()) {
+    const areaActual = areaDeEsp[esp] || 'tecnica';
+    const tieneJefe = jefesPorEsp.hasOwnProperty(esp);
+    html += `
+      <div class="dir-carrera" style="margin-bottom:12px;">
+        <div class="dir-carrera-header">
+          <div class="dir-carrera-title">
+            ${areaActual === 'humanistica' ? '📚' : '🎓'} ${esp}
+            ${tieneJefe ? '<span class="badge" style="background:rgba(245,158,11,0.2);color:#f59e0b;border:1px solid #f59e0b;margin-left:8px;font-size:0.65rem;">🏅 JEFE ASIGNADO</span>' : ''}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="dir-carrera-badge">${docs.length} docentes</span>
+            <button class="btn-del btn-del-grp" onclick="eliminarDocentesPorEsp('${esp.replace(/'/g,"\\'")}')" >🗑 Eliminar</button>
+          </div>
+        </div>
+                      const esJefe = d.es_jefe === true;
+              const nivelAsig = d.nivel_asignado || '';
+              const tieneNivel = nivelAsig && nivelAsig.trim() !== '';
+
+              // Detectar asignación «huérfana»: el docente tiene nivel sin paralelo
+              // pero el grupo ya se dividió en paralelos (la clave en grupos incluye "Paralelo")
+              let esHuerfano = false;
+              if (tieneNivel && areaActual === 'tecnica' && dirData.grupos?.tecnica?.[esp]) {
+                  const clavesGrupo = Object.keys(dirData.grupos.tecnica[esp]);
+                  // Verificar si TODAS las claves que empiezan con el nivel del docente tienen "Paralelo"
+                  // pero el nivel asignado NO tiene "Paralelo"
+                  const nivelBase = nivelAsig.replace(/ - Paralelo [A-Z]$/, '').trim();
+                  const clavesDelNivel = clavesGrupo.filter(k => k.startsWith(nivelBase));
+                  const todasConParalelo = clavesDelNivel.length > 1 && clavesDelNivel.every(k => k.includes('Paralelo'));
+                  const asignadoSinParalelo = !nivelAsig.includes('Paralelo');
+                  esHuerfano = todasConParalelo && asignadoSinParalelo;
+              }
+
+              const rowStyle = esHuerfano
+                ? 'background:linear-gradient(90deg,rgba(251,146,60,0.08),rgba(239,68,68,0.05));border-left:3px solid #f97316;'
+                : esJefe
+                ? 'background:linear-gradient(90deg,rgba(245,158,11,0.06),rgba(139,92,246,0.06));border-left:3px solid #f59e0b;'
+                : tieneNivel ? 'border-left:3px solid rgba(72,209,142,0.5);' : '';
+
+              return `
+              <tr style="${rowStyle}">
+                <td><strong>${d.carnet||'S/N'}</strong></td>
+                <td>
+                  ${d.apellido} ${d.nombre}
+                  ${esJefe ? '<br><span class="badge" style="background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;font-size:0.65rem;margin-top:3px;display:inline-block;">🏅 Jefe de Carrera</span>' : ''}
+                  ${esHuerfano ? '<br><span class="badge" style="background:rgba(251,146,60,0.2);color:#fb923c;border:1px solid #f97316;font-size:0.62rem;margin-top:3px;display:inline-block;">⚠️ REASIGNAR PARALELO</span>' : ''}
+                </td>
+                <td style="font-size:.78rem;">
+                  ${esHuerfano
+                    ? `<span style="color:#f97316;font-weight:700;">⚠️ ${nivelAsig} <small style="font-weight:400;opacity:.8">(curso dividido)</small></span>`
+                    : tieneNivel
+                    ? `<span style="color:#48d18e;font-weight:700;">✅ ${nivelAsig}</span>`
+                    : `<span style="color:var(--muted);font-style:italic;">Sin designar</span>`
+                  }
+                </td>
+                <td><span class="badge ${d.estado==='activo'?'b-ok':'b-err'}">${d.estado}</span></td>
+                <td style="white-space:nowrap;">
+                  <button class="btn-del btn-del-ind" onclick="eliminarDocente(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+                  <button class="btn-sm" style="margin-left:4px;" onclick="resetPassword(${d.id},'${d.carnet}')">🔑 Clave</button>
+                  <button class="btn-sm" style="margin-left:4px;background:${esHuerfano?'linear-gradient(90deg,#f97316,#ef4444)':tieneNivel?'linear-gradient(90deg,#48d18e,#0ea5e9)':'var(--primary)'};color:white;border:none;" onclick="modalAsignarNivel(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')}">
+                    ${esHuerfano ? '🔄 Reasignar Paralelo' : tieneNivel ? '✏️ Cambiar Nivel' : '📘 Asignar Nivel'}
+                  </button>
+                  ${esJefe
+                    ? `<button class="btn-sm" style="margin-left:4px;background:linear-gradient(90deg,#f59e0b,#8b5cf6);color:white;border:none;" onclick="modalRetirarJefe(${d.id},'${(d.apellido+' '+d.nombre).replace(/'/g,"\\'")}')">🏅 Jefe Actual · Retirar</button>`
+                    : `<button class="btn-sm" style="margin-left:4px;background:var(--violet);color:white;border:none;" onclick="modalNombrarJefe(${d.id},'${esp.replace(/'/g,"\\'")}')">🎖️ Nombrar Jefe</button>`
+                  }
+                </td>
+              </tr>`;
+            }).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+  container.innerHTML = html;
+}
+
+// ── Funciones de Eliminación ─────────────────────
+async function apiEliminar(body, confirm_msg) {
+  if (!confirm(confirm_msg + '\n\n⚠️ Esta acción es IRREVERSIBLE.')) return;
+  const r2 = confirm('¿Estás COMPLETAMENTE SEGURO? Confirma una segunda vez.');
+  if (!r2) return;
+  try {
+    const res = await fetch(`${API_BASE}/estadisticas/eliminar-inscripciones`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert(`✅ ${data.mensaje}`);
+      document.directorioLoaded = false;
+      loadDirectorio();
+    } else {
+      alert(`❌ Error: ${data.detail}`);
+    }
+  } catch(e) { alert(`❌ Error de red: ${e.message}`); }
+}
+
+function eliminarIndividual(id, nombre) {
+  apiEliminar({ tipo: 'individual', usuario_id: id }, `¿Eliminar a "${nombre}" del sistema?`);
+}
+
+function eliminarPorCarrera(carrera) {
+  apiEliminar({ tipo: 'carrera', carrera }, `¿Eliminar TODOS los estudiantes de la carrera "${carrera}"?`);
+}
+
+function eliminarPorNivel(nivel, carrera) {
+  apiEliminar({ tipo: 'nivel', nivel }, `¿Eliminar todos los estudiantes del nivel "${nivel}" (${carrera})?`);
+}
+
+function eliminarPorArea(area) {
+  const label = area === 'tecnica' ? 'Técnica' : 'Humanística';
+  apiEliminar({ tipo: 'area', area }, `¿Eliminar TODOS los estudiantes del Área ${label}?`);
+}
+
+function eliminarDocentesPorEsp(especialidad) {
+  apiEliminar({ tipo: 'carrera', carrera: especialidad, rol: 'docente' }, `¿Eliminar TODOS los docentes de la especialidad "${especialidad}"?`);
+}
+
+// ── Eliminar docente individual (usa DELETE /auth/usuarios/{id}) ──────────
+async function eliminarDocente(id, nombre) {
+    const conf = await Swal.fire({
+        title: '🗑 Eliminar Docente',
+        html: `¿Estás seguro de que deseas eliminar a <b>${nombre}</b> del sistema?<br><br>
+               <small style="color:#f43f5e;">⚠️ Esta acción es IRREVERSIBLE. Se eliminará su cuenta de acceso y todos sus datos.</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f43f5e',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        background: '#0b1220',
+        color: '#f8fafc'
+    });
+
+    if (!conf.isConfirmed) return;
+
+    // Segunda confirmación
+    const conf2 = await Swal.fire({
+        title: '¿COMPLETAMENTE SEGURO?',
+        html: `Vas a eliminar permanentemente a <b>${nombre}</b>.<br>Esta acción <u>no se puede deshacer</u>.`,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#f43f5e',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, ELIMINAR DEFINITIVAMENTE',
+        cancelButtonText: 'Cancelar',
+        background: '#0b1220',
+        color: '#f8fafc'
+    });
+
+    if (!conf2.isConfirmed) return;
+
+    try {
+        Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const res = await fetch(`${API_BASE}/auth/usuarios/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        Swal.close();
+        if (res.ok) {
+            Swal.fire({
+                title: '✅ Docente Eliminado',
+                html: `<b>${nombre}</b> ha sido eliminado del sistema.`,
+                icon: 'success',
+                timer: 2500,
+                timerProgressBar: true,
+                showConfirmButton: false
+            });
+            document.directorioLoaded = false;
+            loadDirectorio();
+        } else {
+            Swal.fire('Error', data.detail || 'No se pudo eliminar al docente', 'error');
+        }
+    } catch(e) {
+        Swal.fire('Error', 'Error de red: ' + e.message, 'error');
+    }
+}
+
+function eliminarTodos(rol) {
+  const label = rol === 'docente' ? 'DOCENTES' : 'ESTUDIANTES';
+  apiEliminar({ tipo: 'todos', rol }, `¿Eliminar ABSOLUTAMENTE TODOS LOS ${label} del sistema?`);
+}
+
+// ── Reset Clave ──────────────────────────────────
+async function resetPassword(id, carnet) {
+  if(!carnet || carnet === 'null' || carnet === 'S/N') return alert("El usuario no tiene carnet registrado para restablecer.");
+  if(!confirm(`¿Restablecer la contraseña a ${carnet} (su CI)?`)) return;
+  try {
+    const res = await fetch(`${API_BASE}/auth/usuarios/${id}/password`, {
+      method: 'PUT',
+      headers: { 'Content-Type':'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ new_password: carnet.trim() })
+    });
+    if(res.ok) alert("✅ Contraseña restablecida correctamente al CI del usuario.");
+    else alert("❌ Error al restablecer contraseña.");
+  } catch(e) { alert("Error de red"); }
+}
+
+// ── Exportar Excel Pro ───────────────────────────
+function exportarExcelPro() {
+  if(!dirData || !dirData.grupos) return alert("Espera a que carguen los datos del directorio.");
+  const wb = XLSX.utils.book_new();
+
+  const nivelOrder = {
+    'Nivel Básico': 1, 'Nivel Auxiliar': 2, 'Nivel Medio I': 3, 'Nivel Medio II': 4,
+    'Aplicados (Primer Año)': 1, 'Complementarios (Segundo Año)': 2, 'Especializados (Tercer Año)': 3
+  };
+
+  // Crear una hoja por cada Carrera (ordenada por niveles lógicamente)
+  for (const area in dirData.grupos) {
+    for (const carrera in dirData.grupos[area]) {
+      const niveles = dirData.grupos[area][carrera];
+      
+      const sortedNiveles = Object.entries(niveles).sort(([nA], [nB]) => {
+        return (nivelOrder[nA] || 99) - (nivelOrder[nB] || 99);
+      });
+
+      const data = [];
+      sortedNiveles.forEach(([nivel, d]) => {
+        d.alumnos.forEach((a) => {
+          data.push({
+            'Nivel/Curso': nivel,
+            'CI': a.carnet || 'S/N',
+            'Apellidos': a.apellido,
+            'Nombres': a.nombre,
+            'Paralelo': a.paralelo || 'A',
+            'Estado': a.estado,
+            'Fecha Inscripción': a.fecha_inscripcion || ''
+          });
+        });
+      });
+
+      if (data.length > 0) {
+        let sheetName = carrera.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 31);
+        if(!sheetName) sheetName = "Estudiantes";
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), sheetName);
+      }
+    }
+  }
+
+  // Hoja docentes
+  if (dirData.docentes && dirData.docentes.length > 0) {
+      const docs = dirData.docentes.map(d => ({
+        'CI': d.carnet, 'Apellidos': d.apellido, 'Nombres': d.nombre, 'Email': d.email,
+        'Especialidad': d.especialidad, 'Estado': d.estado, 'Fecha Ingreso': d.fecha_ingreso
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(docs), "Plantel Docente");
+  }
+
+  XLSX.writeFile(wb, `Directorio_CEA_Pailon_${new Date().toLocaleDateString('es').replace(/\//g,'-')}.xlsx`);
+}
+
+// ── Nombrar Jefe de Carrera ───────────────────────────
+async function modalNombrarJefe(id, especialidad) {
+    if (!especialidad || especialidad === 'Sin Especialidad') {
+        Swal.fire('Atención', 'El docente necesita una especialidad asignada antes de ser Jefe.', 'warning');
+        return;
+    }
+
+    // Verificar si ya hay un jefe en esta carrera (distinto del docente actual)
+    const jefePrevio = (dirData.docentes || []).find(
+        d => d.especialidad === especialidad && d.rol === 'jefe_carrera' && d.id !== id
+    );
+
+    let texto = `¿Ascender a este docente como Jefe de "${especialidad}"?`;
+    if (jefePrevio) {
+        texto = `Ya existe un Jefe en "${especialidad}": ${jefePrevio.apellido} ${jefePrevio.nombre}.\n\n¿Reemplazarlo por este docente?`;
+    }
+    
+    const conf = await Swal.fire({
+        title: '🎖️ Nombrar Jefe de Carrera',
+        text: texto,
+        icon: jefePrevio ? 'warning' : 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#8b5cf6',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: jefePrevio ? 'Sí, reemplazar Jefe' : 'Sí, nombrar Jefe'
+    });
+
+    if (conf.isConfirmed) {
+        Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            const r2 = await fetch(`${API_BASE}/auth/promover-jefe-carrera`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+                body: JSON.stringify({ usuario_id: id, carrera_id: null, especialidad_nombre: especialidad })
+            });
+            const d2 = await r2.json();
+            Swal.close();
+            if (r2.ok) {
+                await Swal.fire({
+                    title: '🏅 ¡Jefe Nombrado!',
+                    html: `<b>${d2.mensaje}</b><br><br><small style="color:#94a3b8;">El docente seguirá en la lista y puede ser asignado a cursos normalmente. Solo se diferencia en que es responsable de subir la malla curricular.</small>`,
+                    icon: 'success',
+                    confirmButtonColor: '#8b5cf6'
+                });
+                document.directorioLoaded = false;
+                loadDirectorio();
+            } else {
+                const msg = r2.status === 403
+                    ? '⚠️ Solo el Director puede nombrar Jefes de Carrera.\n\nCierre sesión e ingrese con las credenciales del Director.'
+                    : (d2.detail || 'Error al promover');
+                Swal.fire('Sin permiso', msg, r2.status === 403 ? 'warning' : 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Error inesperado: ' + e.message, 'error');
+        }
+    }
+}
+
+// ── Retirar designación de Jefe ───────────────────────────────────────────
+async function modalRetirarJefe(id, nombre) {
+    const conf = await Swal.fire({
+        title: '🏅 Retirar Jefatura',
+        html: `¿Retirar la designación de Jefe de Carrera a <b>${nombre}</b>?<br><br>
+               <small style="color:#94a3b8;">El docente seguirá activo y podrá dictar clases normalmente, pero ya no será responsable de la malla curricular.</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#f59e0b',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Sí, retirar',
+        cancelButtonText: 'Cancelar',
+        background: '#0b1220',
+        color: '#f8fafc'
+    });
+
+    if (conf.isConfirmed) {
+        Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        try {
+            const r = await fetch(`${API_BASE}/auth/retirar-jefe-carrera`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+                body: JSON.stringify({ usuario_id: id })
+            });
+            const d = await r.json();
+            Swal.close();
+            if (r.ok) {
+                Swal.fire({
+                    title: '✅ Jefatura Retirada',
+                    html: `<b>${nombre}</b> ya no es Jefe de Carrera. Puede nombrar a otro docente de la misma especialidad.`,
+                    icon: 'success',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+                document.directorioLoaded = false;
+                loadDirectorio();
+            } else {
+                Swal.fire('Error', d.detail || 'No se pudo retirar la jefatura', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Error de red: ' + e.message, 'error');
+        }
+    }
+}
+
+// ── Asignar Nivel/Curso al docente (Nivel Pro) ───────────────────────────
+async function modalAsignarNivel(id, nombre) {
+    const docente = (dirData.docentes || []).find(d => d.id === id);
+    const espDocente = docente ? (docente.especialidad || '') : '';
+    const nivelActual = docente ? (docente.nivel_asignado || '') : '';
+
+    // Detección de área — usa el catálogo oficial del backend (independiente de inscripciones)
+    // Si la carrera del docente está en el catálogo con area='técnica' → técnica
+    // Si está como 'humanística' o no está en el catálogo → humanística
+    const catalogo = dirData.catalogo_areas || {};
+    let areaDocente = catalogo[espDocente] || null;
+
+    if (!areaDocente) {
+        // Fallback: buscar en grupos de estudiantes
+        const carrerasTecnicas = new Set(
+            dirData.grupos && dirData.grupos['tecnica']
+                ? Object.keys(dirData.grupos['tecnica'])
+                : []
+        );
+        areaDocente = carrerasTecnicas.has(espDocente) ? 'tecnica' : 'humanistica';
+    }
+    // Normalizar (puede venir como 'Técnica' con mayúscula del backend)
+    areaDocente = areaDocente.toLowerCase().replace('é','e').replace('á','a').replace('ó','o');
+    const esTecnica = areaDocente.includes('tecnica') || areaDocente.includes('técnica');
+    areaDocente = esTecnica ? 'tecnica' : 'humanistica';
+
+    let htmlContenido = '';
+    let titulo = '';
+
+    if (areaDocente === 'humanistica') {
+        // HUMANÍSTICA: checkboxes multi-select — puede dar 1, 2 o los 3 cursos
+        titulo = '📚 Asignar Cursos — Área Humanística';
+
+        // Detectar los cursos disponibles con sus paralelos (si hay >40 inscritos)
+        const cursosHum = [
+            { id: 'ap', base: 'Aplicados (Primer Año)',        emoji: '📗', color: '139,92,246' },
+            { id: 'co', base: 'Complementarios (Segundo Año)', emoji: '📘', color: '14,165,233' },
+            { id: 'es', base: 'Especializados (Tercer Año)',   emoji: '📙', color: '72,209,142' }
+        ];
+
+        let checkboxesHtml = '';
+        cursosHum.forEach(c => {
+            // Buscar si este curso tiene paralelos en los grupos de estudiantes
+            const paralelosEnCurso = new Set();
+            if (dirData.grupos && dirData.grupos['humanistica']) {
+                for (const carrera in dirData.grupos['humanistica']) {
+                    const niveles = dirData.grupos['humanistica'][carrera];
+                    for (const nivelKey in niveles) {
+                        // La clave puede ser "Aplicados..." o "Aplicados... - Paralelo A"
+                        if (nivelKey.startsWith(c.base)) {
+                            const match = nivelKey.match(/Paralelo ([A-Z])$/);
+                            if (match) paralelosEnCurso.add(match[1]);
+                        }
+                    }
+                }
+            }
+
+            if (paralelosEnCurso.size > 1) {
+                // Hay paralelos: mostrar opción por paralelo
+                [...paralelosEnCurso].sort().forEach(p => {
+                    const val = `${c.base} - Paralelo ${p}`;
+                    const checked = nivelActual.includes(c.base) && nivelActual.includes(`Paralelo ${p}`) ? 'checked' : '';
+                    checkboxesHtml += `
+                    <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
+                        <input type="checkbox" id="ch-${c.id}-${p.toLowerCase()}" value="${val}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
+                        <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — Paralelo ${p}</span>
+                    </label>`;
+                });
+            } else {
+                // Solo un grupo: mostrar el curso normal
+                const checked = nivelActual.includes(c.base) ? 'checked' : '';
+                checkboxesHtml += `
+                <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(${c.color},0.08);border:1px solid rgba(${c.color},0.3);border-radius:10px;cursor:pointer;">
+                    <input type="checkbox" id="ch-${c.id}" value="${c.base}" ${checked} style="width:18px;height:18px;accent-color:rgb(${c.color});">
+                    <span>${c.emoji} <strong>${c.base.split(' ')[0]}</strong> — ${c.base.split('(')[1]?.replace(')','') || ''}</span>
+                </label>`;
+            }
+        });
+
+        htmlContenido = `
+            <p style="font-size:.85rem;color:#94a3b8;margin-bottom:12px;">
+                Prof. <strong>${nombre}</strong> · Materia: <strong>${espDocente}</strong><br>
+                <small>Selecciona los cursos que impartirá (puede ser 1, 2 o los 3).</small>
+            </p>
+            <div style="display:flex;flex-direction:column;gap:10px;text-align:left;">
+                ${checkboxesHtml}
+            </div>`;
+
+    } else {
+        // TÉCNICA: un solo nivel + paralelo si existe
+        titulo = '🎓 Asignar Nivel — Área Técnica';
+
+        // Recolectar niveles y paralelos disponibles de la carrera
+        const nivelesDisponibles = [];
+        if (dirData.grupos && dirData.grupos['tecnica'] && dirData.grupos['tecnica'][espDocente]) {
+            const nivelesCarrera = dirData.grupos['tecnica'][espDocente];
+            // El backend ya entrega las claves como:
+            //   "Nivel Básico"          → único paralelo o sin división
+            //   "Nivel Básico - Paralelo A" / "Nivel Básico - Paralelo B" → dividido por >30
+            // Ordenar por nivel base primero, luego paralelo
+            const nivelOrder = {'Nivel Básico':1,'Nivel Auxiliar':2,'Nivel Medio I':3,'Nivel Medio II':4};
+            const getNivelBase = k => k.replace(/ - Paralelo [A-Z]$/, '').trim();
+            Object.keys(nivelesCarrera)
+              .sort((a, b) => {
+                  const oa = nivelOrder[getNivelBase(a)] || 9;
+                  const ob = nivelOrder[getNivelBase(b)] || 9;
+                  if (oa !== ob) return oa - ob;
+                  return a.localeCompare(b);
+              })
+              .forEach(nivelKey => {
+                  // Si la clave ya contiene "Paralelo", usarla directamente
+                  if (nivelKey.includes('Paralelo')) {
+                      const label = nivelKey.replace(' - Paralelo ', ' — Paralelo ');
+                      nivelesDisponibles.push({ label, value: nivelKey });
+                  } else {
+                      nivelesDisponibles.push({ label: nivelKey, value: nivelKey });
+                  }
+              });
+        }
+        // Si no hay datos de estudiantes, mostrar los 4 niveles estándar
+        if (nivelesDisponibles.length === 0) {
+            ['Nivel Básico','Nivel Auxiliar','Nivel Medio I','Nivel Medio II'].forEach(n => {
+                nivelesDisponibles.push({ label: n, value: n });
+            });
+        }
+
+        const opciones = nivelesDisponibles.map(n =>
+            `<option value="${n.value}">${n.label}</option>`
+        ).join('');
+
+        htmlContenido = `
+            <p style="font-size:.85rem;color:#94a3b8;margin-bottom:12px;">
+                Prof. <strong>${nombre}</strong> · Carrera: <strong>${espDocente}</strong><br>
+                <small>Selecciona el único nivel o paralelo que impartirá.</small>
+            </p>
+            <select id="sel-nivel" style="width:100%;padding:12px;border-radius:10px;background:#1e2a3a;color:#f8fafc;border:1px solid rgba(14,165,233,0.4);font-size:0.95rem;">
+                <option value="">— Selecciona un Nivel —</option>
+                ${opciones}
+            </select>`;
+    }
+
+    const result = await Swal.fire({
+        title: titulo,
+        html: htmlContenido,
+        showCancelButton: true,
+        confirmButtonColor: '#0ea5e9',
+        cancelButtonText: 'Cancelar',
+        confirmButtonText: '💾 Guardar Asignación',
+        background: '#0b1220',
+        color: '#f8fafc',
+        focusConfirm: false,
+        preConfirm: () => {
+            if (areaDocente === 'humanistica') {
+                // Recoger TODOS los checkboxes marcados del contenedor (IDs dinámicos)
+                const sel = [...document.querySelectorAll('.swal2-html-container input[type="checkbox"]:checked')]
+                    .map(el => el.value);
+                if (sel.length === 0) {
+                    Swal.showValidationMessage('Debes seleccionar al menos un curso.');
+                    return false;
+                }
+                return sel.join(', ');
+            } else {
+                const val = document.getElementById('sel-nivel')?.value;
+                if (!val) { Swal.showValidationMessage('Debes seleccionar un nivel.'); return false; }
+                return val;
+            }
+        }
+    });
+
+    if (result.isConfirmed && result.value) {
+        try {
+            const r = await fetch(`${API_BASE}/auth/usuarios/${id}/especialidad`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json', Authorization: `Bearer ${token}`},
+                body: JSON.stringify({ especialidad: result.value })
+            });
+            const d = await r.json();
+            if (r.ok) {
+                Swal.fire({
+                    title: '✅ Asignado',
+                    html: `El nivel <b>${result.value}</b> fue asignado correctamente al docente.`,
+                    icon: 'success',
+                    timer: 2500,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+                document.directorioLoaded = false;
+                loadDirectorio();
+            } else if (r.status === 409) {
+                // Conflicto: ya existe otro docente con ese nivel/materia
+                Swal.fire({
+                    title: '⚠️ Conflicto de Asignación',
+                    html: `<div style="text-align:left;font-size:.9rem;line-height:1.6;">
+                        ${d.detail || 'Este nivel ya está ocupado por otro docente.'}
+                        <br><br>
+                        <small style="color:#94a3b8;">💡 Para reasignar, primero retire la asignación al docente actual usando el botón <b>"Cambiar Nivel"</b> y luego asigne el nuevo.</small>
+                    </div>`,
+                    icon: 'warning',
+                    confirmButtonColor: '#f59e0b',
+                    confirmButtonText: 'Entendido'
+                });
+            } else if (r.status === 403) {
+                Swal.fire('Sin permiso', '⚠️ Solo el Director puede designar niveles a docentes.', 'warning');
+            } else {
+                Swal.fire('Error', d.detail || 'Error al guardar', 'error');
+            }
+        } catch(e) {
+            Swal.fire('Error', 'Error de red: ' + e.message, 'error');
+        }
+    }
+}
+
+function descargarExcelCurso(area, carrera, nivel) {
+    if (!dirData || !dirData.grupos) return;
+    const alumnos = dirData.grupos[area][carrera][nivel]?.alumnos;
+    if (!alumnos || alumnos.length === 0) return alert("No hay alumnos en este curso.");
+
+    const isHum = area === 'humanistica';
+    
+    // Encabezado Pro
+    const data = [
+        ["CENTRO DE EDUCACIÓN ALTERNATIVA 'PAILÓN'"],
+        ["LISTA OFICIAL DE ESTUDIANTES"],
+        [""],
+        ["ÁREA:", isHum ? "Humanística" : "Técnica"],
+        [isHum ? "ESPECIALIDAD:" : "CARRERA:", carrera],
+        ["NIVEL / CURSO:", nivel],
+        ["FECHA DE REPORTE:", new Date().toLocaleDateString()],
+        [""],
+        ["N°", "Carnet / CI", "Apellidos", "Nombres", "Paralelo", "Estado", "Fecha Inscripción"]
+    ];
+
+    alumnos.forEach((a, index) => {
+        data.push([
+            index + 1,
+            a.carnet || 'S/N',
+            a.apellido,
+            a.nombre,
+            a.paralelo || 'A',
+            a.estado,
+            a.fecha_inscripcion || ''
+        ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    
+    // Combinar celdas para el título
+    ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }, // CEA Pailon
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } }  // Lista Oficial
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Lista Curso");
+    
+    // Auto-ajustar ancho de columnas
+    const colWidths = [
+        { wch: 5 },  // N°
+        { wch: 15 }, // CI
+        { wch: 25 }, // Apellidos
+        { wch: 25 }, // Nombres
+        { wch: 10 }, // Paralelo
+        { wch: 12 }, // Estado
+        { wch: 15 }  // Fecha
+    ];
+    ws['!cols'] = colWidths;
+
+    const safeCarrera = carrera.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const safeNivel = nivel.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    XLSX.writeFile(wb, `Lista_${safeCarrera}_${safeNivel}.xlsx`);
+}
+
+init();
+
